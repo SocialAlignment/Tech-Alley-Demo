@@ -1,0 +1,18 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/leads/route": "app/api/admin/leads/route.js",
+  "/api/enrich/route": "app/api/enrich/route.js",
+  "/api/identify/route": "app/api/identify/route.js",
+  "/api/submit-lead/route": "app/api/submit-lead/route.js",
+  "/api/update-lead/route": "app/api/update-lead/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/hub/follow-us/page": "app/hub/follow-us/page.js",
+  "/hub/giveaway/page": "app/hub/giveaway/page.js",
+  "/hub/hello-world/page": "app/hub/hello-world/page.js",
+  "/hub/page": "app/hub/page.js",
+  "/hub/speakers/page": "app/hub/speakers/page.js",
+  "/hub/surveys/page": "app/hub/surveys/page.js",
+  "/page": "app/page.js"
+}

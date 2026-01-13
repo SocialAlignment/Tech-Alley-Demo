@@ -1,0 +1,33 @@
+- [x] Formulate Automation & Design Plan <!-- id: 0 -->
+  - [x] Analyze Transcript & Context <!-- id: 1 -->
+  - [x] Analyze "Gorgeous UI" PDF <!-- id: 2 -->
+  - [x] Create Detailed Implementation Plan (Updated for Popl Flow) <!-- id: 3 -->
+- [x] Develop "Gorgeous" Companion Hub (Next.js) <!-- id: 4 -->
+  - [x] Setup Netlify Project <!-- id: 5 -->
+  - [x] Implement Sidebar/Tab Layout (Desktop & Mobile) <!-- id: 6 -->
+  - [x] Implement "Identity Context" (Read ID from URL) <!-- id: 7 -->
+  - [x] Build "Hello World" & Agenda Tab <!-- id: 8 -->
+  - [x] Build "Speakers" & Spotlight Tab <!-- id: 9 -->
+  - [x] Build "Giveaway" Tab (Qualifying Form Only) <!-- id: 10 -->
+  - [x] Build "Surveys" & Follow Us Tabs <!-- id: 11 -->
+- [x] Implement Backend (API & Automation) <!-- id: 12 -->
+  - [x] API: `POST /api/identify` (Fetch Name/Context) <!-- id: 13 -->
+  - [x] API: `PATCH /api/update-lead` (Survey/Form Submission) <!-- id: 14 -->
+  - [/] API: `POST /api/enrich` (Batch Trigger for 24h Delay) <!-- id: 15 -->
+  - [ ] Implement "9 PM SMS" Scheduler (Netlify Function) <!-- id: 16 -->
+  - [ ] Implement "9 PM SMS" Scheduler (Netlify Function) <!-- id: 16 -->
+  - [ ] Design Newsletter Content Plan (12 Emails) <!-- id: 17 -->
+- [x] Build "God Mode" Admin Dashboard <!-- id: 18 -->
+  - [x] Setup `/admin` Route with Basic Auth <!-- id: 19 -->
+  - [x] Build "Live Lead Table" (Notion View) <!-- id: 20 -->
+  - [x] Move "Raffle Wheel" to Admin Side (Big Screen Mode) <!-- id: 21 -->
+  - [x] Implement CMS Controls (Edit Agenda/Links) <!-- id: 22 -->
+- [/] Audit Notion Schema & Deployment Prep <!-- id: 27 -->
+  - [/] Audit Lead Database Properties (Verify Schema) <!-- id: 28 -->
+  - [ ] Verify Firecrawl Key Availability <!-- id: 29 -->
+  - [ ] Deploy to Netlify <!-- id: 30 -->
+- [x] Refine Logic & Add "Enrichment" <!-- id: 23 -->
+  - [x] Refactor Giveaway Form (GenAI Specifics + Checkbox) <!-- id: 24 -->
+  - [x] convert "Surveys" to Internal Form (Update Record) <!-- id: 25 -->
+  - [x] Implement `api/enrich` Logic (Firecrawl/Perplexity) <!-- id: 26 -->
+
