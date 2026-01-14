@@ -1,29 +1,46 @@
-import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
-
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
 export async function POST(request: Request) {
     try {
         const { name, email, company, phone } = await request.json();
 
+        // Validate Env Vars
+        if (!process.env.NOTION_API_KEY) {
+            throw new Error('Missing NOTION_API_KEY');
+        }
         if (!process.env.NOTION_LEADS_DB_ID) {
             throw new Error('Missing NOTION_LEADS_DB_ID');
         }
 
-        // 1. Check for existing lead (Deduplication) using raw request since .query is missing
-        const existing = await notion.request({
-            path: `databases/${process.env.NOTION_LEADS_DB_ID}/query`,
-            method: 'post',
-            body: {
+
+
+        const dbId = process.env.NOTION_LEADS_DB_ID.trim();
+        const apiKey = process.env.NOTION_API_KEY.trim();
+
+        // 1. Check for existing lead (Deduplication) - Using native fetch to bypass SDK issues
+        const queryRes = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
                 filter: {
                     property: 'Email',
                     email: {
                         equals: email,
                     },
                 },
-            },
-        }) as { results: any[] };
+            }),
+        });
+
+        if (!queryRes.ok) {
+            const errText = await queryRes.text();
+            throw new Error(`Notion API Error: ${queryRes.status} - ${errText}`);
+        }
+
+        const existing = await queryRes.json() as { results: any[] };
 
         if (existing.results && existing.results.length > 0) {
             console.log('Lead already exists, resuming session.');
@@ -35,50 +52,65 @@ export async function POST(request: Request) {
             });
         }
 
-        // 2. Create new lead
-        const newLead = await notion.pages.create({
-            parent: { database_id: process.env.NOTION_LEADS_DB_ID },
-            properties: {
-                Name: {
-                    title: [
-                        {
-                            text: {
-                                content: name,
-                            },
-                        },
-                    ],
-                },
-                Email: {
-                    email: email,
-                },
-                Company: {
-                    rich_text: [
-                        {
-                            text: {
-                                content: company || '',
-                            },
-                        },
-                    ],
-                },
-                // 'Phone' is optional, mapping if provided
-                ...(phone && {
-                    Phone: {
-                        phone_number: phone,
-                    },
-                }),
-                'Lead Source': {
-                    select: {
-                        name: 'Tech Alley Render',
-                    },
-                },
+        // 2. Create new lead - Using native fetch
+        const createRes = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
             },
+            body: JSON.stringify({
+                parent: { database_id: dbId },
+                properties: {
+                    Name: {
+                        title: [
+                            {
+                                text: {
+                                    content: name,
+                                },
+                            },
+                        ],
+                    },
+                    Email: {
+                        email: email,
+                    },
+                    Company: {
+                        rich_text: [
+                            {
+                                text: {
+                                    content: company || '',
+                                },
+                            },
+                        ],
+                    },
+                    // 'Phone' is optional
+                    ...(phone && {
+                        Phone: {
+                            phone_number: phone,
+                        },
+                    }),
+                    'Lead Source': {
+                        select: {
+                            name: 'Tech Alley Henderson',
+                        },
+                    },
+                },
+            }),
         });
+
+        if (!createRes.ok) {
+            const errText = await createRes.text();
+            throw new Error(`Notion Create Error: ${createRes.status} - ${errText}`);
+        }
+
+        const newLead = await createRes.json() as { id: string };
 
         return NextResponse.json({ success: true, leadId: newLead.id, redirect: '/hub/hello-world' });
     } catch (error) {
         console.error('Notion Submission Error:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to submit lead' },
+            { success: false, error: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }

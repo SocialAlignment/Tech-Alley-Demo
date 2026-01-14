@@ -39,7 +39,7 @@ export default function HubPage() {
                 {/* Header & Search */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Innovation Hub</h1>
+                        <h1 className="text-3xl font-bold text-slate-900">Innovation Henderson Alignment Hub</h1>
                         <p className="text-slate-500">Connect, Learn, and Win.</p>
                     </div>
                     {/* Search Bar */}

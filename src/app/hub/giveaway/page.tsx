@@ -76,7 +76,7 @@ export default function GiveawayPage() {
                 <div className="inline-block p-3 rounded-full bg-primary/10 mb-4 border border-primary/30">
                     <Sparkles className="w-8 h-8 text-primary" />
                 </div>
-                <h1 className="text-3xl font-bold mb-2">Win a <span className="gradient-text">$1,500 GenAI Video Audit</span></h1>
+                <h1 className="text-3xl font-bold mb-2">Win a <span className="gradient-text">Free GenAI Video Audit</span></h1>
                 <p className="text-gray-400 max-w-lg mx-auto">
                     Complete the audit below to unlock your entry.
                 </p>
@@ -218,6 +218,20 @@ export default function GiveawayPage() {
                                     <label className="label-text">Est. Monthly Rev Gain?</label>
                                     <input type="number" required placeholder="e.g. 5000" className="input-field" value={formData.monthlyGain} onChange={e => setFormData({ ...formData, monthlyGain: e.target.value })} />
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION 5: VIDEO INTEREST (Gap Analysis) */}
+                        <div className="space-y-4">
+                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">5. Video Interest</h3>
+                            <div>
+                                <label className="label-text">If you don't win, are you interested in AI Video services?</label>
+                                <select className="input-field" value={(formData as any).videoInterest || ''} onChange={e => setFormData({ ...formData, videoInterest: e.target.value } as any)}>
+                                    <option value="" disabled>Select...</option>
+                                    <option value="Yes">Yes, absolutely.</option>
+                                    <option value="Maybe">Maybe, depends on cost.</option>
+                                    <option value="No">No, just here for the raffle.</option>
+                                </select>
                             </div>
                         </div>
 

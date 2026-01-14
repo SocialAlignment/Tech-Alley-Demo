@@ -19,70 +19,105 @@ export default function SpotlightPage() {
                     </div>
                 </div>
 
-                {/* Main Spotlight Card */}
-                <motion.div
+                {/* Main Spotlight Article */}
+                <motion.article
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden"
+                    className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden"
                 >
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        {/* Image / Logo Section */}
-                        <div className="w-full md:w-1/3 space-y-4">
-                            <div className="aspect-square relative rounded-3xl overflow-hidden shadow-lg border border-slate-100">
-                                <img
-                                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800"
-                                    alt="Vegas AI Team"
-                                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
-                                />
-                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-900 shadow-sm border border-slate-200">
-                                    Vegas AI
-                                </div>
-                            </div>
-                            <div className="flex justify-center gap-3">
-                                <Button variant="primary" className="w-full text-sm">
-                                    Visit
-                                </Button>
-                                <Button variant="outline" className="w-full text-sm">
-                                    Follow
-                                </Button>
+                    {/* Article Header Image */}
+                    <div className="relative h-64 md:h-80 w-full">
+                        <img
+                            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200"
+                            alt="Vegas AI Team"
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-8 text-white">
+                            <span className="inline-block px-3 py-1 mb-3 rounded-full bg-purple-600 text-white text-xs font-bold uppercase tracking-wider shadow-lg">
+                                Community Leader
+                            </span>
+                            <h1 className="text-4xl md:text-5xl font-bold mb-2">Vegas AI Community</h1>
+                            <p className="text-lg text-slate-200 font-medium">Democratizing Innovation in the Desert</p>
+                        </div>
+                    </div>
+
+                    <div className="p-8 md:p-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        {/* Article Content */}
+                        <div className="lg:col-span-8 space-y-6 text-lg text-slate-600 leading-relaxed">
+                            <p>
+                                <span className="font-bold text-slate-900 text-xl">Vegas AI is the premier community</span> for Artificial Intelligence enthusiasts, developers, and founders in Southern Nevada.
+                                Born from a desire to bridge the gap between abstract technology and practical application, they are dedicated to building a hub of innovation right here in Henderson.
+                            </p>
+                            <p>
+                                "We want to make sure no one gets left behind in this revolution," says the founding team. Their weekly meetups have become a staple for local founders looking to integrate LLMs and automation into their workflows.
+                            </p>
+
+                            <h3 className="text-2xl font-bold text-slate-900 pt-4">The 'Hello Henderson' Connection</h3>
+                            <p>
+                                Recently featured on the <strong>Hello Henderson</strong> podcast, the team discussed their roadmap for 2026 and how local businesses can leverage AI for 10x growth.
+                            </p>
+
+                            {/* Media embed / Link Block */}
+                            <div className="not-prose grid gap-4 my-8">
+                                <a href="https://socialalignment.biz" target="_blank" rel="noopener noreferrer" className="block group">
+                                    <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-purple-200 hover:bg-purple-50 transition-all">
+                                        <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                                            <Mic2 size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 group-hover:text-purple-700">Listen on 'Hello Henderson'</h4>
+                                            <p className="text-sm text-slate-500">Episode: The Future of Vegas Tech</p>
+                                        </div>
+                                        <ExternalLink size={18} className="ml-auto text-slate-400 group-hover:text-purple-400" />
+                                    </div>
+                                </a>
+                                <a href="https://deadsprintradio.com" target="_blank" rel="noopener noreferrer" className="block group">
+                                    <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+                                        <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                            <Mic2 size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 group-hover:text-indigo-700">Dead Sprint Radio Feature</h4>
+                                            <p className="text-sm text-slate-500">Deep Dive with Hoz</p>
+                                        </div>
+                                        <ExternalLink size={18} className="ml-auto text-slate-400 group-hover:text-indigo-400" />
+                                    </div>
+                                </a>
                             </div>
                         </div>
 
-                        {/* Content Section */}
-                        <div className="flex-1 space-y-6">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-bold uppercase tracking-wider">Community Leader</span>
-                                </div>
-                                <h2 className="text-3xl font-bold text-slate-900 mb-4">Vegas AI Community</h2>
-                                <p className="text-slate-600 leading-relaxed text-lg">
-                                    Vegas AI is the premier community for Artificial Intelligence enthusiasts, developers, and founders in Southern Nevada.
-                                    They are dedicated to democratizing AI education and fostering a hub of innovation right here in the desert.
-                                </p>
-                            </div>
-
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                    <div className="flex items-center gap-2 mb-1 text-purple-600">
-                                        <Users size={18} />
-                                        <span className="text-xs font-bold uppercase">Community</span>
+                        {/* Sidebar / Stats */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                                <h4 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs">Community Stats</h4>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-500 text-sm">Active Members</span>
+                                        <span className="font-bold text-slate-900">500+</span>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-slate-900">500+</h4>
-                                    <p className="text-xs text-slate-500">Active Members</p>
-                                </div>
-                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                    <div className="flex items-center gap-2 mb-1 text-indigo-600">
-                                        <Calendar size={18} />
-                                        <span className="text-xs font-bold uppercase">Events</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-500 text-sm">Founded</span>
+                                        <span className="font-bold text-slate-900">2023</span>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-slate-900">Weekly</h4>
-                                    <p className="text-xs text-slate-500">In-Person Meetups</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-500 text-sm">Meeting Cadence</span>
+                                        <span className="font-bold text-slate-900">Weekly</span>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-6 border-t border-slate-200">
+                                    <h4 className="font-bold text-slate-900 mb-2 text-sm">Connect with Founders</h4>
+                                    <Button variant="primary" className="w-full text-sm mb-2">
+                                        Visit Website
+                                    </Button>
+                                    <Button variant="outline" className="w-full text-sm">
+                                        Follow on LinkedIn
+                                    </Button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </motion.article>
             </div>
 
             {/* --- RIGHT COLUMN (Widgets) --- */}

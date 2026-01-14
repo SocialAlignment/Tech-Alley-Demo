@@ -14,8 +14,8 @@ const RESOURCES = [
     {
         category: "Community Links",
         items: [
-            { label: "Join the Tech Alley Discord", icon: LinkIcon, action: "Join" },
-            { label: "Tech Alley Official Website", icon: LinkIcon, action: "Visit" },
+            { label: "Join the Tech Alley Henderson Discord", icon: LinkIcon, action: "Join" },
+            { label: "Tech Alley Henderson Official Website", icon: LinkIcon, action: "Visit" },
             { label: "Innovation Henderson Newsletter", icon: LinkIcon, action: "Subscribe" },
         ]
     }
