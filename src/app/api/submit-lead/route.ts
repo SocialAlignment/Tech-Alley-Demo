@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
     try {
-        const { name, email, company, phone } = await request.json();
+        const { name, email, company, phone, title, isFirstTime, goalForTonight, goalDetail } = await request.json();
 
         // Validate Env Vars
         if (!process.env.NOTION_API_KEY) {
@@ -80,6 +80,37 @@ export async function POST(request: Request) {
                             {
                                 text: {
                                     content: company || '',
+                                },
+                            },
+                        ],
+                    },
+                    Title: {
+                        rich_text: [
+                            {
+                                text: {
+                                    content: title || '',
+                                },
+                            },
+                        ],
+                    },
+                    'First Time Attendee': {
+                        checkbox: isFirstTime || false,
+                    },
+                    // Assuming 'Goal for Tonight' exists as a Rich Text property in Notion
+                    'Goal for Tonight': {
+                        rich_text: [
+                            {
+                                text: {
+                                    content: goalForTonight || '',
+                                },
+                            },
+                        ],
+                    },
+                    'Goal Detail': {
+                        rich_text: [
+                            {
+                                text: {
+                                    content: goalDetail || '',
                                 },
                             },
                         ],

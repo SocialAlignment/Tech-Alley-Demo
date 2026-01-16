@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Mic2, Gift, ClipboardList, Share2, Menu, X, CheckSquare, Star, Brain, MessageSquare, BookOpen, Users } from 'lucide-react';
+import { FlipText } from '@/components/ui/flip-link';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { useIdentity } from '@/context/IdentityContext';
@@ -138,7 +139,9 @@ export default function Sidebar() {
                                 )}>
                                     <Icon size={18} />
                                 </div>
-                                <span className="font-medium text-sm">{item.label}</span>
+                                <FlipText className="font-medium text-sm">
+                                    {item.label}
+                                </FlipText>
                             </button>
                         );
                     })}

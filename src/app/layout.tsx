@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${outfit.variable} antialiased bg-background text-foreground overflow-x-hidden`}>
+      <body className={`${outfit.variable} antialiased bg-background text-foreground overflow-x-hidden`} suppressHydrationWarning>
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-900 text-primary">Loading Innovation Hub Alignment Hub...</div>}>
           <IdentityProvider>
             {children}

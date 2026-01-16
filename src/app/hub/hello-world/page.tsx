@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Mic2, ArrowRight, Calendar, Sparkles, MessageSquare, X, Send, Loader2, CheckSquare } from 'lucide-react';
+import {
+    Calendar, MapPin, Ticket, Mic, Mic2, Gift, Store, Briefcase, Info,
+    ArrowRight, Sparkles, CheckSquare, Zap, Target, MessageSquare
+} from 'lucide-react';
+import { AnimatedShinyText } from '@/components/magicui/animated-shiny-text';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { useIdentity } from '@/context/IdentityContext';
@@ -140,9 +144,12 @@ export default function HelloWorldPage() {
 
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                         <div className="flex-1">
-                            <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-purple-50 text-xs font-bold text-purple-600 tracking-wide border border-purple-100">
-                                HAPPENING NOW
-                            </span>
+                            <div className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
+                                <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
+                                    <span>✨ Innovation Henderson Alignment Hub</span>
+                                    <ArrowRight className="ml-1 size-3 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
+                                </AnimatedShinyText>
+                            </div>
                             <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
                                 Hello, <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">{displayName}.</span>
