@@ -63,7 +63,19 @@ export default function ChecklistPage() {
                 const res = await fetch('/api/missions/list');
                 const data = await res.json();
                 if (data.success) {
-                    setMissions(data.missions);
+                    const sorted = data.missions.sort((a: Mission, b: Mission) => {
+                        const getPriority = (text: string) => {
+                            const t = text.toLowerCase();
+                            if (t.includes('spotlight') || t.includes('speaker')) return 2;
+                            if (t.includes('connect') || t.includes('networking')) return 1;
+                            return 0;
+                        };
+                        const pA = getPriority(a.text);
+                        const pB = getPriority(b.text);
+                        if (pA !== pB) return pB - pA; // Higher priority first
+                        return a.order - b.order; // Fallback to DB order
+                    });
+                    setMissions(sorted);
                 }
             } catch (error) {
                 console.error("Failed to load missions", error);

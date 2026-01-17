@@ -1,6 +1,6 @@
 // 1. Import dependencies
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Upload, Loader2, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils"; // Your utility for merging class names
 
@@ -51,8 +51,7 @@ const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormProps>(
             onSubmit(username);
         };
 
-        // Animation variants for framer-motion
-        const FADE_UP_ANIMATION_VARIANTS = {
+        const FADE_UP_ANIMATION_VARIANTS: Variants = {
             hidden: { opacity: 0, y: 10 },
             show: { opacity: 1, y: 0, transition: { type: "spring" } },
         };
