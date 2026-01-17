@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar, Mic2, Gift, Sparkles, CheckSquare, MessageSquare, X,
-    Loader2, Send, ArrowRight
+    Loader2, Send, ArrowRight, Camera
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useIdentity } from '@/context/IdentityContext';
@@ -284,6 +284,21 @@ export default function HubPage() {
                     <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest pl-4">Interact & Win</h3>
 
                     <div className="grid grid-cols-1 gap-4">
+                        {/* 0. Photo Booth (Orange Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/photo-booth')}
+                            className="bg-gradient-to-r from-orange-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-orange-100 hover:border-orange-200 hover:shadow-[0_10px_20px_-5px_rgba(249,115,22,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-orange-50 shadow-sm flex items-center justify-center text-orange-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                <Camera size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Photo Booth</h4>
+                                <p className="text-orange-400 text-xs font-medium">Capture & Share</p>
+                            </div>
+                        </motion.div>
                         {/* 1. Enter Raffle (Pink Pastel) */}
                         <motion.div
                             variants={itemParams}

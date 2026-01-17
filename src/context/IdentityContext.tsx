@@ -8,6 +8,7 @@ interface IdentityContextType {
     userName: string | null;
     email: string | null;
     avatar: string | null;
+    instagram: string | null;
     isProfileComplete: boolean;
     missionProgress: string | null;
     isLoading: boolean;
@@ -19,6 +20,7 @@ const IdentityContext = createContext<IdentityContextType>({
     userName: null,
     email: null,
     avatar: null,
+    instagram: null,
     isProfileComplete: false,
     missionProgress: null,
     isLoading: true,
@@ -30,6 +32,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     const [userName, setUserName] = useState<string | null>(null);
     const [email, setEmail] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<string | null>(null);
+    const [instagram, setInstagram] = useState<string | null>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
     const [missionProgress, setMissionProgress] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +90,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                             setUserName(data.data.name);
                             setEmail(data.data.email);
                             setAvatar(data.data.avatar);
+                            setInstagram(data.data.contactDetails?.instagram || null);
                             setIsProfileComplete(data.data.isProfileComplete);
                             setMissionProgress(data.data.missionProgress);
                         } else {
@@ -118,7 +122,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     }, [searchParams]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, email, avatar, isProfileComplete, missionProgress, isLoading, updateMissionProgress }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, isLoading, updateMissionProgress }}>
             {children}
         </IdentityContext.Provider>
     );

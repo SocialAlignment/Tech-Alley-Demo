@@ -65,6 +65,7 @@ export default function SpotlightPage() {
 
                             {/* Media embed / Link Block */}
                             <div className="not-prose grid gap-4 my-8">
+                                { /* Action Buttons */}
                                 <a href="https://deadsprintradio.com" target="_blank" rel="noopener noreferrer" className="block group">
                                     <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
                                         <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">

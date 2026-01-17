@@ -7,6 +7,8 @@ import { Check, Mic2, ArrowRight, CheckSquare, Loader2 } from 'lucide-react';
 import { VideoPlayer } from '@/components/ui/video-thumbnail-player';
 import { ScratchToReveal } from '@/components/ui/scratch-to-reveal';
 import { useIdentity } from '@/context/IdentityContext';
+import { GoButton } from '@/components/ui/go-button';
+import Link from 'next/link';
 
 interface Mission {
     id: string;
@@ -225,6 +227,20 @@ export default function ChecklistPage() {
                     ) : (
                         missions.map((item) => {
                             const isChecked = checkedItems.has(item.id);
+
+                            // Determine Action URL
+                            let actionUrl = null;
+                            const textValues = item.text.toLowerCase();
+
+                            if (textValues.includes("connect with 5 new people")) actionUrl = "/hub/networking";
+                            else if (textValues.includes("submit a question")) actionUrl = "/hub/surveys";
+                            else if (textValues.includes("complete your social profile")) actionUrl = leadId ? `/hub/profile/qualify?id=${leadId}` : '/hub/profile/qualify';
+                            else if (textValues.includes("enter the genai")) actionUrl = "/hub/giveaway";
+                            else if (textValues.includes("follow hello henderson")) actionUrl = "https://www.youtube.com/@DeadSprintRadio/videos";
+                            // Add more mappings as needed
+
+                            const isExternal = actionUrl?.startsWith('http');
+
                             return (
                                 <motion.div
                                     key={item.id}
@@ -240,7 +256,7 @@ export default function ChecklistPage() {
                                     onClick={() => toggleItem(item.id)}
                                 >
                                     <div className={`
-                                    w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors
+                                    w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors shrink-0
                                     ${isChecked
                                             ? 'bg-purple-500 border-purple-500 text-white'
                                             : 'border-slate-300 text-transparent group-hover:border-purple-300'
@@ -249,16 +265,34 @@ export default function ChecklistPage() {
                                         <Check size={14} strokeWidth={3} />
                                     </div>
 
-                                    <div className="flex-1">
-                                        <h3 className={`font-bold transition-colors ${isChecked ? 'text-purple-900 line-through decoration-purple-300' : 'text-slate-800'}`}>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className={`font-bold transition-colors truncate ${isChecked ? 'text-purple-900 line-through decoration-purple-300' : 'text-slate-800'}`}>
                                             {item.text}
                                         </h3>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="text-xs text-slate-400 truncate">
                                             {isChecked ? 'Completed!' : (item.description || `Tap to complete (+${item.points} XP)`)}
                                         </p>
                                     </div>
-                                    <div className="text-xs font-bold text-slate-300 group-hover:text-purple-400">
-                                        +{item.points} XP
+
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <div className="text-xs font-bold text-slate-300 group-hover:text-purple-400 whitespace-nowrap">
+                                            +{item.points} XP
+                                        </div>
+
+                                        {/* Action Button */}
+                                        {!isChecked && actionUrl && (
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                {isExternal ? (
+                                                    <a href={actionUrl} target="_blank" rel="noopener noreferrer">
+                                                        <GoButton className="h-8 text-xs bg-slate-900 text-white hover:bg-slate-800" text="Go" />
+                                                    </a>
+                                                ) : (
+                                                    <Link href={actionUrl}>
+                                                        <GoButton className="h-8 text-xs bg-slate-900 text-white hover:bg-slate-800" text="Go" />
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             );
