@@ -1,10 +1,11 @@
 'use client';
 
-import { ButtonHTMLAttributes } from 'react';
+import React from 'react';
 import clsx from 'clsx';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<"button"> {
+    children: React.ReactNode;
     variant?: 'primary' | 'secondary' | 'glass' | 'ghost' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;

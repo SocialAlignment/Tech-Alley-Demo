@@ -449,7 +449,7 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({ onSubmit, isSubmitting: p
             x: 0,
             opacity: 1,
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 300,
                 damping: 30,
             }
@@ -458,7 +458,7 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({ onSubmit, isSubmitting: p
             x: direction === "right" ? -50 : 50,
             opacity: 0,
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 300,
                 damping: 30,
             }

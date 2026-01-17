@@ -7,18 +7,63 @@ import { FlipText } from '@/components/ui/flip-link';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { useIdentity } from '@/context/IdentityContext';
+import UserProfileDemo from '@/components/UserProfileDemo';
 
-const NAV_ITEMS = [
-    { label: 'Hello World', icon: Home, path: '/hub/hello-world' },
-    { label: 'Companion Checklist', icon: CheckSquare, path: '/hub/checklist' },
-    { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
-    { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
-    { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
-    { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
-    { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
-    { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
-    { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
+const NAV_SECTIONS = [
+    {
+        title: "", // Main Section (No Header)
+        items: [
+            { label: 'Home', icon: Home, path: '/hub' },
+        ]
+    },
+    {
+        title: "INTERACT & WIN",
+        items: [
+            { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
+            { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
+            { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
+            { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
+            { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
+            { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
+            { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
+            { label: 'Companion Checklist', icon: CheckSquare, path: '/hub/checklist' },
+        ]
+    }
 ];
+
+// Helper Component for Countdown
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const difference = +new Date(targetDate) - +new Date();
+
+            if (difference > 0) {
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((difference / 1000 / 60) % 60);
+                const seconds = Math.floor((difference / 1000) % 60);
+
+                // Format with leading zeros
+                const pad = (n: number) => n < 10 ? `0${n}` : n;
+                return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`;
+            }
+            return 'EVENT STARTED';
+        };
+
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        // Initial call
+        setTimeLeft(calculateTimeLeft());
+
+        return () => clearInterval(timer);
+    }, [targetDate]);
+
+    return <>{timeLeft}</>;
+};
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -100,61 +145,79 @@ export default function Sidebar() {
             >
                 {/* Brand Header */}
                 <div className="flex flex-col mb-8 pt-4 px-2">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-purple-900/20">
-                            TA
+                    <div className="flex items-start gap-3 mb-2">
+                        <div className="w-12 h-12 flex items-center justify-center shrink-0 mt-0.5">
+                            <img src="/hub-icon.png?v=2" alt="Innovation Henderson Logo" className="w-full h-full object-contain" />
                         </div>
-                        <h2 className="text-lg font-bold text-white tracking-tight leading-4">
-                            Innovation Henderson<br />
-                            <span className="text-primary font-normal text-sm">Alignment Hub</span>
-                        </h2>
+                        <div className="flex flex-col">
+                            <h2 className="text-base font-bold text-white leading-tight">
+                                Innovation Henderson
+                            </h2>
+                            <span className="text-white font-medium text-xs opacity-90">Alignment Hub</span>
+                        </div>
                     </div>
-                    {/* Live Clock Psd */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 w-fit">
-                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
-                        <span className="text-[10px] font-mono font-medium text-slate-400 tracking-wide">{currentTime}</span>
+                    {/* Date/Time & Countdown */}
+                    <div className="flex flex-col gap-2 w-full">
+                        {/* Current Time */}
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/5 w-full">
+                            <span className="text-[10px] text-white/80 font-medium">Current Time:</span>
+                            <span className="text-[10px] font-mono font-medium text-white tracking-wide">{currentTime}</span>
+                        </div>
+
+                        {/* Countdown to Jan 21, 2026 5PM PST */}
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 w-full">
+                            <span className="text-[10px] text-blue-100 font-medium">Event Starts:</span>
+                            <span className="text-[10px] font-mono font-medium text-white tracking-wide">
+                                <CountdownTimer targetDate="2026-01-21T17:00:00-08:00" />
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
-                    {NAV_ITEMS.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.path;
+                <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                    {NAV_SECTIONS.map((section, idx) => (
+                        <div key={idx} className="space-y-2">
+                            {section.title && (
+                                <h3 className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                    {section.title}
+                                </h3>
+                            )}
+                            <div className="space-y-1">
+                                {section.items.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = pathname === item.path;
 
-                        return (
-                            <button
-                                key={item.path}
-                                onClick={() => handleNav(item.path)}
-                                className={clsx(
-                                    "w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
-                                    isActive
-                                        ? "text-white bg-white/10"
-                                        : "text-slate-400 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <div className={clsx(
-                                    "p-2 rounded-xl transition-colors",
-                                    isActive ? "bg-primary text-white" : "bg-white/5 text-slate-400 group-hover:text-white"
-                                )}>
-                                    <Icon size={18} />
-                                </div>
-                                <FlipText className="font-medium text-sm">
-                                    {item.label}
-                                </FlipText>
-                            </button>
-                        );
-                    })}
+                                    return (
+                                        <button
+                                            key={item.path}
+                                            onClick={() => handleNav(item.path)}
+                                            className={clsx(
+                                                "w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
+                                                isActive
+                                                    ? "text-white bg-white/10"
+                                                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                                            )}
+                                        >
+                                            <div className={clsx(
+                                                "p-2 rounded-xl transition-colors",
+                                                isActive ? "bg-primary text-white" : "bg-white/5 text-slate-400 group-hover:text-white"
+                                            )}>
+                                                <Icon size={18} />
+                                            </div>
+                                            <FlipText className="font-medium text-sm">
+                                                {item.label}
+                                            </FlipText>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
 
-                {/* Bottom Promo Card (Detailed Stats style) */}
-                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/5 relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
-                    <div className="relative z-10">
-                        <h3 className="text-white font-bold text-sm mb-1">Detailed Stats</h3>
-                        <p className="text-slate-400 text-xs mb-3">View your engagement analytics</p>
-                        <button className="px-3 py-1.5 bg-white text-primary text-xs font-bold rounded-lg shadow-lg">View Reports</button>
-                    </div>
-                    <div className="absolute -right-2 -bottom-2 w-20 h-20 bg-primary/40 rounded-full blur-2xl group-hover:bg-primary/50 transition-colors" />
+                <div className="mt-4">
+                    <UserProfileDemo />
                 </div>
             </motion.aside>
 

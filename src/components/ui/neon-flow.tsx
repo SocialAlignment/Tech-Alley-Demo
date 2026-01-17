@@ -1,8 +1,6 @@
-"use client";
-
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; // We'll define this or use inline
 
 // Helper for random colors
 const randomColors = (count: number) => {
@@ -28,21 +26,43 @@ export function TubesBackground({
 
     useEffect(() => {
         let mounted = true;
-        let cleanup: (() => void) | undefined;
+        let app: any = null;
+        let resizeObserver: ResizeObserver | null = null;
 
         const initTubes = async () => {
+            // 1. Wait for canvas ref
             if (!canvasRef.current) return;
 
+            // 2. Wait for dimensions (prevent 0x0 crash)
+            if (canvasRef.current.clientWidth === 0 || canvasRef.current.clientHeight === 0) {
+                // Retry in next frame if dimensions are missing
+                requestAnimationFrame(initTubes);
+                return;
+            }
+
+            // Probe for WebGL context availability to prevent library crash
             try {
-                // We use the specific build from the CDN as it contains the exact effect requested
-                // Using native dynamic import which works in modern browsers
+                const gl = canvasRef.current.getContext('webgl');
+                if (!gl) {
+                    console.warn("WebGL context not available - skipping 3D init to prevent crash.");
+                    return;
+                }
+                // Release the context immediately so the library can acquire it
+                const ext = gl.getExtension('WEBGL_lose_context');
+                if (ext) ext.loseContext();
+
+                // We use the specific build locally to avoid Turbopack CDN import errors
                 // @ts-ignore
-                const module = await import('@/lib/threejs-tubes.js');
+                const module = await import('@/lib/threejs-tubes-cdn.js');
                 const TubesCursor = module.default;
 
                 if (!mounted) return;
+                // Double check ref after await
+                if (!canvasRef.current) return;
+                // Prevent double init
+                if (tubesRef.current) return;
 
-                const app = TubesCursor(canvasRef.current, {
+                app = TubesCursor(canvasRef.current, {
                     tubes: {
                         colors: ["#f967fb", "#53bc28", "#6958d5"],
                         lights: {
@@ -55,27 +75,34 @@ export function TubesBackground({
                 tubesRef.current = app;
                 setIsLoaded(true);
 
-                const handleResize = () => {
-                    // The library might handle it, but typically we ensure canvas matches container
-                };
-
-                window.addEventListener('resize', handleResize);
-
-                cleanup = () => {
-                    window.removeEventListener('resize', handleResize);
-                    // If the library has a destroy method, call it
-                };
-
             } catch (error) {
                 console.error("Failed to load TubesCursor:", error);
             }
         };
 
+        // Start initialization attempt
         initTubes();
+
+        // Use ResizeObserver to detect when container has size (better than window resize)
+        if (canvasRef.current) {
+            resizeObserver = new ResizeObserver(() => {
+                // If not loaded and now has size, try init
+                if (!tubesRef.current && mounted) {
+                    initTubes();
+                }
+            });
+            resizeObserver.observe(canvasRef.current);
+        }
 
         return () => {
             mounted = false;
-            if (cleanup) cleanup();
+            if (resizeObserver) resizeObserver.disconnect();
+
+            // Attempt to destroy if the library exposes it, or at least help GC
+            if (tubesRef.current && typeof tubesRef.current.destroy === 'function') {
+                tubesRef.current.destroy();
+            }
+            tubesRef.current = null;
         };
     }, []);
 

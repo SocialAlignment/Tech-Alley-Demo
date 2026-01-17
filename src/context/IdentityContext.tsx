@@ -6,56 +6,109 @@ import { useSearchParams, useRouter } from 'next/navigation';
 interface IdentityContextType {
     leadId: string | null;
     userName: string | null;
+    email: string | null;
+    avatar: string | null;
+    isProfileComplete: boolean;
     isLoading: boolean;
 }
 
 const IdentityContext = createContext<IdentityContextType>({
     leadId: null,
     userName: null,
+    email: null,
+    avatar: null,
+    isProfileComplete: false,
     isLoading: true,
 });
 
 export function IdentityProvider({ children }: { children: ReactNode }) {
     const [leadId, setLeadId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
+    const [email, setEmail] = useState<string | null>(null);
+    const [avatar, setAvatar] = useState<string | null>(null);
+    const [isProfileComplete, setIsProfileComplete] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
     const router = useRouter();
 
     useEffect(() => {
-        // 1. Try to get ID from URL
-        const urlId = searchParams.get('id');
+        let isMounted = true;
+        const failsafeTimer = setTimeout(() => {
+            if (isMounted) {
+                console.warn("IdentityContext: Loading timed out. Forcing completion.");
+                setIsLoading(false);
+            }
+        }, 8000); // 8 second max load time
 
-        // 2. Try to get ID from localStorage (persistence)
-        const localId = localStorage.getItem('techalley_lead_id');
-        const activeId = urlId || localId;
+        const initIdentity = async () => {
+            try {
+                // 1. Try to get ID from URL
+                const urlId = searchParams.get('id');
 
-        if (activeId) {
-            setLeadId(activeId);
-            if (urlId) localStorage.setItem('techalley_lead_id', urlId);
+                // 2. Try to get ID from localStorage (persistence)
+                let localId = null;
+                try {
+                    localId = localStorage.getItem('techalley_lead_id');
+                } catch (e) {
+                    console.error("Storage access error:", e);
+                }
 
-            // Fetch details
-            fetch('/api/identify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ leadId: activeId })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        setUserName(data.data.name);
+                const activeId = urlId || localId;
+
+                if (activeId) {
+                    console.log("IDENTITY DEBUG: Found activeId from:", urlId ? "URL" : "Local", activeId);
+                    setLeadId(activeId);
+                    if (urlId) {
+                        try { localStorage.setItem('techalley_lead_id', urlId); } catch (e) { }
                     }
-                })
-                .catch(console.error)
-                .finally(() => setIsLoading(false));
 
-        } else {
-            setIsLoading(false);
+                    // Fetch details
+                    console.log("IdentityContext: Fetching profile for", activeId);
+                    const res = await fetch('/api/identify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ leadId: activeId })
+                    });
+
+                    const data = await res.json();
+
+                    if (isMounted) {
+                        if (data.success && data.data) {
+                            console.log("IdentityContext: Profile loaded", data.data.name);
+                            setUserName(data.data.name);
+                            setEmail(data.data.email);
+                            setAvatar(data.data.avatar);
+                            setIsProfileComplete(data.data.isProfileComplete);
+                        } else {
+                            console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
+                            // Invalid ID? Maybe clear it so we don't loop?
+                            if (localId && !urlId) {
+                                localStorage.removeItem('techalley_lead_id');
+                            }
+                        }
+                    }
+                } else {
+                    console.log("IdentityContext: No ID found");
+                }
+            } catch (error) {
+                console.error("IdentityContext: Critical Error", error);
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                    clearTimeout(failsafeTimer);
+                }
+            }
+        };
+
+        if (isLoading) {
+            initIdentity();
         }
+
+        return () => { isMounted = false; clearTimeout(failsafeTimer); };
     }, [searchParams]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, isLoading }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, isProfileComplete, isLoading }}>
             {children}
         </IdentityContext.Provider>
     );

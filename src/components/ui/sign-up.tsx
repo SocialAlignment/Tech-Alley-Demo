@@ -78,7 +78,7 @@ export function TextLoop({ children, className, interval = 2, transition = { dur
 interface BlurFadeProps { children: React.ReactNode; className?: string; variant?: { hidden: { y: number }; visible: { y: number } }; duration?: number; delay?: number; yOffset?: number; inView?: boolean; inViewMargin?: string; blur?: string; }
 function BlurFade({ children, className, variant, duration = 0.4, delay = 0, yOffset = 6, inView = true, inViewMargin = "-50px", blur = "6px" }: BlurFadeProps) {
     const ref = useRef(null);
-    const inViewResult = useInView(ref, { once: true, margin: inViewMargin });
+    const inViewResult = useInView(ref, { once: true, margin: inViewMargin as any });
     const isInView = !inView || inViewResult;
     const defaultVariants: Variants = {
         hidden: { y: yOffset, opacity: 0, filter: `blur(${blur})` },
@@ -162,6 +162,8 @@ const DefaultLogo = () => (<div className="bg-primary text-primary-foreground ro
 interface AuthComponentProps {
     logo?: React.ReactNode;
     heading?: React.ReactNode;
+    brandName?: string;
+    onGoogleSignIn?: () => void;
 }
 
 export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", heading = "Join Tech Alley", onGoogleSignIn }: AuthComponentProps) => {
@@ -283,7 +285,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", 
     );
 
     return (
-        <div className="bg-background min-h-screen w-screen flex flex-col">
+        <div className="bg-black min-h-screen w-screen flex flex-col">
             <style>{`
             input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none !important; } input[type="password"]::-webkit-credentials-auto-fill-button, input[type="password"]::-webkit-strong-password-auto-fill-button { display: none !important; } input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active { -webkit-box-shadow: 0 0 0 30px transparent inset !important; -webkit-text-fill-color: var(--foreground) !important; background-color: transparent !important; background-clip: content-box !important; transition: background-color 5000s ease-in-out 0s !important; color: var(--foreground) !important; caret-color: var(--foreground) !important; } input:autofill { background-color: transparent !important; background-clip: content-box !important; -webkit-text-fill-color: var(--foreground) !important; color: var(--foreground) !important; } input:-internal-autofill-selected { background-color: transparent !important; background-image: none !important; color: var(--foreground) !important; -webkit-text-fill-color: var(--foreground) !important; } input:-webkit-autofill::first-line { color: var(--foreground) !important; -webkit-text-fill-color: var(--foreground) !important; }
             @property --angle-1 { syntax: "<angle>"; inherits: false; initial-value: -75deg; } @property --angle-2 { syntax: "<angle>"; inherits: false; initial-value: -45deg; }
@@ -305,20 +307,39 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", 
             </div>
 
             <div className={cn("flex w-full flex-1 h-full items-center justify-center bg-card", "relative overflow-hidden")}>
-                <div className="absolute inset-0 z-0"><GradientBackground /></div>
-                <fieldset disabled={modalStatus !== 'closed'} className="relative z-10 flex flex-col items-center gap-8 w-[280px] mx-auto p-4">
+                <div className="absolute inset-0 z-0 bg-black"></div>
+                <fieldset disabled={modalStatus !== 'closed'} className="relative z-10 flex flex-col items-center gap-8 w-full max-w-md mx-auto p-4">
                     <AnimatePresence mode="wait">
                         {authStep === "email" && <motion.div key="email-content" initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className="w-full flex flex-col items-center gap-4">
                             <BlurFade delay={0.25 * 1} className="w-full"><div className="text-center">{typeof heading === 'string' ? <p className="font-serif font-light text-4xl sm:text-5xl md:text-6xl tracking-tight text-foreground whitespace-nowrap">{heading}</p> : heading}</div></BlurFade>
-                            <BlurFade delay={0.25 * 2}><p className="text-sm font-medium text-muted-foreground">Continue with</p></BlurFade>
+                            <BlurFade delay={0.25 * 2}><p className="text-sm font-medium text-white/60">Continue with</p></BlurFade>
                             <BlurFade delay={0.25 * 3}><div className="flex items-center justify-center gap-4 w-full">
-                                <GlassButton onClick={onGoogleSignIn} contentClassName="flex items-center justify-center gap-2" size="sm"><GoogleIcon /><span className="font-semibold text-foreground">Google</span></GlassButton>
+                                <GlassButton onClick={onGoogleSignIn} contentClassName="flex items-center justify-center gap-2" size="sm"><GoogleIcon /><span className="font-semibold text-white">Google</span></GlassButton>
                                 {/* Removed GitHub as per requirements, just Google needed */}
                             </div></BlurFade>
                         </motion.div>}
                     </AnimatePresence>
                 </fieldset>
             </div>
+
+            {/* Centered Footer with Watermark - Updated Size/Spacing to match Welcome Page */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 1 }}
+                className="absolute bottom-8 left-0 w-full flex flex-col items-center justify-center gap-0 z-20 pointer-events-none leading-none"
+            >
+                <div className="flex flex-row items-center justify-center gap-0 opacity-90 hover:opacity-100 transition-opacity pointer-events-auto select-none">
+                    <span className="text-sm uppercase tracking-[0.2em] text-white font-semibold">Powered By</span>
+                    <img
+                        src="/social-alignment-icon.png"
+                        alt="Social Alignment"
+                        className="h-28 w-auto object-contain mix-blend-screen"
+                    />
+                </div>
+                {/* Negative margin to pull text up into the logo's whitespace */}
+                <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium -mt-6">Tech Alley Henderson • Community Hub</p>
+            </motion.div>
         </div>
     );
 };

@@ -48,7 +48,7 @@ export async function POST(request: Request) {
                 success: true,
                 leadId: existing.results[0].id,
                 message: 'Lead found',
-                redirect: '/hub/hello-world'
+                redirect: '/hub'
             });
         }
 
@@ -93,9 +93,9 @@ export async function POST(request: Request) {
                             },
                         ],
                     },
-                    'First Time Attendee': {
-                        checkbox: isFirstTime || false,
-                    },
+                    // 'First Time?': {
+                    //     checkbox: isFirstTime || false,
+                    // },
                     // Assuming 'Goal for Tonight' exists as a Rich Text property in Notion
                     'Goal for Tonight': {
                         rich_text: [
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
 
         const newLead = await createRes.json() as { id: string };
 
-        return NextResponse.json({ success: true, leadId: newLead.id, redirect: '/hub/hello-world' });
+        return NextResponse.json({ success: true, leadId: newLead.id, redirect: '/hub' });
     } catch (error) {
         console.error('Notion Submission Error:', error);
         return NextResponse.json(

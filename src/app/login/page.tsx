@@ -16,15 +16,15 @@ export default function LoginPage() {
       brandName=""
       logo={null}
       heading={
-        <div className="flex flex-col items-center mb-4">
+        <div className="flex flex-col items-center mb-4 w-full">
           <img
-            src="/tech-alley-logo.png"
+            src="/tech-alley-banner.jpg"
             alt="Tech Alley Henderson"
-            className="w-64 h-auto object-contain"
+            className="w-full h-auto object-contain"
           />
         </div>
       }
-      onGoogleSignIn={() => signIn("google", { callbackUrl: "http://localhost:3007/auth/verify" })}
+      onGoogleSignIn={() => signIn("google", { callbackUrl: "/auth/verify" })}
     />
   );
 }

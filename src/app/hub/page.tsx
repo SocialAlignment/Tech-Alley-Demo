@@ -1,9 +1,17 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Sparkles, Mic2, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Calendar, Mic2, Gift, Sparkles, CheckSquare, MessageSquare, X,
+    Loader2, Send, ArrowRight
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useIdentity } from '@/context/IdentityContext';
 import SpeakerCard from '@/components/SpeakerCard';
 import RaffleWheel from '@/components/RaffleWheel';
+
+// --- DATA CONSTANTS ---
 
 const SPEAKERS = [
     {
@@ -29,53 +37,186 @@ const SPEAKERS = [
     }
 ];
 
+const AGENDA_ITEMS = [
+    { time: '6:00 PM', event: 'Networking & Check-In', desc: 'Grab a drink, meet the community.' },
+    { time: '6:30 PM', event: 'Kickoff & "State of the Alley"', desc: 'Welcome from Lorraine & The Team.' },
+    { time: '7:00 PM', event: 'Startup Spotlight: Vegas AI', desc: 'Demo from local innovators.' },
+    { time: '7:30 PM', event: 'Guest Speaker: The Future of work', desc: 'Deep dive into AI workflows.' },
+    { time: '8:15 PM', event: 'Raffle & Closing Remarks', desc: 'Win the AI Commercial!' },
+];
+
+// --- ANIMATION VARIANTS ---
+
+const itemParams = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+};
+
 export default function HubPage() {
+    const router = useRouter();
+    const { leadId, userName } = useIdentity();
+    const displayName = userName ? userName.split(' ')[0] : 'Innovator';
+
+    // --- STATE FOR ASK MODAL ---
+    const [isAskModalOpen, setIsAskModalOpen] = useState(false);
+    const [question, setQuestion] = useState('');
+    const [sending, setSending] = useState(false);
+    const [agendaItems, setAgendaItems] = useState(AGENDA_ITEMS);
+
+    useEffect(() => {
+        const fetchAgenda = async () => {
+            try {
+                const res = await fetch('/api/agenda');
+                const data = await res.json();
+                if (data.success && data.agenda && data.agenda.length > 0) {
+                    setAgendaItems(data.agenda);
+                }
+            } catch (e) {
+                console.error("Failed to fetch agenda", e);
+            }
+        };
+        fetchAgenda();
+    }, []);
+
+    const navigateTo = (path: string) => {
+        router.push(leadId ? `${path}?id=${leadId}` : path);
+    };
+
+    const handleAskSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSending(true);
+
+        try {
+            const res = await fetch('/api/update-lead', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    leadId,
+                    updates: {
+                        eventFeedback: `ASKED QUESTION: ${question}`
+                    }
+                })
+            });
+
+            if (res.ok) {
+                setTimeout(() => {
+                    setSending(false);
+                    setIsAskModalOpen(false);
+                    setQuestion('');
+                    alert("Question sent to the stage!");
+                }, 800);
+            }
+        } catch (err) {
+            console.error(err);
+            setSending(false);
+        }
+    };
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24">
+        <div className="flex flex-col xl:flex-row gap-8 pb-24">
+
+            {/* --- ASK MODAL --- */}
+            <AnimatePresence>
+                {isAskModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl border border-blue-100"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-slate-900">Ask Lorraine</h3>
+                                <button onClick={() => setIsAskModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleAskSubmit} className="space-y-4">
+                                <textarea
+                                    autoFocus
+                                    value={question}
+                                    onChange={(e) => setQuestion(e.target.value)}
+                                    placeholder="Type your question here..."
+                                    className="w-full h-32 p-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-200 text-slate-700 resize-none font-medium placeholder:text-slate-400"
+                                    required
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={sending}
+                                    className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {sending ? <Loader2 className="animate-spin" /> : <Send size={18} />}
+                                    {sending ? 'Sending...' : 'Send to Stage'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
 
             {/* --- CENTER COLUMN (Main Content) --- */}
-            <div className="lg:col-span-8 space-y-8">
+            <div className="flex-1 space-y-8 min-w-0">
 
-                {/* Header & Search */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Innovation Henderson Alignment Hub</h1>
-                        <p className="text-slate-500">Connect, Learn, and Win.</p>
-                    </div>
-                    {/* Search Bar */}
-                    <div className="relative w-full md:w-96 group">
-                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-600 transition-colors">
-                            <Sparkles size={18} />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Find speakers or topics..."
-                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300 transition-all shadow-sm text-slate-700 placeholder:text-slate-400"
-                        />
-                    </div>
-                </div>
 
-                {/* Hero / Welcome Section */}
-                <motion.section
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="gradient-card p-8 md:p-10 rounded-[2rem] relative overflow-hidden"
+
+                {/* 2. PERSONAL HERO + ACTIONS (White Design) */}
+                <motion.div
+                    variants={itemParams}
+                    initial="hidden"
+                    animate="show"
+                    className="relative bg-white rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-[0_20px_50px_-12px_rgba(200,200,255,0.3)] border border-slate-50"
                 >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="px-3 py-1 rounded-full bg-white/30 text-xs font-mono text-purple-900 border border-white/20 font-bold">LIVE EVENT</span>
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Welcome, Innovator.</h2>
-                        <p className="text-slate-700 max-w-2xl text-lg">
-                            You are now connected to the Tech Alley Henderson digital experience.
-                            Use this hub to access tonight's resources, connect with speakers, and win prizes.
-                        </p>
-                    </div>
-                </motion.section>
+                    {/* Decorative Blobs */}
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-yellow-100/50 to-blue-100/50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none mix-blend-multiply"></div>
 
-                {/* Speakers Section */}
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                        <div className="flex-1">
+                            <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
+                                Hello, <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">{displayName}.</span>
+                            </h2>
+                            <div className="text-slate-500 text-lg mb-8 max-w-md font-medium leading-relaxed">
+                                <p className="mb-2">You are now connected to the Tech Alley Henderson interactive hub. Use this throughout the event to access:</p>
+                                <ul className="list-disc list-inside space-y-1 pl-2 marker:text-blue-500">
+                                    <li>Tonight's Agenda</li>
+                                    <li>Announcements</li>
+                                    <li>Speaker Resources</li>
+                                    <li>New Ways to Network</li>
+                                    <li>And More</li>
+                                </ul>
+                            </div>
+
+                            <div className="flex flex-wrap gap-4">
+                                <button onClick={() => navigateTo('/hub/surveys/business-mri')} className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_15px_35px_-10px_rgba(37,99,235,0.6)] transition-all transform hover:-translate-y-0.5">
+                                    Start Here
+                                </button>
+                                <button onClick={() => setIsAskModalOpen(true)} className="px-6 py-3.5 bg-white text-slate-700 font-bold rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:bg-slate-50 hover:shadow-md transition-all flex items-center gap-2 group">
+                                    <MessageSquare size={18} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                                    Ask Lorraine
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Illustration */}
+                        <div className="w-full md:w-5/12 flex justify-center relative">
+                            <motion.div
+                                animate={{ y: [0, -15, 0] }}
+                                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                                className="relative z-10"
+                            >
+                                <img
+                                    src="/hero-whimsical.png"
+                                    alt="Innovation Hub"
+                                    className="w-full max-w-[320px] object-contain drop-shadow-2xl"
+                                />
+                            </motion.div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 3. SPEAKERS SECTION (Purple Design) */}
                 <section className="space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <h3 className="text-xl font-bold text-slate-900">Tonight's Speakers</h3>
@@ -95,7 +236,26 @@ export default function HubPage() {
                     </div>
                 </section>
 
-                {/* Raffle Section */}
+                {/* 4. AGENDA (White Design) */}
+                <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="font-bold text-xl text-slate-800">Tonight's Agenda</h3>
+                        <span className="p-2 bg-slate-50 rounded-full text-slate-400"><Calendar size={20} /></span>
+                    </div>
+                    <div className="space-y-6">
+                        {agendaItems.map((item, i) => (
+                            <div key={i} className="flex gap-6 items-start group">
+                                <span className="text-sm font-bold text-slate-400 w-16 pt-1">{item.time}</span>
+                                <div className="flex-1 p-4 bg-slate-50 rounded-2xl group-hover:bg-blue-50 transition-colors border border-slate-100 group-hover:border-blue-100">
+                                    <h4 className="font-bold text-slate-800 group-hover:text-blue-700 mb-1">{item.event}</h4>
+                                    <p className="text-sm text-slate-500">{item.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 5. RAFFLE SECTION (Purple Design) */}
                 <motion.section
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -113,55 +273,98 @@ export default function HubPage() {
                         <RaffleWheel />
                     </div>
                 </motion.section>
+
             </div>
 
-            {/* --- RIGHT COLUMN (Widgets) --- */}
-            <div className="lg:col-span-4 space-y-6">
 
-                {/* User Profile Widget */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-lg">
-                            TA
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800">My Profile</h3>
-                            <p className="text-xs text-slate-400">Manage your networking</p>
-                        </div>
-                    </div>
-                    <div className="space-y-3">
-                        <button className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-slate-600 text-sm font-medium">
-                            <span>Track Activity</span>
-                            <span className="bg-white px-2 py-1 rounded-md text-xs shadow-sm text-slate-400">Settings</span>
-                        </button>
-                    </div>
-                </motion.div>
+            {/* --- RIGHT COLUMN (Sidebar from White Design) --- */}
+            <div className="w-full xl:w-[350px] space-y-6 shrink-0">
 
-                {/* Quick Access Widgets */}
                 <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-2">Quick Access</h3>
+                    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest pl-4">Interact & Win</h3>
 
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-gradient-to-br from-[#6366F1] to-[#4F46E5] rounded-[2rem] p-6 text-white cursor-pointer hover:shadow-lg hover:shadow-indigo-200 transition-all group"
-                    >
-                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                            <Mic2 size={20} />
-                        </div>
-                        <h4 className="font-bold text-lg mb-1">Feedback</h4>
-                        <p className="text-indigo-100 text-xs opacity-80">Help us improve</p>
-                    </motion.div>
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* 1. Enter Raffle (Pink Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/giveaway')}
+                            className="bg-gradient-to-r from-pink-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-pink-100 hover:border-pink-200 hover:shadow-[0_10px_20px_-5px_rgba(236,72,153,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-pink-50 shadow-sm flex items-center justify-center text-pink-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                <Gift size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Enter Raffle</h4>
+                                <p className="text-pink-400 text-xs font-medium">Win the AI Commercial</p>
+                            </div>
+                        </motion.div>
 
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-gradient-to-br from-[#A855F7] to-[#9333EA] rounded-[2rem] p-6 text-white cursor-pointer hover:shadow-lg hover:shadow-purple-200 transition-all group"
-                    >
-                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                            <ArrowRight size={20} />
-                        </div>
-                        <h4 className="font-bold text-lg mb-1">Companion App</h4>
-                        <p className="text-purple-100 text-xs opacity-80">Checklist & Progress</p>
-                    </motion.div>
+                        {/* 2. Business MRI (Cyan Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/surveys/business-mri')}
+                            className="bg-gradient-to-r from-cyan-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-cyan-100 hover:border-cyan-200 hover:shadow-[0_10px_20px_-5px_rgba(6,182,212,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-cyan-50 shadow-sm flex items-center justify-center text-cyan-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                                <Sparkles size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Business MRI</h4>
+                                <p className="text-cyan-400 text-xs font-medium">Get your 2026 Diagnosis</p>
+                            </div>
+                        </motion.div>
+
+                        {/* 3. Feedback (Purple Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/surveys')}
+                            className="bg-gradient-to-r from-indigo-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-indigo-100 hover:border-indigo-200 hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-indigo-50 shadow-sm flex items-center justify-center text-indigo-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                <MessageSquare size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Feedback</h4>
+                                <p className="text-indigo-400 text-xs font-medium">Help us improve</p>
+                            </div>
+                        </motion.div>
+
+                        {/* 4. Speak Here (Blue Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/apply-to-speak')}
+                            className="bg-gradient-to-r from-blue-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-blue-100 hover:border-blue-200 hover:shadow-[0_10px_20px_-5px_rgba(59,130,246,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-blue-50 shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                                <Mic2 size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Speak Here</h4>
+                                <p className="text-blue-400 text-xs font-medium">Apply for the stage</p>
+                            </div>
+                        </motion.div>
+
+                        {/* 5. My Checklist (Emerald Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/checklist')}
+                            className="bg-gradient-to-r from-emerald-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-emerald-100 hover:border-emerald-200 hover:shadow-[0_10px_20px_-5px_rgba(16,185,129,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-50 shadow-sm flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                                <CheckSquare size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">My Checklist</h4>
+                                <p className="text-emerald-400 text-xs font-medium">Your Companion Guide</p>
+                            </div>
+                        </motion.div>
+
+                    </div>
                 </div>
 
             </div>

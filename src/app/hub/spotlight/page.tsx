@@ -110,7 +110,7 @@ export default function SpotlightPage() {
                                     <Button variant="primary" className="w-full text-sm mb-2">
                                         Visit Website
                                     </Button>
-                                    <Button variant="outline" className="w-full text-sm">
+                                    <Button variant="glass" className="w-full text-sm">
                                         Follow on LinkedIn
                                     </Button>
                                 </div>

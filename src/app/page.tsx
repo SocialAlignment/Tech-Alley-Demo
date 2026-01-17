@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TubesBackground } from '@/components/ui/neon-flow';
 
@@ -10,9 +10,11 @@ export default function WelcomePage() {
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-slate-900">
-      {/* Neon Flow Background */}
-      <div className="absolute inset-0 z-0">
-        <TubesBackground className="bg-black" />
+      {/* Background - Neon Flow Restored */}
+      <div className="absolute inset-0 z-0 bg-black">
+        <TubesBackground className="bg-transparent" />
+        {/* Dark overlay for better text contrast/safety if tubes fail */}
+        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
       </div>
 
       {/* Content Overlay */}
@@ -53,27 +55,25 @@ export default function WelcomePage() {
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
         </motion.button>
 
-        {/* Footer Note */}
+
+        {/* Centered Footer with Watermark - Updated Size/Spacing */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5, duration: 1 }}
-          className="absolute bottom-10 text-white/40 text-sm uppercase tracking-[0.25em] font-light drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
+          className="absolute bottom-8 left-0 w-full flex flex-col items-center justify-center gap-0 z-20 pointer-events-none leading-none"
         >
-          Tech Alley Henderson • Community Hub
+          <div className="flex flex-row items-center justify-center gap-0 opacity-90 hover:opacity-100 transition-opacity pointer-events-auto select-none">
+            <span className="text-sm uppercase tracking-[0.2em] text-white font-semibold">Powered By</span>
+            <img
+              src="/social-alignment-icon.png"
+              alt="Social Alignment"
+              className="h-28 w-auto object-contain mix-blend-screen"
+            />
+          </div>
+          {/* Negative margin to pull text up into the logo's whitespace */}
+          <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium -mt-6">Tech Alley Henderson • Community Hub</p>
         </motion.div>
-
-
-        {/* Footer Branding */}
-        <div className="absolute bottom-6 right-6 flex items-center gap-4 z-20 pointer-events-none select-none opacity-90 backdrop-blur-sm bg-black/40 p-4 pr-6 rounded-2xl border border-white/10">
-          <span className="text-white/50 text-xs font-light tracking-[0.2em] uppercase">Powered by</span>
-
-          <img
-            src="/social-alignment-icon.png"
-            alt="Social Alignment Logo"
-            className="h-24 w-auto object-contain opacity-100 drop-shadow-[0_0_20px_rgba(59,130,246,0.8)]"
-          />
-        </div>
 
       </div>
     </main>

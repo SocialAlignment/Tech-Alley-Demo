@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
             const leadId = existing.results[0].id;
             return NextResponse.json({
                 success: true,
-                redirect: `/hub/hello-world?id=${leadId}`,
+                redirect: `/hub?id=${leadId}`,
                 isNewUser: false
             });
         }
@@ -71,8 +71,14 @@ export async function GET(request: NextRequest) {
                     'Lead Source': {
                         select: { name: 'Tech Alley Henderson' },
                     },
-                    'First Time Attendee': {
+                    'Google Oauth': {
                         checkbox: true,
+                    },
+                    'Lead Status': {
+                        status: { name: 'Engaged' },
+                    },
+                    'Registered Events': {
+                        relation: [{ id: '2d56b72f-a765-80b9-bf33-cee0e586594c' }]
                     },
                 },
             }),
