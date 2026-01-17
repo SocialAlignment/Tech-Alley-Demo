@@ -20,7 +20,7 @@ export default function VerifyAuth() {
                     setStatus('Redirecting...');
                     router.push(data.redirect);
                 } else {
-                    router.push('/hub'); // Fallback
+                    router.push('/hub/start'); // Fallback: Start Here First
                 }
             } catch (error) {
                 console.error('Auth Verify Error:', error);

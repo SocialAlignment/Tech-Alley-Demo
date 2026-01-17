@@ -13,8 +13,8 @@ const NAV_SECTIONS = [
     {
         title: "", // Main Section (No Header)
         items: [
-            { label: 'Home', icon: Home, path: '/hub' },
             { label: 'Start Here', icon: Zap, path: '/hub/start' },
+            { label: 'Home', icon: Home, path: '/hub' },
         ]
     },
     {
