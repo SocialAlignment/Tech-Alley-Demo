@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Mic2, Gift, ClipboardList, Share2, Menu, X, CheckSquare, Star, Brain, MessageSquare, BookOpen, Users } from 'lucide-react';
+import { Home, Mic2, Gift, ClipboardList, Share2, Menu, X, CheckSquare, Star, Brain, MessageSquare, BookOpen, Users, Zap } from 'lucide-react';
 import { FlipText } from '@/components/ui/flip-link';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -14,16 +14,18 @@ const NAV_SECTIONS = [
         title: "", // Main Section (No Header)
         items: [
             { label: 'Home', icon: Home, path: '/hub' },
+            { label: 'Start Here', icon: Zap, path: '/hub/start' },
         ]
     },
     {
-        title: "INTERACT & WIN",
+        title: "Tonight's Event",
         items: [
             { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
             { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
             { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
             { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
             { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
+            { label: 'Networking Alignment', icon: Users, path: '/hub/networking' },
             { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
             { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
             { label: 'Companion Checklist', icon: CheckSquare, path: '/hub/checklist' },
