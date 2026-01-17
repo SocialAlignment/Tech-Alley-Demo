@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.971.0",
     "@aws-sdk/s3-request-presigner": "^3.971.0",
+    "@mendable/firecrawl-js": "^4.11.1",
     "@notionhq/client": "^5.7.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-label": "^2.1.8",
