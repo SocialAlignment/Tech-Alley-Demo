@@ -1,84 +1,67 @@
-"use client";
-
 import React from "react";
-import { Rocket, Users, Mic, Gift, MessageSquare, Target } from "lucide-react";
+import Image from "next/image";
 
-export default function AboutFeatures() {
+const features = [
+    {
+        title: "Startup Spotlight",
+        description: "Learn more about this month's featured Startup.",
+        icon: "/features/startup.png",
+    },
+    {
+        title: "Next Level Networking",
+        description: "Complete your social profile to experience the Tech Alley Henderson community like never before.",
+        icon: "/features/networking.png",
+    },
+    {
+        title: "Guest Speaker Resources",
+        description: "Learn more about tonight's speakers, download their presentations and get resources exclusive to tonight's event.",
+        icon: "/features/speakers.png",
+    },
+    {
+        title: "Giveaways",
+        description: "Be sure to enter the Hub Raffle each month to earn a chance to win sponsored prizes. (Better odds than the slots)",
+        icon: "/features/giveaways.png",
+    },
+    {
+        title: "Let your voices be heard",
+        description: "Interact with tonight's event by asking questions and/or leaving feedback related to tonight's event.",
+        icon: "/features/voice.png",
+    },
+    {
+        title: "Interactive Mission Hub",
+        description: "Make tonight count by completing live micro-missions in the Hub—unlock content, earn perks, and enrich connections as you move through the event.",
+        icon: "/features/mission.png",
+    },
+];
+
+export function AboutFeatures() {
     return (
-        <section className="py-16">
-            <h1 className="text-3xl font-semibold text-center mx-auto text-slate-800">About the Hub</h1>
-            <p className="text-sm text-slate-500 text-center mt-2 max-w-lg mx-auto">
-                A visual collection of our most recent works - each piece crafted with intention, emotion and style.
-            </p>
-            <div className="relative max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-20 px-8 md:px-0 pt-16">
-                <div className="size-[520px] -top-80 left-1/2 -translate-x-1/2 rounded-full absolute blur-[300px] -z-10 bg-blue-100"></div>
-
-                {/* Feature 1: Startup Spotlight */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <Rocket size={20} />
+        <div className="w-full max-w-7xl mx-auto px-4 py-20 pb-32">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {features.map((feature, index) => (
+                    <div
+                        key={index}
+                        className="flex flex-col items-center text-center p-6 rounded-2xl bg-white/50 border border-blue-100 hover:border-blue-300 transition-colors shadow-sm hover:shadow-md h-full"
+                    >
+                        <div className="h-48 w-48 mb-6 bg-white rounded-2xl flex items-center justify-center p-4 shadow-sm border border-slate-100">
+                            <Image
+                                src={feature.icon}
+                                alt={feature.title}
+                                width={192}
+                                height={192}
+                                className={`w-full h-full object-contain ${index === 4 ? "scale-150" : ""}`}
+                                priority={index < 3}
+                            />
+                        </div>
+                        {/* <h3 className="text-xl font-bold text-slate-900 mb-3 w-full">
+                            {feature.title}
+                        </h3> */}
+                        <p className="text-slate-500 leading-relaxed max-w-sm">
+                            {feature.description}
+                        </p>
                     </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Startup Spotlight</h3>
-                        <p className="text-sm text-slate-500">Learn more about this month's featured Startup.</p>
-                    </div>
-                </div>
-
-                {/* Feature 2: Next Level Networking */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <Users size={20} />
-                    </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Next Level Networking</h3>
-                        <p className="text-sm text-slate-500">Complete your social profile to experience the Tech Alley Henderson community like never before.</p>
-                    </div>
-                </div>
-
-                {/* Feature 3: Guest Speaker Resources */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <Mic size={20} />
-                    </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Guest Speaker Resources</h3>
-                        <p className="text-sm text-slate-500">Learn more about tonight's speakers, download their presentations and get resources exclusive to tonight's event.</p>
-                    </div>
-                </div>
-
-                {/* Feature 4: Giveaways */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <Gift size={20} />
-                    </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Giveaways</h3>
-                        <p className="text-sm text-slate-500">Be sure to enter the Hub Raffle each month to earn a chance to win sponsored prizes. (Better odds than the slots)</p>
-                    </div>
-                </div>
-
-                {/* Feature 5: Let your voices be heard */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <MessageSquare size={20} />
-                    </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Let your voices be heard</h3>
-                        <p className="text-sm text-slate-500">Interact with tonight's event by asking questions and/or leaving feedback related to tonight's event.</p>
-                    </div>
-                </div>
-
-                {/* Feature 6: Interactive Mission Hub */}
-                <div>
-                    <div className="size-10 p-2 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600">
-                        <Target size={20} />
-                    </div>
-                    <div className="mt-5 space-y-2">
-                        <h3 className="text-base font-medium text-slate-600">Interactive Mission Hub</h3>
-                        <p className="text-sm text-slate-500">Make tonight count by completing live micro‑missions in the Hub—unlock content, earn perks, and enrich connections as you move through the event.</p>
-                    </div>
-                </div>
+                ))}
             </div>
-        </section>
+        </div>
     );
-};
+}

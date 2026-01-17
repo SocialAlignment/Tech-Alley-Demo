@@ -10,7 +10,7 @@ async function findTrueDB() {
 
     try {
         const response = await notion.search({
-            query: 'Doors Open',
+            query: 'Social Alignment Workshop Series',
             sort: {
                 direction: 'descending',
                 timestamp: 'last_edited_time'

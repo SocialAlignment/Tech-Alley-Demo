@@ -1,6 +1,6 @@
 "use client";
 
-import AboutFeatures from "@/components/ui/about-features";
+import { AboutFeatures } from "@/components/ui/about-features";
 import AboutHero from "@/components/ui/about-hero";
 
 export default function StartHerePage() {
