@@ -9,7 +9,9 @@ interface IdentityContextType {
     email: string | null;
     avatar: string | null;
     isProfileComplete: boolean;
+    missionProgress: string | null;
     isLoading: boolean;
+    updateMissionProgress: (progress: string) => void;
 }
 
 const IdentityContext = createContext<IdentityContextType>({
@@ -18,7 +20,9 @@ const IdentityContext = createContext<IdentityContextType>({
     email: null,
     avatar: null,
     isProfileComplete: false,
+    missionProgress: null,
     isLoading: true,
+    updateMissionProgress: () => { },
 });
 
 export function IdentityProvider({ children }: { children: ReactNode }) {
@@ -27,9 +31,14 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     const [email, setEmail] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<string | null>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
+    const [missionProgress, setMissionProgress] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
     const router = useRouter();
+
+    const updateMissionProgress = (progress: string) => {
+        setMissionProgress(progress);
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -79,6 +88,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                             setEmail(data.data.email);
                             setAvatar(data.data.avatar);
                             setIsProfileComplete(data.data.isProfileComplete);
+                            setMissionProgress(data.data.missionProgress);
                         } else {
                             console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
                             // Invalid ID? Maybe clear it so we don't loop?
@@ -108,7 +118,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     }, [searchParams]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, email, avatar, isProfileComplete, isLoading }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, isProfileComplete, missionProgress, isLoading, updateMissionProgress }}>
             {children}
         </IdentityContext.Provider>
     );

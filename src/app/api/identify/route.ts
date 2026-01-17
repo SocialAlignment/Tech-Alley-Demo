@@ -64,9 +64,20 @@ export async function POST(request: Request) {
             "Phone": "Phone Call"
         };
 
-        if (contactDetails.commPrefs.length > 0) {
-            contactDetails.commPrefs = contactDetails.commPrefs.map(p => commReverseMap[p] || p);
-        }
+
+
+        // Extract Mission Progress
+        // 'MissionData' property now holds the IDs string (created to support Status Ring visualization on 'MissionProgress')
+        // Fallback to 'MissionProgress' TEXT if 'MissionData' is empty (migration support), 
+        // but 'MissionProgress' is now primarily a Number.
+        // We will read 'MissionData' first.
+        const missionData = props['MissionData']?.rich_text?.[0]?.plain_text || '';
+
+        // If missionData is empty, check if we have any legacy data in MissionProgress (if it was text)
+        // usage: const legacy = props['MissionProgress']?.rich_text?.[0]?.plain_text; 
+        // But since we just changed types, let's stick to MissionData.
+
+        const missionProgress = missionData;
 
         console.log("Identify: Returning Contact Details:", JSON.stringify(contactDetails, null, 2));
 
@@ -79,6 +90,7 @@ export async function POST(request: Request) {
                 email,
                 avatar,
                 isProfileComplete,
+                missionProgress, // This is the string of IDs
                 contactDetails
             }
         });
