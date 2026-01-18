@@ -3,18 +3,18 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { TubesBackground } from '@/components/ui/neon-flow';
+import { WarpBackground } from '@/components/ui/warp-background';
 
 export default function WelcomePage() {
   const router = useRouter();
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-slate-900">
-      {/* Background - Neon Flow Restored */}
-      <div className="absolute inset-0 z-0 bg-black">
-        <TubesBackground className="bg-transparent" />
-        {/* Dark overlay for better text contrast/safety if tubes fail */}
-        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+      {/* Background - Neon Portal Warp Grid (Consistent with Photo Booth) */}
+      <div className="absolute inset-0 z-0">
+        <WarpBackground className="w-full h-full" gridColor="rgba(168, 85, 247, 0.6)" />
+        {/* Deep dark overlay for text contrast */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       </div>
 
       {/* Content Overlay */}

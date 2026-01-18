@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // 3. Define component props for reusability
-interface OnboardingFormProps extends React.HTMLAttributes<HTMLDivElement> {
+interface OnboardingFormProps extends Pick<React.HTMLAttributes<HTMLDivElement>, "className"> {
     imageSrc: string;
     avatarSrc?: string;
     avatarFallback: string;

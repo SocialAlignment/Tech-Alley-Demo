@@ -211,7 +211,7 @@ export default function EnrichmentForm({ leadId }: { leadId: string }) {
             if (!res.ok) throw new Error('Failed');
 
             // Force hard reload to ensure fresh dashboard state
-            window.location.href = `/hub?id=${leadId}`;
+            window.location.href = `/hub/start?id=${leadId}`;
         } catch (error) {
             console.error(error);
             setIsSubmitting(false);

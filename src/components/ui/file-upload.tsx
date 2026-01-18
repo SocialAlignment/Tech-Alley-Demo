@@ -1,9 +1,15 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FileSpreadsheet, Upload, X, CheckCircle2, Loader2, Image as ImageIcon } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useIdentity } from "@/context/IdentityContext";
+import RetroGrid from "@/components/ui/retro-grid";
+import { BorderBeam } from "@/components/ui/border-beam";
+import ShimmerButton from "@/components/ui/shimmer-button";
 
 export default function FileUpload05() {
     const [file, setFile] = useState<File | null>(null);
@@ -101,6 +107,7 @@ export default function FileUpload05() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        s3Key: data.key,
                         caption: caption,
                         userId: userName ? `${userName} (${leadId || 'No ID'})` : undefined,
                         instagramHandle: instagram
@@ -131,74 +138,103 @@ export default function FileUpload05() {
         <div className="sm:mx-auto sm:max-w-lg flex flex-col items-center justify-center p-10 w-full max-w-lg">
 
             {success ? (
-                <div className="text-center space-y-4 animate-in fade-in zoom-in duration-300">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="w-10 h-10 text-green-600" />
+                <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 p-8 text-center shadow-2xl backdrop-blur-xl">
+                    {/* Background Grid - Made clearer */}
+                    <div className="absolute inset-0 z-0 opacity-60">
+                        <RetroGrid angle={65} />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-800">Upload Complete!</h3>
-                    <p className="text-slate-500">Your memory has been shared with the galaxy.</p>
-                    <Button
-                        onClick={() => { setSuccess(false); setFile(null); setProgress(0); }}
-                        className="mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
-                    >
-                        Upload Another
-                    </Button>
+
+                    {/* Glowing Border effect - Adjusted color */}
+                    <BorderBeam size={300} duration={10} delay={5} colorFrom="#818cf8" colorTo="#c084fc" />
+
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-500/20 shadow-[0_0_40px_-5px_theme(colors.indigo.500)] ring-1 ring-indigo-500/50">
+                            <CheckCircle2 className="h-10 w-10 text-indigo-400" />
+                        </div>
+
+                        <h3 className="mb-2 text-3xl font-bold tracking-tight text-white drop-shadow-lg">
+                            Upload Complete
+                        </h3>
+                        <p className="mb-8 max-w-xs text-sm text-slate-300">
+                            Your memory has been captured and shared with the galaxy.
+                        </p>
+
+                        <div className="flex w-full flex-col gap-4">
+                            <Link href="/hub/photo-booth/gallery" className="w-full">
+                                <ShimmerButton className="w-full text-lg font-medium" shimmerColor="#c084fc" background="rgba(79, 70, 229, 0.4)">
+                                    <span className="flex items-center gap-2">
+                                        View in Gallery
+                                    </span>
+                                </ShimmerButton>
+                            </Link>
+
+                            <Button
+                                onClick={() => { setSuccess(false); setFile(null); setProgress(0); }}
+                                variant="ghost"
+                                className="w-full text-slate-400 hover:bg-white/10 hover:text-white"
+                            >
+                                Upload Another
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <div className="w-full">
-                    <h3 className="text-lg font-semibold text-foreground text-center mb-4">File Upload</h3>
-
+                    {/* Upload State */}
                     {!file ? (
                         <div
                             className={cn(
-                                "mt-4 flex justify-center space-x-4 rounded-xl border-2 border-dashed px-6 py-10 transition-colors",
-                                error ? "border-red-300 bg-red-50" : "border-slate-300 hover:border-indigo-400 hover:bg-slate-50"
+                                "group relative mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 transition-all duration-300",
+                                "bg-slate-950/30 backdrop-blur-md", // Glass effect
+                                error
+                                    ? "border-red-500/50 bg-red-500/10"
+                                    : "border-slate-700 hover:border-indigo-500 hover:bg-slate-900/50"
                             )}
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}
                         >
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-800/50 text-slate-300 ring-1 ring-white/10 transition-transform group-hover:scale-110">
+                                <Upload className="h-8 w-8" aria-hidden={true} />
+                            </div>
+
                             <div className="text-center">
-                                <div className="mx-auto h-12 w-12 text-slate-300 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                                    <Upload className="h-6 w-6 text-indigo-500" aria-hidden={true} />
-                                </div>
-                                <div className="mt-4 flex text-sm leading-6 text-foreground justify-center">
-                                    <Label
-                                        htmlFor="file-upload"
-                                        className="relative cursor-pointer rounded-sm font-semibold text-indigo-600 hover:text-indigo-500"
-                                    >
-                                        <span>Click to upload</span>
-                                        <input
-                                            id="file-upload"
-                                            name="file-upload"
-                                            type="file"
-                                            accept="image/*,video/*"
-                                            className="sr-only"
-                                            onChange={handleFileChange}
-                                        />
-                                    </Label>
-                                    <p className="pl-1 text-slate-500">or drag and drop</p>
-                                </div>
-                                <p className="text-xs leading-5 text-slate-400 mt-2">
+                                <Label
+                                    htmlFor="file-upload"
+                                    className="relative cursor-pointer text-lg font-semibold text-white transition-colors hover:text-indigo-400"
+                                >
+                                    <span>Click to upload</span>
+                                    <input
+                                        id="file-upload"
+                                        name="file-upload"
+                                        type="file"
+                                        accept="image/*,video/*"
+                                        className="sr-only"
+                                        onChange={handleFileChange}
+                                    />
+                                </Label>
+                                <p className="mt-1 text-sm text-slate-400">or drag and drop</p>
+                                <p className="mt-2 text-xs text-slate-500">
                                     Images or Videos up to 10MB
                                 </p>
-                                {error && (
-                                    <p className="text-sm font-medium text-red-600 mt-4 bg-red-100 px-3 py-1 rounded-full inline-block">
-                                        {error}
-                                    </p>
-                                )}
                             </div>
+
+                            {error && (
+                                <p className="mt-4 inline-block rounded-full bg-red-500/20 px-3 py-1 text-sm font-medium text-red-300">
+                                    {error}
+                                </p>
+                            )}
                         </div>
                     ) : (
-                        <div className="relative mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+                        <div className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-sm">
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-600">
-                                    {file.type.startsWith('video') ? <FileSpreadsheet className="w-6 h-6" /> : <ImageIcon className="w-6 h-6" />}
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
+                                    {file.type.startsWith('video') ? <FileSpreadsheet className="h-6 w-6" /> : <ImageIcon className="h-6 w-6" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-slate-900 truncate pr-8">
+                                    <p className="truncate pr-8 text-sm font-medium text-white">
                                         {file.name}
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-1 mb-3">
+                                    <p className="mb-3 mt-1 text-xs text-slate-400">
                                         {(file.size / (1024 * 1024)).toFixed(2)} MB
                                     </p>
 
@@ -207,15 +243,15 @@ export default function FileUpload05() {
                                         placeholder="Add a caption..."
                                         value={caption}
                                         onChange={(e) => setCaption(e.target.value)}
-                                        className="w-full text-sm border-b border-slate-300 bg-transparent py-1 mb-2 focus:outline-none focus:border-indigo-500 placeholder:text-slate-400"
+                                        className="mb-2 w-full border-b border-slate-700 bg-transparent py-1 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
                                         disabled={uploading}
                                     />
 
                                     {/* Progress Bar */}
                                     {uploading && (
-                                        <div className="mt-3 h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                                             <div
-                                                className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                                                className="h-full rounded-full bg-indigo-500 transition-all duration-300"
                                                 style={{ width: `${progress}%` }}
                                             />
                                         </div>
@@ -226,11 +262,11 @@ export default function FileUpload05() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 h-8 w-8 p-0"
+                                    className="absolute right-2 top-2 h-8 w-8 p-0 text-slate-400 hover:bg-white/10 hover:text-red-400"
                                     onClick={handleRemoveFile}
                                     disabled={uploading}
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
@@ -241,7 +277,7 @@ export default function FileUpload05() {
                             type="button"
                             variant="outline"
                             onClick={() => { setFile(null); setError(null); }}
-                            className="bg-white"
+                            className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
                             disabled={uploading}
                         >
                             Cancel
@@ -250,7 +286,7 @@ export default function FileUpload05() {
                             type="button"
                             onClick={handleUpload}
                             disabled={!file || uploading}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[100px]"
+                            className="min-w-[100px] bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_20px_-5px_theme(colors.indigo.500)]"
                         >
                             {uploading ? (
                                 <>

@@ -1,273 +1,441 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle2, Lock, Loader2, Sparkles, Youtube, DollarSign, Target, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    CheckCircle2, Sparkles, ArrowRight, ChevronLeft,
+    Smartphone, Zap, Target, BarChart3, Bot, Video, Play
+} from 'lucide-react';
 import { useIdentity } from '@/context/IdentityContext';
+import Image from 'next/image';
+
+const TOTAL_STEPS = 5;
+
+// Design 3.0: Social Alignment Blue Palette
+const BRAND_COLORS = {
+    primary: '#0ea5e9', // Sky 500
+    secondary: '#06b6d4', // Cyan 500
+    accent: '#38bdf8', // Sky 400
+    background: '#020617', // Slate 950
+    glassBorder: 'rgba(14, 165, 233, 0.2)',
+    glassBg: 'rgba(2, 6, 23, 0.6)'
+};
 
 export default function GiveawayPage() {
+    const [step, setStep] = useState(1);
     const [isEntered, setIsEntered] = useState(false);
-    const [status, setStatus] = useState('idle');
+    const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
     const { leadId } = useIdentity();
 
-    // Form State matching Master Spec (GenAI Audit)
-    const [formData, setFormData] = useState({
-        // 1. Authority & Context
-        decisionMaker: '',
-        businessType: '',
-        bottleneck: '',
-
-        // 2. Audit Metrics (New Phase 3)
-        leadsPerWeek: '',       // Leads/Customers per week
-        conversionRate: '',     // Current Conversion Rate
-        socialPosts: '',        // Social Posts Per Week
-        allowAds: '',           // Do you allow external ads?
-
-        // 3. AI Readiness
-        aiMaturity: '',
-        aiChallenges: [] as string[], // Main Challenges for AI (Multi)
-        toolsInterest: '',
-
-        // 4. Budget & Outcome
-        budgetRange: '',
-        monthlyGain: '',
-        slogan: ''              // Main Slogan/Hook
+    // Resize logic for Mad Libs inputs
+    const [inputWidths, setInputWidths] = useState({
+        targetAudience: 180,
+        painPoint: 180,
+        uniqueSolution: 180
     });
 
-    // Helper for Multi-Select (AI Challenges)
-    const toggleChallenge = (value: string) => {
-        setFormData(prev => {
-            const current = prev.aiChallenges;
-            const updated = current.includes(value)
-                ? current.filter(item => item !== value)
-                : [...current, value];
-            return { ...prev, aiChallenges: updated };
-        });
+    const [formData, setFormData] = useState({
+        targetAudience: '',
+        painPoint: '',
+        uniqueSolution: '',
+        mascotDetails: '',
+        genAiExp: '',
+        genAiTools: '',
+        contentProblem: '',
+        marketingProblem: '',
+        adSpend: '',
+        leadVolume: '',
+    });
+
+    const handleInputChange = (key: string, value: string) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+        const length = value.length || 0;
+        const newWidth = Math.max(180, length * 15 + 20);
+        setInputWidths(prev => ({ ...prev, [key]: newWidth }));
     };
 
-    const handleUnlock = async (e: React.FormEvent) => {
+    const nextStep = () => setStep(s => Math.min(s + 1, TOTAL_STEPS));
+    const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('submitting');
-        if (!leadId) { alert("Identity missing."); setStatus('idle'); return; }
+
+        if (!leadId) {
+            setTimeout(() => { setIsEntered(true); setStatus('success'); }, 1500);
+            return;
+        }
 
         try {
-            const res = await fetch('/api/update-lead', {
+            await fetch('/api/update-lead', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     leadId,
-                    updates: {
-                        ...formData,
-                        enteredToWin: true,
-                        genAiConfirmed: true,
-                        formType: 'GenAI Audit'
-                    }
+                    pageId: leadId,
+                    ...formData,
+                    enteredToWin: true,
+                    genAiConfirmed: true,
+                    formType: 'GenAI Raffle'
                 })
             });
-
-            if (res.ok) { setIsEntered(true); setStatus('success'); }
-            else { throw new Error('Failed'); }
-        } catch (err) { console.error(err); alert('Error.'); setStatus('idle'); }
+            setIsEntered(true);
+            setStatus('success');
+        } catch (err) {
+            console.error(err);
+            setStatus('idle');
+        }
     };
 
-    return (
-        <div className="space-y-8 pb-20">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                <div className="inline-block p-3 rounded-full bg-primary/10 mb-4 border border-primary/30">
-                    <Sparkles className="w-8 h-8 text-primary" />
-                </div>
-                <h1 className="text-3xl font-bold mb-2">Win a <span className="gradient-text">Free GenAI Video Audit</span></h1>
-                <p className="text-gray-400 max-w-lg mx-auto">
-                    Complete the audit below to unlock your entry.
-                </p>
-            </motion.div>
+    // --- Components ---
 
-            <div className="max-w-3xl mx-auto">
-                <motion.div layout className={`glass-panel p-8 ${isEntered ? 'hidden' : ''}`}>
-                    <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                        <h2 className="text-xl font-bold flex items-center gap-2">
-                            <Lock size={18} className="text-primary" /> GenAI Audit
-                        </h2>
-                        <span className="text-xs font-mono text-gray-500">SECURE ENTRY </span>
+    const Iphone15Pro = () => (
+        <div className="relative mx-auto w-[320px] h-[660px] bg-[#1c1c1e] rounded-[55px] shadow-[0_0_80px_rgba(14,165,233,0.2)] border-[6px] border-[#3a3a3c] overflow-hidden transform rotate-[-2deg] hover:rotate-0 transition-transform duration-700 ease-out group">
+            {/* Dynamic Island Area */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[35px] w-[120px] bg-black rounded-b-[20px] z-50 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-[#1c1c1e]/50 ml-16"></div>
+            </div>
+
+            {/* Screen Content - Social Alignment Branded */}
+            <div className="w-full h-full bg-black rounded-[48px] overflow-hidden relative group cursor-pointer">
+                {/* Brand Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#001021] to-[#0ea5e9]/20">
+                    {/* Abstract Tech Grid */}
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
+                    <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+                </div>
+
+                {/* Simulated UI Overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-6 pb-12 z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 p-[2px] border border-sky-500/30">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center">
+                                {/* Simulated Logo/Icon */}
+                                <img src="/social-alignment-icon.png" alt="Icon" className="w-6 h-6 object-contain" />
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-white font-bold text-sm tracking-wide">Social Alignment</p>
+                            <p className="text-sky-400 text-xs">Video Audit • AI Powered</p>
+                        </div>
                     </div>
 
-                    <form onSubmit={handleUnlock} className="space-y-8">
+                    <h3 className="text-2xl font-black text-white leading-tight mb-2">
+                        Scale your reach.<br />
+                        <span className="text-sky-400">Without the grind.</span>
+                    </h3>
 
-                        {/* SECTION 1: CONTEXT */}
-                        <div className="space-y-4">
-                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">1. Business Context</h3>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="label-text">Who handles tech/budget?</label>
-                                    <select required className="input-field" value={formData.decisionMaker} onChange={e => setFormData({ ...formData, decisionMaker: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="Sole">I make all decisions</option>
-                                        <option value="Collaborative">Collaborative Team</option>
-                                        <option value="Influencer">I research, others sign</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label-text">Business Model</label>
-                                    <select required className="input-field" value={formData.businessType} onChange={e => setFormData({ ...formData, businessType: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="Service Based Business">Service Based</option>
-                                        <option value="E-Commerce">E-Commerce</option>
-                                        <option value="Content Creator">Creator / Influencer</option>
-                                        <option value="Manufacturing">Manufacturing</option>
-                                        <option value="New Business">New Business</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 2: METRICS */}
-                        <div className="space-y-4">
-                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">2. Current Metrics</h3>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="label-text">Leads/Customers per Week?</label>
-                                    <select required className="input-field" value={formData.leadsPerWeek} onChange={e => setFormData({ ...formData, leadsPerWeek: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="0-10">0-10 (Starting)</option>
-                                        <option value="11-50">11-50 (Growing)</option>
-                                        <option value="51-200">51-200 (Scaling)</option>
-                                        <option value="200+">200+ (Volume)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label-text">Avg. Conversion Rate (%)</label>
-                                    <input type="number" placeholder="e.g. 5" className="input-field" value={formData.conversionRate} onChange={e => setFormData({ ...formData, conversionRate: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="label-text">Social Posts per Week</label>
-                                    <input type="number" placeholder="e.g. 3" className="input-field" value={formData.socialPosts} onChange={e => setFormData({ ...formData, socialPosts: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="label-text">Run paid ads?</label>
-                                    <select required className="input-field" value={formData.allowAds} onChange={e => setFormData({ ...formData, allowAds: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="Yes">Yes, actively.</option>
-                                        <option value="No">No, organic only.</option>
-                                        <option value="Interested">No, but interested.</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 3: PAIN & TECH */}
-                        <div className="space-y-4">
-                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">3. AI & Tech</h3>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="label-text">Biggest Bottleneck</label>
-                                    <select required className="input-field" value={formData.bottleneck} onChange={e => setFormData({ ...formData, bottleneck: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="Hiring">Hiring / Team</option>
-                                        <option value="Leads">Lead Quality</option>
-                                        <option value="Chaos">Operational Chaos</option>
-                                        <option value="Scaling">Scaling Revenue</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label-text">AI Maturity Level</label>
-                                    <select required className="input-field" value={formData.aiMaturity} onChange={e => setFormData({ ...formData, aiMaturity: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="No knowledge">Beginner (0)</option>
-                                        <option value="Basic">Basic (Theoretical)</option>
-                                        <option value="Intermediate">Intermediate (Dabbling)</option>
-                                        <option value="Expert">Expert (Scaling)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="label-text mb-2 block">Main Challenges with AI (Select all)</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['Don\'t know where to start', 'Too expensive', 'Too complex/technical', 'Integration issues', 'Privacy concerns', 'No time to learn'].map(opt => (
-                                        <div key={opt} onClick={() => toggleChallenge(opt)}
-                                            className={`cursor-pointer p-3 rounded-lg border text-sm transition-all ${formData.aiChallenges.includes(opt) ? 'bg-primary/20 border-primary text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>
-                                            {opt}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="label-text">Tools you currently use?</label>
-                                <input type="text" placeholder="e.g. ChatGPT, Zapier..." className="input-field" value={formData.toolsInterest} onChange={e => setFormData({ ...formData, toolsInterest: e.target.value })} />
-                            </div>
-                        </div>
-
-                        {/* SECTION 4: OUTCOME */}
-                        <div className="space-y-4">
-                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">4. The Prize</h3>
-                            <div>
-                                <label className="label-text">Main Slogan / Hook?</label>
-                                <input type="text" placeholder="What is your core message?" className="input-field" value={formData.slogan} onChange={e => setFormData({ ...formData, slogan: e.target.value })} />
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="label-text">Monthly Growth Budget</label>
-                                    <select required className="input-field" value={formData.budgetRange} onChange={e => setFormData({ ...formData, budgetRange: e.target.value })}>
-                                        <option value="" disabled>Select...</option>
-                                        <option value="<$500">&lt;$500</option>
-                                        <option value="$500-$2K">$500 - $2k</option>
-                                        <option value="$2K-$5K">$2k - $5k</option>
-                                        <option value="$5K+">$5k+</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label-text">Est. Monthly Rev Gain?</label>
-                                    <input type="number" required placeholder="e.g. 5000" className="input-field" value={formData.monthlyGain} onChange={e => setFormData({ ...formData, monthlyGain: e.target.value })} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 5: VIDEO INTEREST (Gap Analysis) */}
-                        <div className="space-y-4">
-                            <h3 className="text-white font-semibold border-l-4 border-primary pl-3">5. Video Interest</h3>
-                            <div>
-                                <label className="label-text">If you don't win, are you interested in AI Video services?</label>
-                                <select className="input-field" value={(formData as any).videoInterest || ''} onChange={e => setFormData({ ...formData, videoInterest: e.target.value } as any)}>
-                                    <option value="" disabled>Select...</option>
-                                    <option value="Yes">Yes, absolutely.</option>
-                                    <option value="Maybe">Maybe, depends on cost.</option>
-                                    <option value="No">No, just here for the raffle.</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={status === 'submitting'}
-                            className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-purple-500/20 mt-4"
-                        >
-                            {status === 'submitting' ? <Loader2 className="animate-spin w-5 h-5" /> : 'Submit & Unlock Entry'}
+                    <div className="mt-4 flex items-center gap-2">
+                        <button className="flex-1 bg-sky-500 text-white font-bold py-3 rounded-full text-sm hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/20">
+                            Start Audit
                         </button>
-                    </form>
-                    <style jsx>{`
-                        .label-text { display: block; font-size: 0.875rem; color: #d1d5db; margin-bottom: 0.5rem; font-weight: 500; }
-                        .input-field { width: 100%; bg-black/40; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 0.75rem 1rem; color: white; background: rgba(0,0,0,0.4); }
-                        .input-field:focus { border-color: #8B5CF6; outline: none; box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); }
-                    `}</style>
+                    </div>
+                </div>
+
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center pl-1">
+                        <Play fill="white" className="text-white w-6 h-6" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    if (isEntered) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-600/20 rounded-full blur-[120px] animate-pulse"></div>
+
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
+                    animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+                    className="relative z-10 text-center space-y-8 max-w-2xl px-4"
+                >
+                    <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-tr from-sky-400 to-cyan-500 flex items-center justify-center shadow-[0_0_50px_rgba(14,165,233,0.4)]">
+                        <CheckCircle2 size={64} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-100 to-sky-300 mb-4">
+                            You're In.
+                        </h1>
+                        <p className="text-xl text-slate-400 font-light">
+                            Good luck. We'll verify your channel shortly.
+                        </p>
+                        <div className="mt-8">
+                            <img src="/social-alignment-logo.png" alt="Social Alignment" className="h-8 opacity-50 mx-auto grayscale hover:grayscale-0 transition-all duration-500" />
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-[#020617] text-white font-outfit overflow-x-hidden selection:bg-sky-500/30">
+
+
+            {/* Ambient Background - Social Alignment Blue */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-sky-900/20 blur-[150px] animate-pulse"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-cyan-900/10 blur-[150px] animate-pulse delay-1000"></div>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+            </div>
+
+            <div className="relative z-10 container mx-auto px-4 py-8 lg:py-16 grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-24 items-center min-h-[90vh]">
+
+                {/* LEFT: Cinematic Phone Showcase */}
+                <motion.div
+                    initial={{ x: -100, opacity: 0, rotate: -5 }}
+                    animate={{ x: 0, opacity: 1, rotate: 0 }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="hidden lg:flex flex-col items-center justify-center relative"
+                >
+
+
+                    <Iphone15Pro />
+                    <div className="mt-12 text-center opacity-70">
+                        <p className="text-sm font-light tracking-widest uppercase mb-2 text-sky-200">The Giveaway</p>
+                        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300">
+                            Custom 30s GenAI Video
+                        </h2>
+                    </div>
                 </motion.div>
 
-                {/* Success State */}
-                {isEntered && (
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="h-full flex flex-col items-center justify-center p-12 text-center border border-primary rounded-3xl bg-gradient-to-b from-slate-900 to-black shadow-[0_0_50px_rgba(139,92,246,0.3)]"
-                    >
-                        <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center mb-6 shadow-lg shadow-primary/50 animate-pulse">
-                            <CheckCircle2 className="w-12 h-12 text-white" />
+                {/* RIGHT: Master Kinetic Wizard */}
+                <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="w-full max-w-2xl mx-auto"
+                >
+                    {/* Header */}
+                    <div className="mb-12 relative">
+                        {/* Social Alignment Logo - Top Right "Fill Here" Position */}
+                        <div className="absolute -top-24 -right-10 md:-top-32 md:-right-20 lg:-top-40 lg:-right-0 z-50 pointer-events-none">
+                            <motion.div
+                                animate={{ y: [0, -10, 0] }}
+                                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                                className="flex items-center gap-3"
+                            >
+                                <img src="/social-alignment-icon.png" alt="Icon" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-[0_0_25px_rgba(14,165,233,0.5)]" />
+                                <span className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-lg">
+                                    Social Alignment
+                                </span>
+                            </motion.div>
                         </div>
-                        <h3 className="text-3xl font-bold mb-2 text-white">Entry Confirmed!</h3>
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
-                        <p className="text-gray-300 text-lg mb-6">
-                            We have received your qualification profile. <br />
-                            <span className="text-secondary text-sm">We will review your submission and announce the winner live.</span>
-                        </p>
-                    </motion.div>
-                )}
+
+
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-950/30 text-xs font-medium tracking-wide text-sky-200 mb-6 backdrop-blur-md">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" /> LIVE RAFFLE
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.95] mb-6">
+                            Win the <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-400 to-white">Future of Ads</span>
+                        </h1>
+                    </div>
+
+                    {/* Glassmorphic Form Card - Social Alignment Stye */}
+                    <div className="relative bg-slate-900/40 backdrop-blur-xl border border-sky-500/20 rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.3)]">
+                        {/* Progress */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-slate-800">
+                            <motion.div
+                                className="h-full bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.8)]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+                            />
+                        </div>
+
+                        {/* Mobile Mascot (visible only on small screens) */}
+                        <div className="lg:hidden absolute top-4 right-4 w-12 h-12 opacity-50">
+                            <img src="/social-alignment-icon.png" alt="Mascot" className="w-full h-full object-contain" />
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <AnimatePresence mode="wait">
+                                {step === 1 && (
+                                    <motion.div
+                                        key="step1"
+                                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                        exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+                                        className="space-y-8"
+                                    >
+                                        <div className="text-sky-400/60 text-sm font-mono uppercase">01 / The Hook</div>
+                                        <div className="text-3xl md:text-4xl leading-relaxed font-light text-slate-100">
+                                            "I help
+                                            <input
+                                                autoFocus
+                                                value={formData.targetAudience}
+                                                onChange={e => handleInputChange('targetAudience', e.target.value)}
+                                                placeholder="my audience"
+                                                style={{ width: inputWidths.targetAudience }}
+                                                className="inline-block mx-2 bg-transparent border-b-2 border-slate-700 focus:border-sky-500 text-sky-400 placeholder:text-slate-700 outline-none transition-all px-0"
+                                            />
+                                            to
+                                            <input
+                                                value={formData.painPoint}
+                                                onChange={e => handleInputChange('painPoint', e.target.value)}
+                                                placeholder="solve a problem"
+                                                style={{ width: inputWidths.painPoint }}
+                                                className="inline-block mx-2 bg-transparent border-b-2 border-slate-700 focus:border-sky-500 text-sky-400 placeholder:text-slate-700 outline-none transition-all px-0"
+                                            />
+                                            using
+                                            <input
+                                                value={formData.uniqueSolution}
+                                                onChange={e => handleInputChange('uniqueSolution', e.target.value)}
+                                                placeholder="my solution"
+                                                style={{ width: inputWidths.uniqueSolution }}
+                                                className="inline-block mx-2 bg-transparent border-b-2 border-slate-700 focus:border-sky-500 text-sky-400 placeholder:text-slate-700 outline-none transition-all px-0"
+                                            />."
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {step === 2 && (
+                                    <motion.div
+                                        key="step2"
+                                        initial={{ opacity: 0, x: 30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -30 }}
+                                        className="space-y-8"
+                                    >
+                                        <div className="text-sky-400/60 text-sm font-mono uppercase">02 / Identity</div>
+                                        <h2 className="text-3xl font-bold">Do you have a spokesperson?</h2>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {['Yes, a real human', 'Yes, a mascot/character', 'No, just logos/stock', 'No, but I need one'].map((opt) => (
+                                                <div
+                                                    key={opt}
+                                                    onClick={() => setFormData(p => ({ ...p, mascotDetails: opt }))}
+                                                    className={`p-6 rounded-2xl border cursor-pointer transition-all duration-300 flex items-center justify-between group ${formData.mascotDetails === opt
+                                                        ? 'bg-sky-500/10 text-white border-sky-500 scale-[1.02] shadow-[0_0_20px_rgba(14,165,233,0.1)]'
+                                                        : 'bg-slate-800/20 border-white/5 hover:bg-slate-800/40 hover:border-white/10'
+                                                        }`}
+                                                >
+                                                    <span className="text-lg font-medium text-slate-200 group-hover:text-white transition-colors">{opt}</span>
+                                                    {formData.mascotDetails === opt && <CheckCircle2 size={24} className="text-sky-400" />}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {step === 3 && (
+                                    <motion.div
+                                        key="step3"
+                                        initial={{ opacity: 0, x: 30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -30 }}
+                                        className="space-y-8"
+                                    >
+                                        <div className="text-sky-400/60 text-sm font-mono uppercase">03 / Experience</div>
+                                        <h2 className="text-3xl font-bold">Your GenAI Status</h2>
+
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-2">Experience Level</label>
+                                                <div className="flex gap-2">
+                                                    {['Newbie', 'Curious', 'Pro'].map(lvl => (
+                                                        <button
+                                                            key={lvl}
+                                                            type="button"
+                                                            onClick={() => setFormData(p => ({ ...p, genAiExp: lvl }))}
+                                                            className={`flex-1 py-3 rounded-xl border transition-all ${formData.genAiExp === lvl
+                                                                ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
+                                                                : 'bg-transparent border-slate-700 text-slate-400 hover:border-slate-500'
+                                                                }`}
+                                                        >
+                                                            {lvl}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="block text-sm text-slate-400">Biggest Creation Hurdle?</label>
+                                                <select
+                                                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white outline-none focus:border-sky-500 transition-colors"
+                                                    value={formData.contentProblem}
+                                                    onChange={e => setFormData(p => ({ ...p, contentProblem: e.target.value }))}
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="Time">It takes forever</option>
+                                                    <option value="Money">Too expensive</option>
+                                                    <option value="Skill">Can't make it look good</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {step === 4 && (
+                                    <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                                        <div className="text-sky-400/60 text-sm font-mono uppercase">04 / Metrics</div>
+                                        <h2 className="text-3xl font-bold">Marketing Health</h2>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-sm text-slate-400">Ad Spend / Mo</label>
+                                                <select className="input-glass" value={formData.adSpend} onChange={e => setFormData({ ...formData, adSpend: e.target.value })}>
+                                                    <option value="">Select...</option>
+                                                    <option value="0">$0</option>
+                                                    <option value="<1k">&lt;$1k</option>
+                                                    <option value="1k-5k">$1k-$5k</option>
+                                                    <option value="5k+">$5k+</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm text-slate-400">Leads / Mo</label>
+                                                <input type="number" className="input-glass" placeholder="0" value={formData.leadVolume} onChange={e => setFormData({ ...formData, leadVolume: e.target.value })} />
+                                            </div>
+                                        </div>
+                                        <style jsx>{`
+                                            .input-glass { width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.2); padding: 1rem; border-radius: 0.75rem; color: white; outline: none; transition: all 0.2s; }
+                                            .input-glass:focus { border-color: #0ea5e9; background: rgba(15, 23, 42, 0.8); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+                                         `}</style>
+                                    </motion.div>
+                                )}
+
+                                {step === 5 && (
+                                    <motion.div key="step5" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} className="text-center py-12">
+                                        <div className="w-24 h-24 rounded-full bg-sky-500/10 mx-auto flex items-center justify-center mb-6 animate-[pulse_3s_infinite]">
+                                            <Target size={40} className="text-sky-400" />
+                                        </div>
+                                        <h2 className="text-4xl font-bold mb-4">Ready to Launch?</h2>
+                                        <p className="text-slate-400 mb-8 max-w-sm mx-auto">
+                                            Your profile is locked in. Let's see if you win the campaign.
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* footer nav */}
+                            <div className="mt-12 flex justify-between items-center border-t border-sky-900/10 pt-8">
+                                <button type="button" onClick={prevStep} className={`text-sm text-slate-500 hover:text-white transition-colors flex items-center gap-2 ${step === 1 ? 'opacity-0 pointer-events-none' : ''}`}>
+                                    <ChevronLeft size={16} /> Back
+                                </button>
+
+                                {step < TOTAL_STEPS ? (
+                                    <button
+                                        type="button"
+                                        onClick={nextStep}
+                                        disabled={step === 1 && !formData.targetAudience}
+                                        className="group flex items-center gap-3 bg-sky-500 text-white px-8 py-3 rounded-full font-bold hover:bg-sky-400 hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-sky-500/25"
+                                    >
+                                        Next <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="submit"
+                                        disabled={status === 'submitting'}
+                                        className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white px-10 py-4 rounded-full font-bold shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:shadow-[0_0_50px_rgba(14,165,233,0.6)] hover:scale-105 transition-all flex items-center gap-2"
+                                    >
+                                        {status === 'submitting' ? 'Submitting...' : 'Enter Raffle'} <Sparkles size={20} />
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+                </motion.div>
             </div>
         </div>
     );

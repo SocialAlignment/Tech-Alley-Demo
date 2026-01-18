@@ -1,5 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
+import { WarpBackground } from "@/components/ui/warp-background";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useMemo, useCallback, createContext, Children } from "react";
 // Importing class-variance-authority for the built-in button component
 import { cva, type VariantProps } from "class-variance-authority";
@@ -94,7 +95,7 @@ function BlurFade({ children, className, variant, duration = 0.4, delay = 0, yOf
 
 
 // --- BUILT-IN GLASS BUTTON COMPONENT (WITH CLICK FIX) ---
-const glassButtonVariants = cva("relative isolate all-unset cursor-pointer rounded-full transition-all", { variants: { size: { default: "text-base font-medium", sm: "text-sm font-medium", lg: "text-lg font-medium", icon: "h-10 w-10" } }, defaultVariants: { size: "default" } });
+const glassButtonVariants = cva("relative isolate all-unset cursor-pointer rounded-full transition-all w-full", { variants: { size: { default: "text-base font-medium", sm: "text-sm font-medium", lg: "text-lg font-medium", icon: "h-10 w-10" } }, defaultVariants: { size: "default" } });
 const glassButtonTextVariants = cva("glass-button-text relative block select-none tracking-tighter", { variants: { size: { default: "px-6 py-3.5", sm: "px-4 py-2", lg: "px-8 py-4", icon: "flex h-10 w-10 items-center justify-center" } }, defaultVariants: { size: "default" } });
 export interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof glassButtonVariants> { contentClassName?: string; }
 const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
@@ -300,23 +301,57 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", 
             <div className={cn("fixed top-4 left-4 z-20 flex items-center gap-2", "md:left-1/2 md:-translate-x-1/2")}>
                 {logo}
                 <h1 className="text-base font-bold text-foreground">{brandName}</h1>
-                <div className="md:absolute md:left-[200px] flex items-center gap-2 text-xs text-muted-foreground ml-auto bg-black/20 p-2 rounded-lg border border-white/10">
-                    <Lock className="w-3 h-3" />
-                    <span>Secure Authentication</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-black/40 backdrop-blur-md p-2 px-3 rounded-full border border-white/10 shadow-lg">
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span className="tracking-wide text-emerald-50/80 font-medium">Secure Authentication</span>
                 </div>
             </div>
 
-            <div className={cn("flex w-full flex-1 h-full items-center justify-center bg-card", "relative overflow-hidden")}>
-                <div className="absolute inset-0 z-0 bg-black"></div>
-                <fieldset disabled={modalStatus !== 'closed'} className="relative z-10 flex flex-col items-center gap-8 w-full max-w-md mx-auto p-4">
+            <div className={cn("flex w-full flex-1 h-full items-center justify-center bg-transparent", "relative overflow-hidden")}>
+                <div className="absolute inset-0 z-0">
+                    <WarpBackground className="w-full h-full" gridColor="rgba(168, 85, 247, 0.4)" />
+                    <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                </div>
+                <fieldset disabled={modalStatus !== 'closed'} className="relative z-10 flex flex-col items-center gap-8 w-full max-w-md mx-auto p-8 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
                     <AnimatePresence mode="wait">
-                        {authStep === "email" && <motion.div key="email-content" initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className="w-full flex flex-col items-center gap-4">
-                            <BlurFade delay={0.25 * 1} className="w-full"><div className="text-center">{typeof heading === 'string' ? <p className="font-serif font-light text-4xl sm:text-5xl md:text-6xl tracking-tight text-foreground whitespace-nowrap">{heading}</p> : heading}</div></BlurFade>
-                            <BlurFade delay={0.25 * 2}><p className="text-sm font-medium text-white/60">Continue with</p></BlurFade>
-                            <BlurFade delay={0.25 * 3}><div className="flex items-center justify-center gap-4 w-full">
-                                <GlassButton onClick={onGoogleSignIn} contentClassName="flex items-center justify-center gap-2" size="sm"><GoogleIcon /><span className="font-semibold text-white">Google</span></GlassButton>
-                                {/* Removed GitHub as per requirements, just Google needed */}
-                            </div></BlurFade>
+                        {authStep === "email" && <motion.div key="email-content" initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className="w-full flex flex-col items-center gap-6">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5 }}
+                                className="relative group text-center mb-6"
+                            >
+                                <div className="absolute inset-0 -inset-x-8 bg-purple-500/20 blur-3xl group-hover:bg-purple-500/30 transition-all duration-500" />
+                                <h1 className="relative z-10 font-serif text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-purple-100 to-purple-300 drop-shadow-2xl leading-[0.9]">
+                                    tech<br />alley
+                                </h1>
+                                <p className="relative z-10 text-xs md:text-sm uppercase tracking-[0.4em] text-purple-200/80 font-bold mt-3 ml-1">
+                                    Henderson
+                                </p>
+                            </motion.div>
+
+                            <BlurFade delay={0.25 * 1} className="w-full">
+                                <div className="text-center space-y-2">
+                                    <h2 className="text-xl font-semibold text-white/90">
+                                        Welcome to the Hub
+                                    </h2>
+                                    <p className="text-sm text-white/50 font-medium tracking-wide">
+                                        Your Interactive Event Companion
+                                    </p>
+                                </div>
+                            </BlurFade>
+
+                            <BlurFade delay={0.25 * 3} className="w-full pt-6">
+                                <div className="flex flex-col gap-4 w-full">
+                                    <GlassButton onClick={onGoogleSignIn} contentClassName="flex items-center justify-center gap-3 w-full px-8" size="lg" className="w-full group !bg-white/5 hover:!bg-white/10 !border-white/10 hover:!border-white/20 hover:!ring-2 hover:!ring-purple-500/30 transition-all duration-300 !shadow-[0_0_20px_rgba(0,0,0,0.2)]">
+                                        <GoogleIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        <span className="font-bold text-white tracking-wide">Continue with Google</span>
+                                    </GlassButton>
+                                    <p className="text-xs text-center text-white/30">
+                                        By continuing, you join the Tech Alley community network.
+                                    </p>
+                                </div>
+                            </BlurFade>
                         </motion.div>}
                     </AnimatePresence>
                 </fieldset>

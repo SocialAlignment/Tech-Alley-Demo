@@ -16,11 +16,11 @@ export default function LoginPage() {
       brandName=""
       logo={null}
       heading={
-        <div className="flex flex-col items-center mb-4 w-full">
+        <div className="flex flex-col items-center mb-8 w-full">
           <img
-            src="/tech-alley-banner.jpg"
+            src="/tech-alley-logo.png"
             alt="Tech Alley Henderson"
-            className="w-full h-auto object-contain"
+            className="w-48 h-48 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
           />
         </div>
       }

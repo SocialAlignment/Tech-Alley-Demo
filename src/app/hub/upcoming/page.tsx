@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { EventCard, EventCardProps } from '@/components/ui/event-card';
-import { createicsFile } from '@/lib/utils'; // Assuming this might exist, if not I'll just use a robust handler inline or mock it.
+
 import { Calendar } from 'lucide-react';
 
 export default function UpcomingEventsPage() {

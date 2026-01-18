@@ -1,71 +1,67 @@
 "use client"
 
-import { BentoCell, BentoGrid, ContainerScale, ContainerScroll } from "@/components/ui/hero-gallery-scroll-animation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-
-const IMAGES = [
-    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2388&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1498036882173-b41c28a8ba34?q=80&w=2264&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2368&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dG9reW98ZW58MHx8MHx8fDA%3D",
-    "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHRva3lvfGVufDB8fDB8fHww",
-]
+import { ArrowLeft, Camera, Images } from "lucide-react"
+import { StarsBackground } from "@/components/ui/stars-background"
+import { ShootingStars } from "@/components/ui/shooting-stars"
+import ShimmerButton from "@/components/ui/shimmer-button"
 
 export default function PhotoBoothPage() {
     return (
-        <div className="bg-slate-900 min-h-screen">
+        <div className="min-h-screen relative w-full bg-slate-900 flex flex-col items-center justify-center overflow-hidden rounded-md">
+            <div className="absolute inset-0 z-0">
+                <StarsBackground />
+                <ShootingStars minDelay={500} maxDelay={1500} />
+            </div>
+
             <div className="fixed top-4 left-4 z-50">
                 <Link href="/hub">
-                    <Button variant="ghost" className="text-white hover:text-slate-300 hover:bg-white/10 gap-2">
+                    <Button variant="ghost" className="text-white hover:text-indigo-300 hover:bg-white/10 gap-2">
                         <ArrowLeft size={16} />
                         Back to Hub
                     </Button>
                 </Link>
             </div>
 
-            <ContainerScroll className="h-[350vh]">
-                <BentoGrid className="sticky left-0 top-0 z-0 h-screen w-full p-4">
-                    {IMAGES.map((imageUrl, index) => (
-                        <BentoCell
-                            key={index}
-                            className="overflow-hidden rounded-xl shadow-xl bg-slate-800"
-                        >
-                            <img
-                                className="size-full object-cover object-center"
-                                src={imageUrl}
-                                alt={`Photo Booth Gallery ${index + 1}`}
-                            />
-                        </BentoCell>
-                    ))}
-                </BentoGrid>
+            <div className="flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto relative z-10">
+                <div className="animate-in fade-in zoom-in duration-1000 mb-8 relative">
+                    <div className="absolute -inset-4 bg-indigo-500/30 blur-3xl rounded-full" />
+                    <Camera className="w-24 h-24 text-white relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
+                </div>
 
-                <ContainerScale className="relative z-10 text-center">
-                    <h1 className="max-w-xl text-5xl font-bold tracking-tighter text-slate-800 md:text-slate-900 drop-shadow-sm">
-                        Tech Alley Photo Booth
-                    </h1>
-                    <p className="my-6 max-w-xl text-sm text-slate-700 md:text-base font-medium">
-                        Capture the moment! Upload your photos or videos from the event to our shared gallery.
-                        Access the Google Drive folder to download and share your memories.
-                    </p>
-                    <div className="flex items-center justify-center gap-4">
-                        <Link href="/hub/photo-booth/upload">
-                            <Button className="bg-indigo-600 px-6 py-6 font-bold text-lg hover:bg-indigo-500 shadow-xl">
+                <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white mb-6 drop-shadow-2xl animate-in slide-in-from-bottom-5 duration-700 delay-150">
+                    Tech Alley <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                        Photo Booth
+                    </span>
+                </h1>
+
+                <p className="text-lg md:text-xl text-slate-300 max-w-2xl mb-12 leading-relaxed animate-in slide-in-from-bottom-5 duration-700 delay-300">
+                    Step into the future. Capture the energy of Innovation Henderson, upload your moments, and become part of our digital legacy.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-bottom-5 duration-700 delay-500">
+                    <Link href="/hub/photo-booth/upload">
+                        <ShimmerButton className="text-lg px-8 py-4 min-w-[200px]" shimmerColor="#A855F7" background="rgba(79, 70, 229, 0.4)">
+                            <span className="flex items-center gap-2">
+                                <Camera size={20} />
                                 Upload Media
-                            </Button>
-                        </Link>
-                        <Link href="/hub/photo-booth/gallery">
-                            <Button
-                                variant="link"
-                                className="px-4 py-2 font-medium text-indigo-700 hover:text-indigo-900"
-                            >
-                                Access Gallery
-                            </Button>
-                        </Link>
-                    </div>
-                </ContainerScale>
-            </ContainerScroll>
+                            </span>
+                        </ShimmerButton>
+                    </Link>
+
+                    <Link href="/hub/photo-booth/gallery">
+                        <Button
+                            variant="outline"
+                            className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg min-w-[200px] rounded-full backdrop-blur-sm transition-all hover:scale-105 hover:border-white/50"
+                        >
+                            <Images className="mr-2 h-5 w-5" />
+                            View Gallery
+                        </Button>
+                    </Link>
+                </div>
+            </div>
         </div>
     )
 }

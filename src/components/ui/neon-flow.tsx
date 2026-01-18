@@ -42,9 +42,10 @@ export function TubesBackground({
 
             // Probe for WebGL context availability to prevent library crash
             try {
-                const gl = canvasRef.current.getContext('webgl');
+                const gl = (canvasRef.current.getContext('webgl') || canvasRef.current.getContext('experimental-webgl')) as WebGLRenderingContext | null;
                 if (!gl) {
                     console.warn("WebGL context not available - skipping 3D init to prevent crash.");
+                    setIsLoaded(false); // Ensure loaded state is false
                     return;
                 }
                 // Release the context immediately so the library can acquire it

@@ -9,31 +9,7 @@ import clsx from 'clsx';
 import { useIdentity } from '@/context/IdentityContext';
 import UserProfileDemo from '@/components/UserProfileDemo';
 
-const NAV_SECTIONS = [
-    {
-        title: "", // Main Section (No Header)
-        items: [
-            { label: 'Start Here', icon: Zap, path: '/hub/start' },
-            { label: 'Home', icon: Home, path: '/hub' },
-        ]
-    },
-    {
-        title: "Tonight's Event",
-        items: [
-            { label: 'Announcements', icon: Megaphone, path: '/hub/announcements' },
-            { label: 'Upcoming Events', icon: Calendar, path: '/hub/upcoming' },
-            { label: 'IRL Mission Control', icon: CheckSquare, path: '/hub/checklist' },
-            { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
-            { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
-            { label: 'Networking Alignment', icon: Users, path: '/hub/networking' },
-            { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
-            { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
-            { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
-            { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
-            { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
-        ]
-    }
-];
+// Moved NAV_SECTIONS inside component to access context
 
 // Helper Component for Countdown
 const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
@@ -72,7 +48,33 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
-    const { leadId, userName } = useIdentity();
+    const { leadId, userName, isProfileComplete } = useIdentity();
+
+    const NAV_SECTIONS = [
+        {
+            title: "", // Main Section (No Header)
+            items: [
+                { label: 'Start Here', icon: Zap, path: '/hub/start' },
+                { label: 'Home', icon: Home, path: '/hub' },
+            ]
+        },
+        {
+            title: "Tonight's Event",
+            items: [
+                { label: 'Announcements', icon: Megaphone, path: '/hub/announcements' },
+                { label: 'Upcoming Events', icon: Calendar, path: '/hub/upcoming' },
+                { label: 'IRL Mission Control', icon: CheckSquare, path: '/hub/checklist' },
+                { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
+                { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
+                { label: 'Networking Alignment', icon: Users, path: '/hub/networking' },
+                { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
+                { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
+                { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
+                { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
+                { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
+            ]
+        }
+    ];
     const [isOpen, setIsOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);

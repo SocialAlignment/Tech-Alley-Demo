@@ -263,7 +263,7 @@ export default function ContactWizard({ onSubmit, isSubmitting: parentSubmitting
         setFormData(prev => {
             const current = prev.commPrefs;
             const updated = current.includes(opt)
-                ? current.filter(c => c !== opt)
+                ? current.filter((c: string) => c !== opt)
                 : [...current, opt];
             return { ...prev, commPrefs: updated };
         });
@@ -305,12 +305,12 @@ export default function ContactWizard({ onSubmit, isSubmitting: parentSubmitting
         visible: {
             x: 0,
             opacity: 1,
-            transition: { type: "spring", stiffness: 300, damping: 30 }
+            transition: { type: "spring", stiffness: 300, damping: 30 } as const
         },
         exit: (direction: string) => ({
             x: direction === "right" ? -50 : 50,
             opacity: 0,
-            transition: { type: "spring", stiffness: 300, damping: 30 }
+            transition: { type: "spring", stiffness: 300, damping: 30 } as const
         })
     };
 

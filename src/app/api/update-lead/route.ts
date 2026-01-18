@@ -36,6 +36,29 @@ export async function PATCH(request: Request) {
             }
         };
 
+        // --- GenAI Raffle / Audit Fields ---
+        addProp('Target Audience', 'rich_text', body.targetAudience);
+        addProp('Biggest Pain Point', 'rich_text', body.painPoint);
+        addProp('Unique Solution', 'rich_text', body.uniqueSolution);
+        addProp('Mascot Details', 'rich_text', body.mascotDetails);
+
+        addProp('GenAI Experience', 'select', body.genAiExp);
+        addProp('GenAI Tools', 'rich_text', body.genAiTools);
+        addProp('Content Problem', 'select', body.contentProblem);
+
+        addProp('Marketing Problem', 'select', body.marketingProblem);
+        addProp('Ad Spend', 'select', body.adSpend);
+
+        // Metrics - Try to parse as numbers, or store as text if preferred? 
+        // Using number for sorting/filtering.
+        addProp('Lead Volume', 'number', body.leadVolume);
+        addProp('Conversion Rate', 'number', body.conversionRate);
+
+        // Metadata
+        addProp('Form Type', 'select', body.formType);
+        addProp('Entered Raffle', 'checkbox', body.enteredToWin);
+        addProp('GenAI Interest', 'checkbox', body.genAiConfirmed);
+
         addProp('Company', 'rich_text', body.company);
         addProp('Job Title', 'rich_text', body.title);
         addProp('Website', 'url', body.website);

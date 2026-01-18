@@ -27,7 +27,7 @@ const SPRING_TRANSITION_CONFIG = {
     damping: 16,
     mass: 0.75,
     restDelta: 0.005,
-}
+} as const
 
 const variants: Variants = {
     hidden: {

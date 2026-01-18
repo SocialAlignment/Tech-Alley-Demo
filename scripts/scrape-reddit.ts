@@ -5,7 +5,7 @@
 // But wait, I'm writing the file from scratch.
 // I'll assume global fetch.
 
-interface RedditPost {
+interface ScrapedRedditPost {
     data: {
         title: string;
         url: string;
@@ -15,9 +15,9 @@ interface RedditPost {
     }
 }
 
-interface RedditResponse {
+interface ScrapedRedditResponse {
     data: {
-        children: RedditPost[];
+        children: ScrapedRedditPost[];
     }
 }
 
@@ -52,7 +52,7 @@ async function scrapeReddit(subreddit: string) {
             return;
         }
 
-        const data = await response.json() as RedditResponse;
+        const data = await response.json() as ScrapedRedditResponse;
 
         if (!data.data || !data.data.children) {
             console.error("❌ Invalid response structure:", data);

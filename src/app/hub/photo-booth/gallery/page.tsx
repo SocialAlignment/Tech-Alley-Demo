@@ -28,9 +28,21 @@ const FALLBACK_IMAGES: ImageData[] = [
 
 export const dynamic = 'force-dynamic';
 
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION!,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+});
+
 async function getGalleryImages(): Promise<ImageData[]> {
     const NOTION_KEY = process.env.NOTION_API_KEY;
     const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID;
+    const S3_BUCKET = process.env.AWS_BUCKET_NAME;
 
     if (!NOTION_KEY || !NOTION_DB_ID) {
         console.warn("Notion credentials missing for Gallery");
@@ -63,22 +75,39 @@ async function getGalleryImages(): Promise<ImageData[]> {
 
         const data = await res.json();
 
-        return data.results.map((page: any) => {
+        // Process images in parallel to get signed URLs
+        const imagesWithUrls = await Promise.all(data.results.map(async (page: any) => {
             const props = page.properties;
             const caption = props.Caption?.title?.[0]?.plain_text || "Tech Alley Memory";
-            const imageUrl = props.ImageURL?.url;
-            const key = props.S3Key?.rich_text?.[0]?.plain_text || page.id;
+            const s3Key = props.S3Key?.rich_text?.[0]?.plain_text;
+            let finalImageUrl = props.ImageURL?.url;
 
-            if (!imageUrl) return null;
+            // If we have an S3 Key and credentials, generate a fresh presigned URL
+            if (s3Key && S3_BUCKET && process.env.AWS_ACCESS_KEY_ID) {
+                try {
+                    const command = new GetObjectCommand({
+                        Bucket: S3_BUCKET,
+                        Key: s3Key,
+                    });
+                    finalImageUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+                } catch (err) {
+                    console.error("Failed to sign URL for key:", s3Key, err);
+                    // Fallback to the stored URL
+                }
+            }
+
+            if (!finalImageUrl) return null;
 
             return {
                 id: page.id,
-                src: imageUrl,
+                src: finalImageUrl,
                 alt: caption,
                 title: "Event Photo",
                 description: caption
             };
-        }).filter(Boolean) as ImageData[];
+        }));
+
+        return imagesWithUrls.filter(Boolean) as ImageData[];
 
     } catch (e) {
         console.error("Failed to fetch gallery images:", e);
@@ -92,21 +121,6 @@ export default async function GalleryPage() {
 
     if (images.length === 0) {
         displayImages = FALLBACK_IMAGES;
-    } else if (images.length < 10) {
-        // Sphere looks empty with few images, so duplicate them to fill it up
-        const originalLength = images.length;
-        const targetCount = 20;
-        const multiplier = Math.ceil(targetCount / originalLength);
-
-        displayImages = [];
-        for (let i = 0; i < multiplier; i++) {
-            images.forEach(img => {
-                displayImages.push({
-                    ...img,
-                    id: `${img.id}-dup-${i}`
-                });
-            });
-        }
     }
 
     return <GalleryClient images={displayImages} />;
