@@ -1,60 +1,37 @@
-import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-
+// Refactored to Supabase + Background Sync
 export async function POST(request: Request) {
     try {
         const { leadId, preferredName, avatarUrl } = await request.json();
 
-        if (!leadId) {
-            return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
+        if (!leadId) return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
+
+        // 1. Update Supabase
+        const updateData: any = {};
+        if (preferredName) updateData.preferred_name = preferredName;
+        if (avatarUrl) updateData.avatar = avatarUrl;
+
+        const { data: updatedUser, error } = await supabase
+            .from('leads')
+            .update(updateData)
+            .eq('id', leadId)
+            .select('email') // Get email for Notion sync
+            .single();
+
+        if (error) throw new Error(error.message);
+
+        // 2. Sync to Notion (Background)
+        if (updatedUser?.email) {
+            const { syncUpdateToNotion } = await import('@/lib/notion'); // Dynamic import
+            syncUpdateToNotion(updatedUser.email, { preferred_name: preferredName });
         }
 
-        const propertiesToUpdate: any = {};
+        return NextResponse.json({ success: true, message: 'Profile updated' });
 
-        // Update Preferred Name if provided
-        if (preferredName) {
-            propertiesToUpdate['Preferred Name'] = {
-                rich_text: [
-                    {
-                        text: {
-                            content: preferredName,
-                        },
-                    },
-                ],
-            };
-        }
-
-        // TODO: Handle Avatar URL update
-        // We need a hosted URL to update the 'Profile Image' file property or page icon.
-        // For now, we'll log it if we receive one but haven't implemented storage yet.
-        if (avatarUrl) {
-            console.log("Avatar URL update requested (requires external storage):", avatarUrl)
-            // If we had a hosted URL, we would do:
-            // propertiesToUpdate['Profile Image'] = {
-            //    files: [{ name: 'avatar', external: { url: avatarUrl } }]
-            // }
-        }
-
-        // Perform the update
-        if (Object.keys(propertiesToUpdate).length > 0) {
-            await notion.pages.update({
-                page_id: leadId,
-                properties: propertiesToUpdate,
-            });
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: 'Profile updated successfully'
-        });
-
-    } catch (error) {
+    } catch (error: any) {
         console.error('Profile Update Error:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to update user profile' },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, error: 'Failed to update' }, { status: 500 });
     }
 }

@@ -11,12 +11,8 @@ export default function AboutHero() {
     const router = useRouter();
 
     const handleProfileClick = () => {
-        if (isProfileComplete) {
-            router.push('/hub');
-        } else {
-            const url = leadId ? `/hub/profile/qualify?id=${leadId}` : '/hub/profile/qualify';
-            router.push(url);
-        }
+        const url = leadId ? `/hub/profile/qualify?id=${leadId}` : '/hub/profile/qualify';
+        router.push(url);
     };
 
     return (

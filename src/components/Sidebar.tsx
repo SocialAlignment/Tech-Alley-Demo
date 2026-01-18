@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Mic2, Gift, ClipboardList, Share2, Menu, X, CheckSquare, Star, Brain, MessageSquare, BookOpen, Users, Zap, Megaphone, Calendar } from 'lucide-react';
+import { Home, Mic2, Gift, ClipboardList, Share2, Menu, X, CheckSquare, Star, Brain, MessageSquare, BookOpen, Users, Zap, Megaphone, Calendar, Rocket } from 'lucide-react';
 import { FlipText } from '@/components/ui/flip-link';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -67,9 +67,9 @@ export default function Sidebar() {
                 { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
                 { label: 'Speakers', icon: Mic2, path: '/hub/speakers' },
                 { label: 'Networking Alignment', icon: Users, path: '/hub/networking' },
-                { label: 'Win $1,500 Audit', icon: Gift, path: '/hub/giveaway' },
-                { label: 'Get Free AI Training', icon: Brain, path: '/hub/ai-training' },
-                { label: 'Help Us Help You', icon: MessageSquare, path: '/hub/surveys' },
+                { label: 'Enter Raffle', icon: Gift, path: '/hub/raffle' },
+                { label: 'Productivity Audit', icon: Zap, path: '/hub/mri' },
+                { label: 'Innovation Grant', icon: Rocket, path: '/hub/grant' },
                 { label: 'Resources', icon: BookOpen, path: '/hub/resources' },
                 { label: 'Connect With Us', icon: Users, path: '/hub/connect' },
             ]

@@ -1,13 +1,15 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation';
-import EnrichmentForm from '@/components/ui/enrichment-form';
+import { useSearchParams, useRouter } from 'next/navigation';
+import UnifiedProfileWizard from '@/components/ui/unified-profile-wizard';
 import { TubesBackground } from '@/components/ui/neon-flow';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 
 function OnboardingContent() {
     const searchParams = useSearchParams();
     const leadId = searchParams.get('id');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();
 
     if (!leadId) {
         return (
@@ -19,7 +21,32 @@ function OnboardingContent() {
         );
     }
 
-    return <EnrichmentForm leadId={leadId} />;
+    const handleSubmit = async (formData: any) => {
+        setIsSubmitting(true);
+        try {
+            await fetch('/api/contact/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId, ...formData })
+            });
+            window.location.href = `/hub?id=${leadId}&onboarding=complete`;
+        } catch (e) {
+            console.error(e);
+            alert("Something went wrong. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="w-full max-w-5xl">
+            <UnifiedProfileWizard
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                initialData={{}}
+            />
+        </div>
+    );
 }
 
 export default function OnboardingPage() {
@@ -28,7 +55,7 @@ export default function OnboardingPage() {
             <div className="absolute inset-0 z-0">
                 <TubesBackground className="bg-black" />
             </div>
-            <div className="relative z-10 w-full max-w-md">
+            <div className="relative z-10 w-full flex justify-center">
                 <Suspense fallback={<div className="text-white">Loading...</div>}>
                     <OnboardingContent />
                 </Suspense>

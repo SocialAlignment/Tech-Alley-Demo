@@ -245,9 +245,11 @@ export default function ChecklistPage() {
                             const textValues = item.text.toLowerCase();
 
                             if (textValues.includes("connect with 5 new people")) actionUrl = "/hub/networking";
-                            else if (textValues.includes("submit a question")) actionUrl = "/hub/surveys";
+                            else if (textValues.includes("submit a question")) actionUrl = "/hub/mri";
                             else if (textValues.includes("complete your social profile")) actionUrl = leadId ? `/hub/profile/qualify?id=${leadId}` : '/hub/profile/qualify';
-                            else if (textValues.includes("enter the genai")) actionUrl = "/hub/giveaway";
+                            else if (textValues.includes("enter the genai")) actionUrl = "/hub/raffle";
+                            else if (textValues.includes("apply for grant")) actionUrl = "/hub/grant";
+                            else if (textValues.includes("productivity audit")) actionUrl = "/hub/mri";
                             else if (textValues.includes("follow hello henderson")) actionUrl = "https://www.youtube.com/@DeadSprintRadio/videos";
                             // Add more mappings as needed
 

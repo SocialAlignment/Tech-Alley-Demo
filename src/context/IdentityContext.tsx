@@ -76,30 +76,36 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
 
                     // Fetch details
                     console.log("IdentityContext: Fetching profile for", activeId);
-                    const res = await fetch('/api/identify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ leadId: activeId })
-                    });
+                    try {
+                        const res = await fetch('/api/identify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ leadId: activeId })
+                        });
+                        console.log("IdentityContext: Fetch response status:", res.status);
 
-                    const data = await res.json();
+                        const data = await res.json();
+                        console.log("IdentityContext: Fetch response data:", data);
 
-                    if (isMounted) {
-                        if (data.success && data.data) {
-                            console.log("IdentityContext: Profile loaded", data.data.name);
-                            setUserName(data.data.name);
-                            setEmail(data.data.email);
-                            setAvatar(data.data.avatar);
-                            setInstagram(data.data.contactDetails?.instagram || null);
-                            setIsProfileComplete(data.data.isProfileComplete);
-                            setMissionProgress(data.data.missionProgress);
-                        } else {
-                            console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
-                            // Invalid ID? Maybe clear it so we don't loop?
-                            if (localId && !urlId) {
-                                localStorage.removeItem('techalley_lead_id');
+                        if (isMounted) {
+                            if (data.success && data.data) {
+                                console.log("IdentityContext: Profile loaded", data.data.name);
+                                setUserName(data.data.name);
+                                setEmail(data.data.email);
+                                setAvatar(data.data.avatar);
+                                setInstagram(data.data.contactDetails?.instagram || null);
+                                setIsProfileComplete(data.data.isProfileComplete);
+                                setMissionProgress(data.data.missionProgress);
+                            } else {
+                                console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
+                                // Invalid ID? Maybe clear it so we don't loop?
+                                if (localId && !urlId) {
+                                    localStorage.removeItem('techalley_lead_id');
+                                }
                             }
                         }
+                    } catch (fetchError) {
+                        console.error("IdentityContext: Fetch error", fetchError);
                     }
                 } else {
                     console.log("IdentityContext: No ID found");

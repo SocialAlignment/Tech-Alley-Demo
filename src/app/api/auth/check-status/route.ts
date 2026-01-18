@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase";
 import { authOptions } from "../[...nextauth]/route";
 
 export async function GET(request: NextRequest) {
@@ -11,91 +12,56 @@ export async function GET(request: NextRequest) {
 
     const { email, name } = session.user;
 
-    // Notion Logic
-    const dbId = process.env.NOTION_LEADS_DB_ID?.trim();
-    const apiKey = process.env.NOTION_API_KEY?.trim();
-
-    if (!dbId || !apiKey) {
-        return NextResponse.json({ error: "Configuration missing" }, { status: 500 });
-    }
-
     try {
-        // 1. Check for existing lead
-        const queryRes = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                filter: {
-                    property: 'Email',
-                    email: {
-                        equals: email,
-                    },
-                },
-            }),
-        });
+        // 1. Supabase Check
+        const { data: existing } = await supabase
+            .from('leads')
+            .select('id')
+            .eq('email', email)
+            .single();
 
-        if (!queryRes.ok) throw new Error("Failed to query Notion");
-        const existing = await queryRes.json() as { results: any[] };
-
-
-        if (existing.results && existing.results.length > 0) {
-            const leadId = existing.results[0].id;
+        if (existing) {
             return NextResponse.json({
                 success: true,
-                redirect: `/hub?id=${leadId}`,
+                redirect: `/hub?id=${existing.id}`,
                 isNewUser: false
             });
         }
 
-        // 2. Create New Lead if not found
-        const createRes = await fetch('https://api.notion.com/v1/pages', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                parent: { database_id: dbId },
-                properties: {
-                    Name: {
-                        title: [{ text: { content: name || 'Google User' } }],
-                    },
-                    Email: {
-                        email: email,
-                    },
-                    'Lead Source': {
-                        select: { name: 'Tech Alley Henderson' },
-                    },
-                    'Google Oauth': {
-                        checkbox: true,
-                    },
-                    'Lead Status': {
-                        status: { name: 'Engaged' },
-                    },
-                    'Registered Events': {
-                        relation: [{ id: '2d56b72f-a765-80b9-bf33-cee0e586594c' }]
-                    },
-                },
-            }),
-        });
+        // 2. Create New Lead in Supabase
+        const { data: newLead, error } = await supabase
+            .from('leads')
+            .insert({
+                name: name || 'Google User',
+                email: email,
+                avatar: session.user.image, // Setup avatar from Google
+                // Initial empty CRM fields
+                company: '',
+                title: '',
+                phone: '',
+                instagram: ''
+            })
+            .select()
+            .single();
 
-        if (!createRes.ok) {
-            const err = await createRes.text();
-            console.error('Notion Create Error:', err);
-            throw new Error("Failed to create Notion Page");
+        if (error || !newLead) {
+            console.error("Supabase Create Error:", error);
+            throw new Error("Failed to create user in Supabase");
         }
 
-        const newLead = await createRes.json() as { id: string };
-        const newId = newLead.id;
+        // 3. Background Sync to Notion
+        // We import syncToNotion dynamically or just use the helper if imported
+        // Ideally imported at top level
+        const { syncToNotion } = await import('@/lib/notion');
+        syncToNotion({
+            name: name || 'Google User',
+            email: email,
+            // Google doesn't give these, but we pass what we have
+        });
 
         return NextResponse.json({
             success: true,
-            redirect: `/onboarding?id=${newId}`,
+            redirect: `/onboarding?id=${newLead.id}`, // Direct to onboarding form first
             isNewUser: true
         });
 

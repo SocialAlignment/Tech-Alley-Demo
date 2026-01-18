@@ -19,7 +19,7 @@ export default function HubLayout({
         const hasUrlId = searchParams.get('id');
         // Critical Fix: Never redirect if we have an ID in the URL, even if context is lagging
         if (!isLoading && !leadId && !hasUrlId) {
-            console.warn("HubLayout: No ID found in Context or URL. Redirecting to home.");
+            console.warn("HubLayout: No ID found in Context or URL. Redirecting to home.", { isLoading, leadId, hasUrlId });
             router.push('/');
         }
     }, [isLoading, leadId, router, searchParams]);
@@ -60,9 +60,8 @@ export default function HubLayout({
                     ) : null}
 
                     {/* If we have an ID (even if loading), show the children. They handle their own empty states. */}
+                    {children}
 
-                    {/* Only show children if we have a leadId, otherwise show nothing (waiting for redirect) */}
-                    {leadId ? children : null}
                 </div>
             </main>
         </div>

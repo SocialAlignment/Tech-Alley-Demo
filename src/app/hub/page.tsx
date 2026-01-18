@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar, Mic2, Gift, Sparkles, CheckSquare, MessageSquare, X,
-    Loader2, Send, ArrowRight, Camera
+    Loader2, Send, ArrowRight, Camera, Rocket
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useIdentity } from '@/context/IdentityContext';
@@ -189,8 +189,8 @@ export default function HubPage() {
                             </div>
 
                             <div className="flex flex-wrap gap-4">
-                                <button onClick={() => navigateTo('/hub/surveys/business-mri')} className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_15px_35px_-10px_rgba(37,99,235,0.6)] transition-all transform hover:-translate-y-0.5">
-                                    Start Here
+                                <button onClick={() => navigateTo('/hub/mri')} className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_15px_35px_-10px_rgba(37,99,235,0.6)] transition-all transform hover:-translate-y-0.5">
+                                    Start Audit
                                 </button>
                                 <button onClick={() => setIsAskModalOpen(true)} className="px-6 py-3.5 bg-white text-slate-700 font-bold rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:bg-slate-50 hover:shadow-md transition-all flex items-center gap-2 group">
                                     <MessageSquare size={18} className="text-blue-500 group-hover:scale-110 transition-transform" />
@@ -266,7 +266,7 @@ export default function HubPage() {
 
                     <div className="text-center mb-8 relative z-10">
                         <h2 className="text-2xl font-bold text-slate-900 mb-2">Exclusive Raffle</h2>
-                        <p className="text-sm text-slate-500">Spin for a chance to win a custom 12s AI Commercial!</p>
+                        <p className="text-sm text-slate-500">Spin for a chance to win a Free GenAI Video Audit!</p>
                     </div>
 
                     <div className="flex justify-center relative z-10">
@@ -303,7 +303,7 @@ export default function HubPage() {
                         <motion.div
                             variants={itemParams}
                             initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/giveaway')}
+                            onClick={() => navigateTo('/hub/raffle')}
                             className="bg-gradient-to-r from-pink-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-pink-100 hover:border-pink-200 hover:shadow-[0_10px_20px_-5px_rgba(236,72,153,0.15)] transition-all flex items-center gap-4 group"
                         >
                             <div className="w-12 h-12 rounded-2xl bg-white border border-pink-50 shadow-sm flex items-center justify-center text-pink-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
@@ -311,7 +311,7 @@ export default function HubPage() {
                             </div>
                             <div>
                                 <h4 className="font-bold text-slate-800 text-sm">Enter Raffle</h4>
-                                <p className="text-pink-400 text-xs font-medium">Win the AI Commercial</p>
+                                <p className="text-pink-400 text-xs font-medium">Win a GenAI Audit</p>
                             </div>
                         </motion.div>
 
@@ -319,33 +319,36 @@ export default function HubPage() {
                         <motion.div
                             variants={itemParams}
                             initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/surveys/business-mri')}
+                            onClick={() => navigateTo('/hub/mri')}
                             className="bg-gradient-to-r from-cyan-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-cyan-100 hover:border-cyan-200 hover:shadow-[0_10px_20px_-5px_rgba(6,182,212,0.15)] transition-all flex items-center gap-4 group"
                         >
                             <div className="w-12 h-12 rounded-2xl bg-white border border-cyan-50 shadow-sm flex items-center justify-center text-cyan-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
                                 <Sparkles size={22} />
                             </div>
                             <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Business MRI</h4>
-                                <p className="text-cyan-400 text-xs font-medium">Get your 2026 Diagnosis</p>
+                                <h4 className="font-bold text-slate-800 text-sm">Productivity Audit</h4>
+                                <p className="text-cyan-400 text-xs font-medium">Mini MRI (10+ Hrs Back)</p>
+                            </div>
+                        </motion.div>
+
+                        {/* 3. Innovation Grant (Violet Pastel) */}
+                        <motion.div
+                            variants={itemParams}
+                            initial="hidden" animate="show"
+                            onClick={() => navigateTo('/hub/grant')}
+                            className="bg-gradient-to-r from-violet-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-violet-100 hover:border-violet-200 hover:shadow-[0_10px_20px_-5px_rgba(139,92,246,0.15)] transition-all flex items-center gap-4 group"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-violet-50 shadow-sm flex items-center justify-center text-violet-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                <Rocket size={22} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">Innovation Grant</h4>
+                                <p className="text-violet-400 text-xs font-medium">$5k in AI Architecture</p>
                             </div>
                         </motion.div>
 
                         {/* 3. Feedback (Purple Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/surveys')}
-                            className="bg-gradient-to-r from-indigo-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-indigo-100 hover:border-indigo-200 hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-indigo-50 shadow-sm flex items-center justify-center text-indigo-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                                <MessageSquare size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Feedback</h4>
-                                <p className="text-indigo-400 text-xs font-medium">Help us improve</p>
-                            </div>
-                        </motion.div>
+
 
                         {/* 4. Speak Here (Blue Pastel) */}
                         <motion.div

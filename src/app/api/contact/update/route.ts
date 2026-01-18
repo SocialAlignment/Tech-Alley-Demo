@@ -1,78 +1,45 @@
-import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-
+// Refactored to Supabase + Background Sync
 export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { leadId, ...data } = body;
 
-        console.log("Received Contact Update for:", leadId, data);
+        if (!leadId) return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
 
-        if (!leadId) {
-            return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
+        console.log("Received Contact Update for:", leadId);
+
+        // 1. Map Frontend Data to Supabase Columns
+        const updateData: any = {};
+
+        // Basic Info
+        if (data.phone) updateData.phone = data.phone;
+
+        // Socials (Clean up URLs)
+        const cleanUrl = (url: string) => url ? (url.startsWith('@') ? `https://instagram.com/${url.substring(1)}` : url) : null;
+        if (data.instagram) updateData.instagram = cleanUrl(data.instagram);
+        if (data.linkedin) updateData.linkedin = data.linkedin;
+        if (data.facebook) updateData.facebook = data.facebook;
+        if (data.youtube) updateData.youtube = data.youtube;
+        if (data.schedulingLink) updateData.scheduling_link = data.schedulingLink;
+
+        // MRI / Profile Text
+        if (data.hometown) updateData.hometown = data.hometown;
+        if (data.timezone) updateData.timezone = data.timezone;
+        if (data.bestTime) updateData.best_time = data.bestTime;
+        if (data.askMeAbout) updateData.ask_me_about = data.askMeAbout;
+        if (data.helpMeBy) updateData.help_me_by = data.helpMeBy;
+        if (data.helpYouBy) updateData.help_you_by = data.helpYouBy;
+
+        // Preferences
+        if (data.learningPreference) {
+            // Ensure it's an array for Supabase (text[])
+            updateData.learning_preference = Array.isArray(data.learningPreference) ? data.learningPreference : [data.learningPreference];
         }
 
-        const properties: any = {};
-
-        // Helper to format Rich Text
-        const toRichText = (content: string) => ([{ text: { content: content || '' } }]);
-
-        // 1. Phone
-        if (data.phone) {
-            properties['Phone'] = { phone_number: data.phone };
-        }
-
-        // 2. URLs (Socials & Schedule)
-        // NOTE: Notion Database has these as 'Text' (rich_text), not 'URL'
-        const socialFields = [
-            { key: 'instagram', prop: 'Instagram' },
-            { key: 'linkedin', prop: 'LinkedIn' },
-            { key: 'facebook', prop: 'Facebook' },
-            { key: 'youtube', prop: 'YouTube' },
-            { key: 'schedulingLink', prop: 'Scheduling Link' }
-        ];
-
-        socialFields.forEach(({ key, prop }) => {
-            if (data[key]) {
-                let url = data[key];
-                // basic cleanup
-                if (key === 'instagram' && url.startsWith('@')) {
-                    url = `https://instagram.com/${url.substring(1)}`;
-                }
-
-                // Save as Rich Text because Notion schema is Text
-                properties[prop] = { rich_text: toRichText(url) };
-            }
-        });
-
-        // 3. Text Fields (Matching exact Notion Schema: Sentence case + colon)
-        if (data.hometown) properties['Hometown'] = { rich_text: toRichText(data.hometown) };
-        if (data.timezone) properties['Timezone'] = { rich_text: toRichText(data.timezone) };
-        if (data.bestTime) properties['Best Time to Reach'] = { rich_text: toRichText(data.bestTime) };
-
-        if (data.askMeAbout) properties['Ask Me About'] = { rich_text: toRichText(data.askMeAbout) };
-        // Corrected Name: "You can help me by:"
-        if (data.helpMeBy) properties['You can help me by:'] = { rich_text: toRichText(data.helpMeBy) };
-        // Corrected Name: "I can help you by:"
-        if (data.helpYouBy) properties['I can help you by:'] = { rich_text: toRichText(data.helpYouBy) };
-
-        // 4. Multi-Select Fields (Learning Preference & Comm Prefs)
-
-        // Learning Preference
-        if (data.learningPreference && Array.isArray(data.learningPreference) && data.learningPreference.length > 0) {
-            properties['Learning Preference'] = {
-                multi_select: data.learningPreference.map((pref: string) => ({ name: pref }))
-            };
-        } else if (typeof data.learningPreference === 'string' && data.learningPreference) {
-            properties['Learning Preference'] = {
-                multi_select: [{ name: data.learningPreference }]
-            };
-        }
-
-        // Comm Prefs - Name Correction: Singular "Communication Preference"
-        if (data.commPrefs && Array.isArray(data.commPrefs) && data.commPrefs.length > 0) {
+        if (data.commPrefs) {
             const commMap: Record<string, string> = {
                 "Text/SMS": "SMS",
                 "Phone Call": "Phone",
@@ -80,35 +47,145 @@ export async function POST(request: Request) {
                 "Social Media": "Social Media",
                 "Scheduling Link": "Scheduling Link"
             };
-
-            // Notion "Select" only accepts ONE value. We take the first one selected.
-            const rawPref = data.commPrefs[0];
-            const finalPref = commMap[rawPref] || rawPref;
-
-            properties['Communication Preference'] = {
-                select: { name: finalPref }
-            };
+            // Supabase expects a single string for communication_preference
+            const rawPref = Array.isArray(data.commPrefs) ? data.commPrefs[0] : data.commPrefs;
+            updateData.communication_preference = commMap[rawPref] || rawPref;
         }
 
-        // Perform Update
-        if (Object.keys(properties).length > 0) {
-            // Check the 'Social Profile Completed' box
-            properties['Social Profile Completed'] = { checkbox: true };
+        // Onboarding / Business Data
+        if (data.industry) updateData.industry = data.industry;
+        if (data.company) updateData.company = data.company;
+        if (data.role) updateData.role = data.role;
+        if (data.website) updateData.website = data.website;
+        if (data.businessType) updateData.business_type = data.businessType;
+        if (data.employeeCount) updateData.employee_count = data.employeeCount;
+        if (data.decisionMaker) updateData.decision_maker = data.decisionMaker;
+        if (data.isFirstTime !== undefined) updateData.is_first_time = data.isFirstTime;
+        if (data.goalForTonight) updateData.goal_for_tonight = data.goalForTonight;
+        if (data.vision) updateData.vision = data.vision;
+        if (data.estimatedMonthlyRevenue) updateData.estimated_monthly_revenue = data.estimatedMonthlyRevenue;
+        if (data.currentLeadsPerMonth) updateData.current_leads_per_month = data.currentLeadsPerMonth;
 
-            await notion.pages.update({
-                page_id: leadId,
-                properties: properties,
-            });
+        // 3. AI MRI Data Aggregation
+        // The wizard sends flat fields, we need to bundle them for the JSONB column
+        // We merge with any existing `aiMriResponse` passed, prioritizing the flat fields
+        const mriFields = {
+            profession: data.profession,
+            companyName: data.companyName,
+            businessStatus: data.businessStatus,
+            revenueRange: data.revenueRange,
+            softwareSpend: data.softwareSpend,
+            mainBottleneck: data.mainBottleneck,
+            urgency: data.urgency,
+            manualHours: data.manualHours,
+            giftedHours: data.giftedHours,
+            vision3mo: data.vision3mo,
+            servicesInterest: data.servicesInterest,
+            workshopsInterest: data.workshopsInterest,
+            hiringInterest: data.hiringInterest,
+            trainingInterest: data.trainingInterest
+        };
+
+        // Remove undefined/null keys to keep JSON clean
+        const cleaningMri = Object.fromEntries(Object.entries(mriFields).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
+
+        if (Object.keys(cleaningMri).length > 0) {
+            updateData.ai_mri_response = {
+                ...(data.aiMriResponse || {}),
+                ...cleaningMri
+            };
+        } else if (data.aiMriResponse) {
+            updateData.ai_mri_response = data.aiMriResponse;
+        }
+
+        // Initialize Admin Client to bypass RLS
+        const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+        console.log(`[Contact Update] Using Admin Client? ${hasServiceKey}`);
+
+        const adminAuthClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? require('@supabase/supabase-js').createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY
+            )
+            : supabase;
+
+        // 4. Update Supabase (Leads Table)
+        const { data: updatedUser, error } = await adminAuthClient
+            .from('leads')
+            .update(updateData)
+            .eq('id', leadId)
+            .select('email') // Needed for Notion Sync
+            .maybeSingle();
+
+        if (error) {
+            console.error("[Contact Update] database error:", error);
+            throw new Error(error.message);
+        }
+
+        // If no user was updated (maybeSingle returned null), it means ID didn't match OR strict RLS blocking
+        if (!updatedUser) {
+            console.error(`[Contact Update] FAILED. No user found with ID ${leadId}. RLS blocked or Invalid ID.`);
+            // Return ERROR so frontend doesn't show success confetti
+            return NextResponse.json({
+                success: false,
+                error: 'Update failed. No user found or permission denied.',
+                debug: { hasServiceKey, leadId }
+            }, { status: 400 });
+        }
+
+        // 5. Handle GenAI Raffle Entry (Upsert Logic)
+        // 5. Handle GenAI Raffle Entry (Upsert Logic)
+        // Check if we have raffle data (Legacy or New Wizard)
+        if (data.targetAudience || data.painPoint || data.uniqueSolution || data.aiExpectations || data.aiHesitation || data.interestedServices) {
+            console.log("[Contact Update] Processing Raffle Entry...");
+            const raffleData = {
+                lead_id: leadId,
+                // Legacy / Manual
+                target_audience: data.targetAudience,
+                pain_point: data.painPoint,
+                unique_solution: data.uniqueSolution,
+                mascot_details: data.mascotDetails,
+                content_problem: data.contentProblem,
+                ad_spend: data.adSpend,
+                lead_volume: data.leadVolume,
+
+                // New Wizard Fields
+                gen_ai_exp: data.genAiExp,
+                ai_expectations: data.aiExpectations,
+                ai_hesitation: data.aiHesitation,
+                interested_services: data.interestedServices, // specific text[] column in DB
+
+                form_type: 'Unified Profile',
+                // Don't overwrite is_winner if it exists
+            };
+
+            // We try to update existing entry first to avoid duplicates
+            const { error: raffleError } = await adminAuthClient
+                .from('raffle_entries')
+                .upsert(raffleData, { onConflict: 'lead_id', ignoreDuplicates: false });
+            // Note: 'lead_id' must be a unique constraint or primary key for onConflict to work perfectly.
+            // If it fails, we catch it.
+
+            if (raffleError) {
+                console.error("[Contact Update] Raffle Upsert Error:", raffleError);
+                // We don't block the main success response, but we log it.
+            } else {
+                console.log("[Contact Update] Raffle Entry Synced.");
+            }
+        }
+
+        // 6. Sync to Notion (Background)
+        if (updatedUser?.email) {
+            const { syncUpdateToNotion } = await import('@/lib/notion');
+            // We pass the same data structure we used for Supabase,
+            // but `syncUpdateToNotion` expects keys matching the SQL columns mostly (snake_case)
+            syncUpdateToNotion(updatedUser.email, updateData);
         }
 
         return NextResponse.json({ success: true });
 
     } catch (error: any) {
         console.error('Contact Update Error:', error);
-        // Log detailed Notion error
-        if (error.body) {
-            console.error('Notion Error Body:', error.body);
-        }
         return NextResponse.json(
             {
                 success: false,
