@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { ArrowUpRight, Loader2 } from 'lucide-react';
+import { ArrowUpRight, Loader2, HelpCircle } from 'lucide-react';
 import SpeakerDrawer, { ExtendedSpeaker } from '@/components/SpeakerDrawer';
 import { motion } from 'framer-motion';
 import { WarpBackground } from '@/components/ui/warp-background';
@@ -285,8 +285,13 @@ export default function SpeakersPage() {
                                                     <img src={speaker.image} alt={speaker.name} className={`w-full h-full object-cover ${speaker.imageClassName || ''}`} loading="lazy" />
                                                 </div>
                                                 {/* Logo - Sized Up & Filtered */}
-                                                <div className={`w-32 h-32 transition-all duration-500 p-1 ${speaker.id === '4' ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
-                                                    <img src={speaker.promoImage} alt="Logo" className="w-full h-full object-contain scale-[2.0] translate-y-1 -translate-x-6" />
+                                                {/* Logo - Sized Up & Filtered */}
+                                                <div className={`w-40 h-40 transition-all duration-500 p-1 flex items-center justify-center ${speaker.id === '4' ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
+                                                    {speaker.id === '2' ? (
+                                                        <HelpCircle className="w-24 h-24 text-white opacity-80" />
+                                                    ) : (
+                                                        <img src={speaker.promoImage} alt="Logo" className="w-full h-full object-contain scale-[2.0] translate-y-1 -translate-x-6" />
+                                                    )}
                                                 </div>
                                             </div>
 
