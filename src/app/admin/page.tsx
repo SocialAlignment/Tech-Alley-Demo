@@ -7,6 +7,7 @@ import { Users, Ticket, CheckSquare, Bell, Mail, MessageSquare, RefreshCw, Troph
 import { WarpBackground } from '@/components/ui/warp-background';
 import RaffleWheel from '@/components/admin/RaffleWheel';
 import BroadcastModal from '@/components/admin/BroadcastModal';
+import { EventApprovalWidget } from '@/components/admin/EventApprovalWidget';
 
 // Data Interfaces
 export interface DashboardStats {
@@ -157,8 +158,42 @@ export default function AdminDashboardPage() {
                         </div>
                     </BentoCard>
 
+
+                    {/* Data Feed: Recent Activity */}
+                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.4}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold flex items-center gap-2">
+                                <RefreshCw className={`w-4 h-4 text-slate-400 ${loading ? 'animate-spin' : ''}`} /> Live Feed
+                            </h3>
+                            <span className="text-xs bg-slate-800 px-2 py-1 rounded border border-white/5">Real-time</span>
+                        </div>
+                        <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mx-4 px-4 space-y-2">
+                            {leads.length === 0 ? (
+                                <p className="text-slate-500 text-sm text-center py-4">Waiting for check-ins...</p>
+                            ) : (
+                                leads.map((lead) => (
+                                    <div key={lead.id} className="flex items-center justify-between p-3 rounded bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-sm text-white">{lead.name}</span>
+                                            <span className="text-xs text-slate-400">{lead.email}</span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">{lead.role}</span>
+                                            <span className="text-[10px] text-slate-500 mt-1">{lead.company}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </BentoCard>
+
+                    {/* Action: Event Approvals */}
+                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.45}>
+                        <EventApprovalWidget />
+                    </BentoCard>
+
                     {/* Action: Broadcast (High Priority) */}
-                    <BentoCard className="md:col-span-1 md:row-span-2 bg-gradient-to-b from-red-900/20 to-slate-900/50 border-red-500/30 hover:border-red-500/60" delay={0.4}>
+                    <BentoCard className="md:col-span-1 md:row-span-2 bg-gradient-to-b from-red-900/20 to-slate-900/50 border-red-500/30 hover:border-red-500/60" delay={0.5}>
                         <div className="flex items-center gap-2 mb-6">
                             <Bell className="w-5 h-5 text-red-400" />
                             <h3 className="font-bold text-red-100">BROADCAST</h3>
@@ -186,34 +221,6 @@ export default function AdminDashboardPage() {
                                 <span>Deploy Voice Agent</span>
                             </button>
                             <p className="text-[10px] text-red-400/60 text-center mt-2">Will notify all active attendees immediately.</p>
-                        </div>
-                    </BentoCard>
-
-                    {/* Data Feed: Recent Activity */}
-                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.5}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold flex items-center gap-2">
-                                <RefreshCw className={`w-4 h-4 text-slate-400 ${loading ? 'animate-spin' : ''}`} /> Live Feed
-                            </h3>
-                            <span className="text-xs bg-slate-800 px-2 py-1 rounded border border-white/5">Real-time</span>
-                        </div>
-                        <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mx-4 px-4 space-y-2">
-                            {leads.length === 0 ? (
-                                <p className="text-slate-500 text-sm text-center py-4">Waiting for check-ins...</p>
-                            ) : (
-                                leads.map((lead) => (
-                                    <div key={lead.id} className="flex items-center justify-between p-3 rounded bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-sm text-white">{lead.name}</span>
-                                            <span className="text-xs text-slate-400">{lead.email}</span>
-                                        </div>
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">{lead.role}</span>
-                                            <span className="text-[10px] text-slate-500 mt-1">{lead.company}</span>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
                         </div>
                     </BentoCard>
 

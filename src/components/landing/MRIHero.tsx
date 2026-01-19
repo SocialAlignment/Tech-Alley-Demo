@@ -64,35 +64,35 @@ export function MRIHero() {
                 {/* Right: Visual (Scanner Interface) */}
                 <div className="relative w-full h-[400px] lg:h-[600px] flex items-center justify-center hidden lg:flex">
                     {/* Floating Holographic Interface */}
-                    <div className="relative w-96 h-80 bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 flex flex-col gap-4 shadow-[0_0_50px_-10px_rgba(6,182,212,0.2)]">
+                    <div className="relative w-[500px] h-[400px] bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 flex flex-col gap-6 shadow-[0_0_50px_-10px_rgba(6,182,212,0.2)]">
                         {/* Header UI */}
                         <div className="flex justify-between items-center border-b border-cyan-500/20 pb-4">
-                            <div className="font-mono text-cyan-400 text-xs">SYSTEM_DIAGNOSTIC_V2.0</div>
-                            <div className="flex gap-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/50" />
+                            <div className="font-mono text-cyan-400 text-sm">SYSTEM_DIAGNOSTIC_V2.0</div>
+                            <div className="flex gap-2">
+                                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                                <div className="w-2 h-2 rounded-full bg-cyan-500/50" />
                             </div>
                         </div>
 
                         {/* Body UI */}
                         <div className="flex-1 grid grid-cols-2 gap-4">
-                            <div className="bg-cyan-500/5 rounded p-3 border border-cyan-500/10">
-                                <div className="text-xs text-slate-400 mb-1">EFFICIENCY</div>
-                                <div className="text-2xl font-bold text-white">42%</div>
-                                <div className="w-full bg-slate-800 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-cyan-500/5 rounded p-4 border border-cyan-500/10">
+                                <div className="text-sm text-slate-400 mb-1">EFFICIENCY</div>
+                                <div className="text-3xl font-bold text-white">42%</div>
+                                <div className="w-full bg-slate-800 h-1.5 mt-3 rounded-full overflow-hidden">
                                     <div className="bg-red-500 h-full w-[42%]" />
                                 </div>
                             </div>
-                            <div className="bg-cyan-500/5 rounded p-3 border border-cyan-500/10">
-                                <div className="text-xs text-slate-400 mb-1">WASTE</div>
-                                <div className="text-2xl font-bold text-white">$2.4k</div>
-                                <div className="w-full bg-slate-800 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-cyan-500/5 rounded p-4 border border-cyan-500/10">
+                                <div className="text-sm text-slate-400 mb-1">WASTE</div>
+                                <div className="text-3xl font-bold text-white">$2.4k</div>
+                                <div className="w-full bg-slate-800 h-1.5 mt-3 rounded-full overflow-hidden">
                                     <div className="bg-amber-500 h-full w-[65%]" />
                                 </div>
                             </div>
 
                             {/* Scanning Graph */}
-                            <div className="col-span-2 bg-slate-950/50 rounded h-24 relative overflow-hidden flex items-end p-2 gap-1">
+                            <div className="col-span-2 bg-slate-950/50 rounded h-32 relative overflow-hidden flex items-end p-2 gap-1.5">
                                 {[...Array(20)].map((_, i) => (
                                     <motion.div
                                         key={i}

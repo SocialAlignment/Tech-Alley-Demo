@@ -49,6 +49,12 @@ export async function GET() {
                                     status: {
                                         equals: 'Done'
                                     }
+                                },
+                                {
+                                    property: 'Status',
+                                    status: {
+                                        equals: 'Course Idea'
+                                    }
                                 }
                             ]
                         }

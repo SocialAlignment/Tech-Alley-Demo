@@ -32,12 +32,17 @@ export function QuestionsProvider({ children }: { children: ReactNode }) {
         // Ideally we load for all relevant speakers or dynamically
         // For now, let's look for known speakers ID 1, 2, 4
         // Or better yet, we just listen to ALL questions from the DB
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('feedback')
             .select('*')
             .eq('type', 'question')
             .eq('is_answered', false)
+            .eq('is_answered', false)
             .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching questions in Context:', error);
+        }
 
         if (data) {
             const mapped: Question[] = data.map(q => ({

@@ -195,3 +195,42 @@ export async function submitEventToNotion(eventData: {
         throw e;
     }
 }
+
+// Helper to Update Event Status (Approve/Reject)
+export async function updateEventStatus(pageId: string, status: 'Approved' | 'Pending Review' | 'Rejected' | 'Done') {
+    if (!process.env.NOTION_API_KEY) {
+        throw new Error("Missing Notion API Key");
+    }
+
+    try {
+        const apiKey = process.env.NOTION_API_KEY;
+        const NOTION_VERSION = '2022-06-28';
+
+        console.log(`Updating Event Status: ${pageId} -> ${status}`);
+
+        const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Notion-Version': NOTION_VERSION,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                properties: {
+                    Status: { status: { name: status } }
+                }
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error(`Notion Update Failed: ${res.status} ${err}`);
+        }
+
+        console.log("Event Status Updated Successfully");
+        return { success: true };
+    } catch (e) {
+        console.error("Event Status Update Error", e);
+        throw e;
+    }
+}

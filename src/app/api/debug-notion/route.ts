@@ -8,46 +8,94 @@ const EVENTS_DB_ID = '2eb6b72f-a765-8137-a249-e09442a38221';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const debugData: any = {
+        logs: [],
+        dbId: EVENTS_DB_ID,
+        apiKeyStart: process.env.NOTION_API_KEY ? process.env.NOTION_API_KEY.substring(0, 4) + '...' : 'MISSING'
+    };
+
+    const log = (msg: string, data?: any) => {
+        debugData.logs.push({ msg, data });
+        console.log(msg, data);
+    };
+
     try {
-        console.log("DEBUG: Inspeting Notion DB from API Route");
+        log("DEBUG: Inspeting Notion DB from API Route");
 
         // 1. Inspect DB Metadata (properties)
-        // Retrieve might not work as seen before, but let's try safely
         try {
             const dbResponse = await notion.databases.retrieve({ database_id: EVENTS_DB_ID });
-            console.log("DEBUG: DB Retrieve Properties Key Exists?", 'properties' in dbResponse);
+            log("DEBUG: DB Retrieve Success", {
+                id: dbResponse.id,
+                // @ts-ignore
+                title: dbResponse.title?.[0]?.plain_text
+            });
+
             // @ts-ignore
             if (dbResponse.properties) {
-                console.log("DEBUG: DB Properties:", JSON.stringify(Object.keys(dbResponse.properties), null, 2));
-                // Check Status specifically
                 // @ts-ignore
-                console.log("DEBUG: Status Prop:", JSON.stringify(dbResponse.properties['Status'], null, 2));
+                const propKeys = Object.keys(dbResponse.properties);
+                log("DEBUG: DB Properties Keys", propKeys);
+
+                // Detailed Schema for critical fields
+                log("DEBUG: Schema Details", {
+                    // @ts-ignore
+                    Status: dbResponse.properties['Status'],
+                    // @ts-ignore
+                    Date: dbResponse.properties['Date'],
+                    // @ts-ignore
+                    Tags: dbResponse.properties['Tags']
+                });
             }
-        } catch (e) {
-            console.error("DEBUG: DB Retrieve Failed", e);
+        } catch (e: any) {
+            log("DEBUG: DB Retrieve Failed", e.message);
+            debugData.dbError = e;
         }
 
-        // 2. Query one item to see row properties
-        const queryResponse = await notion.databases.query({
-            database_id: EVENTS_DB_ID,
-            page_size: 1
+        // 2. Query items (no filter to see what's there) using Native Fetch
+        const url = `https://api.notion.com/v1/databases/${EVENTS_DB_ID}/query`;
+        const options = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                page_size: 5 // Get a few to see patterns
+            })
+        };
+
+        log("DEBUG: Fetching with native fetch", url);
+        const res = await fetch(url, options);
+
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(`Fetch failed: ${res.status} ${txt}`);
+        }
+
+        const queryResponse = await res.json();
+
+        log("DEBUG: Query Success. Results count:", queryResponse.results.length);
+
+        const rows = queryResponse.results.map((page: any) => {
+            return {
+                id: page.id,
+                created_time: page.created_time,
+                properties: {
+                    Name: page.properties.Name?.title?.[0]?.plain_text,
+                    Date: page.properties.Date?.date,
+                    Status: page.properties.Status?.status || page.properties.Status?.select,
+                    Tags: page.properties.Tags?.multi_select || page.properties.Tags?.select
+                }
+            };
         });
-        console.log("DEBUG: Query Success. Results count:", queryResponse.results.length);
 
-        if (queryResponse.results.length > 0) {
-            const page = queryResponse.results[0];
-            // @ts-ignore
-            if (page.properties) {
-                console.log("DEBUG: Row Properties Keys:", JSON.stringify(Object.keys(page.properties), null, 2));
-                // Check 'Status' value on the row
-                // @ts-ignore
-                console.log("DEBUG: Row 'Status' Value:", JSON.stringify(page.properties['Status'], null, 2));
-            }
-        }
+        debugData.rows = rows;
 
-        return NextResponse.json({ status: 'Debug logs printed to console' });
+        return NextResponse.json(debugData);
     } catch (error) {
-        console.error("DEBUG: Overall Error", error);
-        return NextResponse.json({ error: String(error) }, { status: 500 });
+        log("DEBUG: Overall Error", error);
+        return NextResponse.json({ ...debugData, error: String(error) }, { status: 500 });
     }
 }

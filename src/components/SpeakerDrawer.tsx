@@ -6,6 +6,7 @@ import { X, MapPin, Calendar, Clock, ArrowRight, User, Briefcase, Award, FileTex
 import { clsx } from 'clsx';
 import { useQuestions } from '@/context/QuestionsContext';
 import { QuestionsStack } from './QuestionsStack';
+import SpeakerInteractionModal from './SpeakerInteractionModal';
 
 
 // --- Types ---
@@ -107,6 +108,7 @@ const SocialDisplayRow = ({ icon, value, placeholder, iconColorClass = "text-sla
 
 export default function SpeakerDrawer({ isOpen, onClose, speaker, initialTab = 'bio' }: SpeakerDrawerProps) {
     const [activeTab, setActiveTab] = useState<'bio' | 'questions' | 'feedback' | 'business' | 'expertise' | 'resources' | 'contact'>(initialTab);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const { getQuestionsBySpeakerId, markAsAnswered } = useQuestions();
 
     // Reset tab when drawer opens with a new initialTab
@@ -328,9 +330,18 @@ export default function SpeakerDrawer({ isOpen, onClose, speaker, initialTab = '
 
                                         {activeTab === 'questions' && (
                                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <SectionHeader title="Q&A Questions">
-                                                    Submitted questions for the session.
-                                                </SectionHeader>
+                                                <div className="flex items-center justify-between">
+                                                    <SectionHeader title="Q&A Questions">
+                                                        Submitted questions for the session.
+                                                    </SectionHeader>
+                                                    <button
+                                                        onClick={() => setIsModalOpen(true)}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-lg shadow-lg hover:shadow-cyan-500/20 transition-all transform hover:-translate-y-0.5 text-sm"
+                                                    >
+                                                        <MessageSquare size={16} />
+                                                        Ask a Question
+                                                    </button>
+                                                </div>
 
                                                 <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden min-h-[400px]">
                                                     <QuestionsStack questions={speakerQuestions} onMarkAnswered={markAsAnswered} />
@@ -424,6 +435,13 @@ export default function SpeakerDrawer({ isOpen, onClose, speaker, initialTab = '
                     </div>
                 </>
             )}
+
+            <SpeakerInteractionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                speaker={speaker}
+                initialMode="question"
+            />
         </AnimatePresence>
     );
 }

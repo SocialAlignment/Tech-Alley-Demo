@@ -13,34 +13,131 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useIdentity } from '@/context/IdentityContext';
 import SpeakerCard from '@/components/SpeakerCard';
+import SpeakerDrawer, { ExtendedSpeaker } from '@/components/SpeakerDrawer';
+import { getTonightLineup } from '@/lib/lineup';
 import { cn } from '@/lib/utils';
 
 // --- DATA CONSTANTS ---
 
-const SPEAKERS = [
+// Tentative mapping of user uploaded logos.
+// 0: Tech Alley, 1: Dead Sprint, 2: GOED, 3: Social Alignment, 4: Silver Sevens
+const LOGO_MAP = {
+    techAlley: '/ta-header-badge.png',
+    deadSprint: '/logos/new/logo-4.png',
+    goed: '/logos/new/logo-2.png',
+    socialAlignment: '/logos/new/logo-1.png',
+    silverSevens: '/logos/new/logo-3.png'
+};
+
+const FALLBACK_SPEAKERS: ExtendedSpeaker[] = [
     {
-        name: "Lorraine",
-        title: "Founder & Organizer",
-        company: "Tech Alley Henderson",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
-        topics: ["State of the Alley", "Innovation Hub", "Community Growth"],
-        id: "0"
+        id: '3',
+        name: 'Lorainne Yarde',
+        title: 'Chapter Lead',
+        company: 'Tech Alley Henderson',
+        image: '/lorainne-profile.png',
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.techAlley,
+        topics: ['State of the Alley', 'Innovation Hub'],
+        bioShort: 'Leading the charge for innovation and community connection.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Community Organization',
+        valueProposition: 'I help tech enthusiasts connect with like-minded individuals using community events.',
+        landingPage: 'https://techalley.org',
+        deckLink: 'https://techalley.org/deck',
+        resourceLink: 'https://techalley.org/resource',
+        sessionTitle: 'State of the Alley 2024',
+        sessionAbstract: 'An update on the progress of Tech Alley and what lies ahead for the innovation community in Henderson.',
+        socials: { linkedin: 'https://linkedin.com', instagram: 'https://instagram.com', facebook: 'https://facebook.com' },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Jonathan",
-        title: "Host",
-        company: "Social Alignment",
-        image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=200",
-        topics: ["System Automation", "Lead Gen", "Digital Strategy"],
-        id: "1"
+        id: '5',
+        name: 'Hoz Roushdi',
+        title: 'Host',
+        company: 'Hello Henderson Podcast',
+        image: '/hoz-profile.jpg',
+        promoImage: LOGO_MAP.deadSprint,
+        topics: ['Podcasting', 'Content Strategy'],
+        bioShort: 'Voice of the community and podcasting expert.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Media & Podcasting',
+        valueProposition: 'I help creators launch successful podcasts using proven content strategies.',
+        landingPage: 'https://deadsprintradio.com',
+        deckLink: 'https://deadsprintradio.com/deck',
+        resourceLink: 'https://deadsprintradio.com/resource',
+        sessionTitle: 'Podcasting 101',
+        sessionAbstract: 'A comprehensive guide to starting your own podcast, from equipment selection to content planning and distribution.',
+        socials: { linkedin: 'https://linkedin.com', youtube: 'https://youtube.com/@deadsprint', instagram: 'https://instagram.com' },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Jorge 'HOZ' Hernandez",
-        title: "Host",
-        company: "Dead Sprint",
-        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200",
-        topics: ["Podcasting", "Content Strategy", "Community"],
-        id: "2"
+        id: '1',
+        name: 'Shaq Cruz',
+        title: 'Entrepreneurship Coordinator',
+        company: 'GOED',
+        image: '/shaq-profile.png',
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.goed,
+        topics: ['Resilience', 'Restoration'],
+        bioShort: 'Empowering communities through resilience and restoration.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Restoration Services',
+        valueProposition: 'I help homeowners recover from disasters using efficient restoration techniques.',
+        landingPage: 'https://lifesavers.com/speaker',
+        deckLink: 'https://lifesavers.com/deck',
+        resourceLink: 'https://lifesavers.com/resource',
+        sessionTitle: 'Building Resilient Communities',
+        sessionAbstract: 'Disasters can strike at any time. In this session, we will discuss how to prepare your community for the unexpected.',
+        socials: { linkedin: 'https://linkedin.com' },
+        status: 'complete',
+        completion: 100,
+    },
+    {
+        id: '4',
+        name: 'Jonathan Sterritt',
+        title: 'CEO',
+        company: 'Social Alignment, LLC',
+        image: '/jonathan-profile.jpg',
+        imageClassName: "w-full h-full object-cover object-top scale-110 group-hover:scale-125 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.socialAlignment,
+        topics: ['System Automation', 'Lead Gen'],
+        bioShort: 'Optimizing digital strategies for maximum impact.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Digital Marketing',
+        valueProposition: 'I help businesses generate more leads using automated digital strategies.',
+        landingPage: 'https://socialalignment.biz/speaker',
+        deckLink: 'https://socialalignment.biz/deck',
+        resourceLink: 'https://socialalignment.biz/resource',
+        sessionTitle: 'Automating Lead Gen',
+        sessionAbstract: 'Learn how to set up automated systems that consistently bring in high-quality leads for your business.',
+        socials: { linkedin: 'https://linkedin.com/in/jonathansterritt', website: 'https://socialalignment.biz' },
+        status: 'complete',
+        completion: 100,
+    },
+    {
+        id: '2',
+        name: 'Todd DeRemer',
+        title: 'Vice President',
+        company: 'Silver Sevens Hotel and Casino',
+        image: '/todd-profile.png',
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.silverSevens,
+        topics: ['Hospitality Tech', 'Growth'],
+        bioShort: 'Driving economic growth and community integration in Henderson.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Hospitality & Gaming',
+        valueProposition: 'I help local businesses integrate with the community using strategic partnerships.',
+        landingPage: 'https://thepasscasino.com/community',
+        deckLink: 'https://thepasscasino.com/deck',
+        resourceLink: 'https://thepasscasino.com/resource',
+        sessionTitle: 'The Future of Hospitality Tech',
+        sessionAbstract: 'Explore how technology is revolutionizing the hospitality industry, enhancing guest experiences.',
+        socials: { linkedin: 'https://linkedin.com' },
+        status: 'complete',
+        completion: 100,
     }
 ];
 
@@ -111,8 +208,46 @@ export default function HubPage() {
     const { leadId, userName } = useIdentity();
     const displayName = userName ? userName.split(' ')[0] : 'Innovator';
 
+    // Speaker Data State
+    const [selectedSpeaker, setSelectedSpeaker] = useState<ExtendedSpeaker | null>(null);
+    const [speakers, setSpeakers] = useState<ExtendedSpeaker[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const data = await getTonightLineup();
+                if (data && data.length > 0) {
+                    const patchedData = data.map(s => {
+                        if (s.id === '4' || s.name.includes('Jonathan')) {
+                            return { ...s, promoImage: LOGO_MAP.socialAlignment };
+                        }
+                        return s;
+                    });
+                    setSpeakers(patchedData);
+                } else {
+                    setSpeakers(FALLBACK_SPEAKERS);
+                }
+            } catch (error) {
+                console.error("Failed to load speakers", error);
+                setSpeakers(FALLBACK_SPEAKERS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
     const navigateTo = (path: string) => {
         router.push(leadId ? `${path}?id=${leadId}` : path);
+    };
+
+    const handleSpeakerClick = (speaker: ExtendedSpeaker) => {
+        if (speaker.id === '5') {
+            router.push('/hub/spotlight');
+        } else {
+            setSelectedSpeaker(speaker);
+        }
     };
 
     const startTour = () => {
@@ -291,26 +426,29 @@ export default function HubPage() {
                         </Link>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-3">
-                        {SPEAKERS.map((speaker, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.3, delay: 0.2 + (i * 0.1) }}
-                            >
-                                <SpeakerCard
-                                    speaker={{
-                                        ...speaker,
-                                        completion: 100,
-                                        status: 'complete'
-                                    }}
-                                    variant="dark"
-                                />
-                            </motion.div>
-                        ))}
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {speakers.slice(0, 3).map((speaker, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 24 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.3, delay: 0.2 + (i * 0.1) }}
+                                >
+                                    <SpeakerCard
+                                        speaker={speaker}
+                                        variant="dark"
+                                        onClick={() => handleSpeakerClick(speaker)}
+                                    />
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 {/* --- 4. CONNECTION BAR --- */}
@@ -367,7 +505,12 @@ export default function HubPage() {
                 </footer>
 
             </div>
+
+            <SpeakerDrawer
+                isOpen={!!selectedSpeaker}
+                onClose={() => setSelectedSpeaker(null)}
+                speaker={selectedSpeaker}
+            />
         </div>
     );
 }
-

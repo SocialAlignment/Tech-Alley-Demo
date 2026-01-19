@@ -51,11 +51,21 @@ export default function SpeakerInteractionModal({
         await new Promise(resolve => setTimeout(resolve, 800));
 
         if (mode === 'question') {
-            addQuestion({
+            await addQuestion({
                 speakerId: speaker.id,
                 from: name || 'Anonymous',
                 topic: topic,
                 content: content,
+            });
+        } else {
+            // Handle Feedback submission directly
+            await submitFeedback({
+                speaker_id: speaker.id,
+                speaker_name: speaker.name,
+                visitor_name: name || 'Anonymous',
+                topic: topic,
+                content: content,
+                type: 'feedback'
             });
         }
 
