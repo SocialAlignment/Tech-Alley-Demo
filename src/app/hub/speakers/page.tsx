@@ -202,20 +202,18 @@ export default function SpeakersPage() {
                 </motion.div>
 
                 {/* Main Content Grid */}
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-3"
-                >
-                    {/* Featured Speakers (Lorainne & Hoz) - Full Width 'Hero' Cards */}
+                <div className="space-y-3">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <Loader2 className="animate-spin text-cyan-500 w-12 h-12" />
                         </div>
                     ) : (
-                        <>
-                            <div className="grid grid-cols-1 gap-12">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            <div className="grid grid-cols-1 gap-12 mb-12">
                                 {speakers.slice(0, 2).map((speaker, idx) => (
                                     <motion.div
                                         key={speaker.id}
@@ -307,9 +305,9 @@ export default function SpeakersPage() {
                                     </motion.div>
                                 ))}
                             </div>
-                        </>
+                        </motion.div>
                     )}
-                </motion.div>
+                </div>
 
                 {/* Footer CTA */}
                 <motion.div
