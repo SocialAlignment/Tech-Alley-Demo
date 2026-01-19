@@ -281,7 +281,7 @@ export default function SpeakersPage() {
 
                                         <div className="p-6 flex flex-col h-full relative z-10">
                                             <div className="flex items-start justify-between mb-6">
-                                                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-lg border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors">
+                                                <div className="relative w-32 h-32 rounded-2xl overflow-hidden shadow-lg border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors">
                                                     <img src={speaker.image} alt={speaker.name} className={`w-full h-full object-cover ${speaker.imageClassName || ''}`} loading="lazy" />
                                                 </div>
                                                 {/* Logo - Sized Up & Filtered */}
