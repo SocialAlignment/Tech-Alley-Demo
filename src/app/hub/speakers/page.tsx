@@ -180,7 +180,7 @@ export default function SpeakersPage() {
     return (
         <main className="min-h-screen relative w-full bg-slate-950 overflow-hidden text-white font-sans selection:bg-cyan-500/30">
             {/* Warp Background for that 'Welcome Page' Energy */}
-            <div className="fixed inset-0 z-0 bg-transparent">
+            <div className="fixed inset-0 z-0 bg-transparent pointer-events-none">
                 <WarpBackground className="w-full h-full" gridColor="rgba(139, 92, 246, 0.4)" />
             </div>
 
@@ -218,32 +218,31 @@ export default function SpeakersPage() {
                                     <motion.div
                                         key={speaker.id}
                                         variants={itemVariants}
-                                        whileHover={{ scale: 1.01 }}
+                                        whileHover={{ scale: 1.005 }} // Reduced scale to avoid heavy layout thrashing
+                                        className="will-change-transform cursor-pointer relative overflow-hidden rounded-[2.5rem] p-[1px] bg-gradient-to-br from-cyan-500/50 via-purple-500/50 to-transparent shadow-2xl group"
                                         onClick={() => handleSpeakerClick(speaker)}
-                                        className={`cursor-pointer relative overflow-hidden rounded-[2.5rem] p-[1px] bg-gradient-to-br ${idx === 0 ? 'from-cyan-500 via-blue-500 to-transparent' : 'from-fuchsia-500 via-purple-500 to-transparent'
-                                            } shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] group`}
                                     >
-                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
+                                        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" /> {/* Reduced blur */}
 
-                                        <div className="relative h-full bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 overflow-hidden">
-                                            {/* Background Glow */}
-                                            <div className={`absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 pointer-events-none ${idx === 0 ? 'bg-cyan-500' : 'bg-fuchsia-500'
-                                                }`} />
+                                        <div className="relative h-full bg-slate-900/50 rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 overflow-hidden">
+
+                                            {/* Simplified Background Glow */}
+                                            <div className={`absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none ${idx === 0 ? 'bg-cyan-500' : 'bg-fuchsia-500'}`} />
 
                                             {/* Image */}
                                             <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0">
-                                                <div className={`absolute inset-0 rounded-[2rem] rotate-6 opacity-40 blur-md transition-transform duration-500 group-hover:rotate-12 ${idx === 0 ? 'bg-cyan-400' : 'bg-fuchsia-400'
-                                                    }`} />
+                                                <div className={`absolute inset-0 rounded-[2rem] rotate-6 opacity-40 blur-sm transition-transform duration-500 group-hover:rotate-12 ${idx === 0 ? 'bg-cyan-400' : 'bg-fuchsia-400'}`} />
                                                 <img
                                                     src={speaker.image}
                                                     alt={speaker.name}
-                                                    className={`relative w-full h-full object-cover rounded-[2rem] shadow-2xl z-10 transition-transform duration-500 group-hover:scale-105 ${speaker.imageClassName || ''}`}
+                                                    className={`relative w-full h-full object-cover rounded-[2rem] shadow-xl z-10 transition-transform duration-500 group-hover:scale-105 ${speaker.imageClassName || ''}`}
+                                                    loading="eager"
                                                 />
                                             </div>
 
                                             {/* Text */}
                                             <div className="flex-1 text-center md:text-left z-10">
-                                                <div className={`inline-flex items-center px-4 py-1.5 rounded-full border mb-4 backdrop-blur-md ${idx === 0 ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' : 'bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-300'
+                                                <div className={`inline-flex items-center px-4 py-1.5 rounded-full border mb-4 backdrop-blur-sm ${idx === 0 ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' : 'bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-300'
                                                     }`}>
                                                     <span className="text-xs font-bold tracking-wider uppercase">{idx === 0 ? 'Chapter Lead' : 'Spotlight'}</span>
                                                 </div>
@@ -259,8 +258,8 @@ export default function SpeakersPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Logo Badge */}
-                                            <div className={`w-44 h-44 flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 ${speaker.id === '5' ? 'p-0' : 'p-4'}`}>
+                                            {/* Logo Badge - Optimized */}
+                                            <div className={`w-44 h-44 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500 ${speaker.id === '5' ? 'p-0' : 'p-4'}`}>
                                                 <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain scale-150 ${speaker.id === '3' ? 'translate-y-2' : '-translate-y-1'}`} />
                                             </div>
                                         </div>
@@ -276,14 +275,14 @@ export default function SpeakersPage() {
                                         variants={itemVariants}
                                         whileHover={{ y: -5 }}
                                         onClick={() => handleSpeakerClick(speaker)}
-                                        className="cursor-pointer group relative overflow-hidden rounded-3xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-colors duration-300 h-full"
+                                        className="will-change-transform cursor-pointer group relative overflow-hidden rounded-3xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-colors duration-300 h-full"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                         <div className="p-6 flex flex-col h-full relative z-10">
                                             <div className="flex items-start justify-between mb-6">
                                                 <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-lg border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors">
-                                                    <img src={speaker.image} alt={speaker.name} className={`w-full h-full object-cover ${speaker.imageClassName || ''}`} />
+                                                    <img src={speaker.image} alt={speaker.name} className={`w-full h-full object-cover ${speaker.imageClassName || ''}`} loading="lazy" />
                                                 </div>
                                                 {/* Logo - Sized Up & Filtered */}
                                                 <div className={`w-32 h-32 transition-all duration-500 p-1 ${speaker.id === '4' ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
@@ -316,15 +315,15 @@ export default function SpeakersPage() {
                     viewport={{ once: true }}
                     className="mt-32 relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 p-12 md:p-16"
                 >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent opacity-50" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-50" /> {/* Reduced opacity */}
 
                     <div className="relative z-10 max-w-[90rem] mx-auto flex flex-col xl:flex-row items-center justify-between gap-20">
                         <div className="text-left flex-1 min-w-[600px]">
                             <h2 className="text-5xl font-bold text-white mb-6 tracking-tight">Step Into the Spotlight</h2>
                             <p className="text-white mb-8 text-xl max-w-3xl leading-relaxed">
-                                We're looking for innovators, builders, and storytellers to share their expertise and shape the future of Henderson's tech ecosystem.
+                                We're looking for innovators, builders, and storytellers to share their expertise.
                             </p>
-                            <button className="whitespace-nowrap px-10 py-5 bg-white text-slate-950 font-bold rounded-full text-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center gap-2">
+                            <button className="whitespace-nowrap px-10 py-5 bg-white text-slate-950 font-bold rounded-full text-xl hover:scale-105 transition-transform shadow-xl flex items-center gap-2">
                                 Now Isn't the Time to Be Modest <ArrowUpRight className="w-6 h-6" />
                             </button>
                         </div>
