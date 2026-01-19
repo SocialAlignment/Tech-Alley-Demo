@@ -29,6 +29,7 @@ export default function QuestionSubmissionModal({ isOpen, onClose, speakerId, sp
 
         addQuestion({
             speakerId,
+            speakerName,
             from,
             topic,
             content

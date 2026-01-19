@@ -1,12 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { WarpBackground } from '@/components/ui/warp-background';
 
 export default function WelcomePage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-slate-900">
@@ -45,11 +47,24 @@ export default function WelcomePage() {
           transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => router.push('/login')}
+          onClick={() => {
+            setIsLoading(true);
+            router.push('/login');
+          }}
+          disabled={isLoading}
           className="group relative pointer-events-auto px-8 py-5 bg-white text-slate-900 rounded-full font-bold text-lg shadow-[0_0_40px_-10px_rgba(255,255,255,0.6)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.8)] transition-all duration-300 flex items-center gap-3 overflow-hidden"
         >
-          <span className="relative z-10">Lets Innovate</span>
-          <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover:translate-x-1" />
+          {isLoading ? (
+            <>
+              <Loader className="w-5 h-5 relative z-10 animate-spin" />
+              <span className="relative z-10">Loading...</span>
+            </>
+          ) : (
+            <>
+              <span className="relative z-10">Lets Innovate</span>
+              <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover:translate-x-1" />
+            </>
+          )}
 
           {/* Button Shine Effect */}
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />

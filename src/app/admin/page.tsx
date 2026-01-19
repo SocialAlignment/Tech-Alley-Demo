@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, Ticket, CheckSquare, Bell, Mail, MessageSquare, RefreshCw, Trophy, LogOut } from 'lucide-react';
-import { WarpBackground } from '@/components/ui/warp-background';
+import { Users, Ticket, CheckSquare, Bell, Mail, MessageSquare, RefreshCw, Trophy, LogOut, Calendar } from 'lucide-react';
 import RaffleWheel from '@/components/admin/RaffleWheel';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import { EventApprovalWidget } from '@/components/admin/EventApprovalWidget';
+import { getAllFeedback, getAllQuestions, markFeedbackAsHandled, markQuestionAsAnswered } from '@/lib/api';
+import { HelpCircle, MessagesSquare, Filter } from 'lucide-react';
 
 // Data Interfaces
 export interface DashboardStats {
@@ -45,9 +46,14 @@ export default function AdminDashboardPage() {
         type: 'email'
     });
 
+
+
     // Data State
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [leads, setLeads] = useState<Lead[]>([]);
+    const [feedbackItems, setFeedbackItems] = useState<any[]>([]); // Quick type for now
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [selectedSpeaker, setSelectedSpeaker] = useState<string>('all');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -62,6 +68,13 @@ export default function AdminDashboardPage() {
 
                 if (data.stats) setStats(data.stats);
                 if (data.recentLeads) setLeads(data.recentLeads);
+
+                // Fetch Feedback & Questions
+                const fb = await getAllFeedback();
+                setFeedbackItems(fb);
+
+                const qs = await getAllQuestions();
+                setQuestions(qs);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
             } finally {
@@ -94,9 +107,16 @@ export default function AdminDashboardPage() {
     return (
         <main className="relative min-h-screen bg-black text-white p-4 md:p-8 font-sans">
 
-            {/* Background */}
-            <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-                <WarpBackground className="w-full h-full" gridColor="rgba(139, 92, 246, 0.3)" />
+            {/* Background: Static & Premium */}
+            <div className="fixed inset-0 z-0 pointer-events-none bg-[#0a0a0a]">
+                {/* Subtle Gradient Mesh */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0a0a] to-black opacity-80" />
+
+                {/* Technical Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+                {/* Vignette */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto space-y-6">
@@ -189,7 +209,17 @@ export default function AdminDashboardPage() {
 
                     {/* Action: Event Approvals */}
                     <BentoCard className="md:col-span-2 md:row-span-2" delay={0.45}>
-                        <EventApprovalWidget />
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold flex items-center gap-2 text-indigo-100">
+                                <Calendar className="w-5 h-5 text-indigo-400" /> Event Approvals
+                            </h3>
+                            <span className="text-xs bg-indigo-950 text-indigo-200 px-2 py-1 rounded border border-indigo-500/20">
+                                Review Queue
+                            </span>
+                        </div>
+                        <div className="h-[calc(100%-3rem)] contents-center">
+                            <EventApprovalWidget />
+                        </div>
                     </BentoCard>
 
                     {/* Action: Broadcast (High Priority) */}
@@ -221,6 +251,105 @@ export default function AdminDashboardPage() {
                                 <span>Deploy Voice Agent</span>
                             </button>
                             <p className="text-[10px] text-red-400/60 text-center mt-2">Will notify all active attendees immediately.</p>
+                        </div>
+                    </BentoCard>
+
+
+                    {/* Data Feed: Questions (New Section) */}
+                    <BentoCard className="md:col-span-2 md:row-span-2 bg-slate-900/80 border-indigo-500/20 hover:border-indigo-500/40" delay={0.5}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold flex items-center gap-2 text-indigo-100">
+                                <HelpCircle className="w-5 h-5 text-indigo-400" /> Speaker Questions
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <Filter className="w-3 h-3 text-slate-500" />
+                                <select
+                                    value={selectedSpeaker}
+                                    onChange={(e) => setSelectedSpeaker(e.target.value)}
+                                    className="bg-slate-800 text-xs text-slate-300 border border-white/10 rounded px-2 py-1 outline-none focus:border-indigo-500"
+                                >
+                                    <option value="all">All Speakers</option>
+                                    {Array.from(new Set([...questions, ...feedbackItems].map(i => i.speaker_name))).map(name => (
+                                        <option key={name} value={name}>{name}</option>
+                                    ))}
+                                </select>
+                                <span className="text-xs bg-indigo-950 text-indigo-200 px-2 py-1 rounded border border-indigo-500/20">
+                                    {loading ? '...' : questions.filter(q => selectedSpeaker === 'all' || q.speaker_name === selectedSpeaker).length} Pending
+                                </span>
+                            </div>
+                        </div>
+                        <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mx-4 px-4 space-y-3">
+                            {questions.filter(q => selectedSpeaker === 'all' || q.speaker_name === selectedSpeaker).length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-500 text-sm">
+                                    <HelpCircle className="w-8 h-8 mb-2 opacity-20" />
+                                    <p>No unanswered questions!</p>
+                                </div>
+                            ) : (
+                                questions.filter(q => selectedSpeaker === 'all' || q.speaker_name === selectedSpeaker).map((item) => (
+                                    <div key={item.id} className="p-3 rounded-lg bg-black/40 border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">{item.speaker_name}</span>
+                                            <span className="text-[10px] text-slate-500">{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                        <p className="text-sm text-slate-300 font-medium mb-2">"{item.content}"</p>
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-xs text-slate-500">From: {item.visitor_name || 'Anonymous'}</span>
+                                            <button
+                                                onClick={async () => {
+                                                    await markQuestionAsAnswered(item.id);
+                                                    setQuestions(prev => prev.filter(i => i.id !== item.id));
+                                                }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 flex items-center gap-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded text-xs"
+                                            >
+                                                <div className="w-3 h-3 rounded-sm border border-current" /> Mark Done
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </BentoCard>
+
+                    {/* Action: Feedback Widget */}
+                    <BentoCard className="md:col-span-2 md:row-span-2 bg-slate-900/80 border-cyan-500/20 hover:border-cyan-500/40" delay={0.55}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold flex items-center gap-2 text-cyan-100">
+                                <MessagesSquare className="w-5 h-5 text-cyan-400" /> Speaker Feedback
+                            </h3>
+                            {/* Re-use selectedSpeaker filter for viewing consistency */}
+                            <span className="text-xs bg-cyan-950 text-cyan-200 px-2 py-1 rounded border border-cyan-500/20">
+                                {loading ? '...' : feedbackItems.filter(f => selectedSpeaker === 'all' || f.speaker_name === selectedSpeaker).length} Pending
+                            </span>
+                        </div>
+                        <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mx-4 px-4 space-y-3">
+                            {feedbackItems.filter(f => selectedSpeaker === 'all' || f.speaker_name === selectedSpeaker).length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-500 text-sm">
+                                    <CheckSquare className="w-8 h-8 mb-2 opacity-20" />
+                                    <p>All feedback handled!</p>
+                                </div>
+                            ) : (
+                                feedbackItems.filter(f => selectedSpeaker === 'all' || f.speaker_name === selectedSpeaker).map((item) => (
+                                    <div key={item.id} className="p-3 rounded-lg bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-all group relative">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">{item.speaker_name}</span>
+                                            <span className="text-[10px] text-slate-500">{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                        <p className="text-sm text-slate-300 italic mb-2">"{item.content}"</p>
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-xs text-slate-500">From: {item.visitor_name || 'Anonymous'}</span>
+                                            <button
+                                                onClick={async () => {
+                                                    await markFeedbackAsHandled(item.id);
+                                                    setFeedbackItems(prev => prev.filter(i => i.id !== item.id));
+                                                }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 flex items-center gap-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded text-xs"
+                                            >
+                                                <div className="w-3 h-3 rounded-sm border border-current" /> Mark Done
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </BentoCard>
 

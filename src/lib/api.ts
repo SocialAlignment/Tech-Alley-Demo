@@ -54,16 +54,49 @@ export async function getQuestions(speakerId: string) {
     return data || [];
 }
 
+// ... existing code ...
+export async function getAllFeedback() {
+    const { data, error } = await supabase
+        .from('feedback')
+        .select('*')
+        .eq('type', 'feedback')
+        .eq('is_answered', false) // Use is_answered as "is_completed"
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching feedback:', error);
+        return [];
+    }
+    return data || [];
+}
+
+export async function getAllQuestions() {
+    const { data, error } = await supabase
+        .from('feedback')
+        .select('*')
+        .eq('type', 'question')
+        .eq('is_answered', false)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching questions:', error);
+        return [];
+    }
+    return data || [];
+}
+
+export async function markFeedbackAsHandled(id: string) {
+    return markQuestionAsAnswered(id);
+}
+
 export async function markQuestionAsAnswered(questionId: string) {
-    // Assuming 'feedback' table has an 'is_answered' boolean column
-    // If not, we might need to add it or soft-delete
     const { error } = await supabase
         .from('feedback')
         .update({ is_answered: true })
         .eq('id', questionId);
 
     if (error) {
-        console.error('Error marking question as answered:', error);
+        console.error('Error marking item as handled:', error);
         throw error;
     }
     return true;

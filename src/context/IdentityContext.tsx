@@ -10,9 +10,10 @@ interface IdentityContextType {
     avatar: string | null;
     instagram: string | null;
     isProfileComplete: boolean;
-    missionProgress: string | null;
+    missionProgress: number | null;
+    missionData: string[];
     isLoading: boolean;
-    updateMissionProgress: (progress: string) => void;
+    updateMissionProgress: (progress: number, data?: string[]) => void;
     refreshIdentity: () => Promise<void>;
 }
 
@@ -24,6 +25,7 @@ const IdentityContext = createContext<IdentityContextType>({
     instagram: null,
     isProfileComplete: false,
     missionProgress: null,
+    missionData: [],
     isLoading: true,
     updateMissionProgress: () => { },
     refreshIdentity: async () => { },
@@ -36,13 +38,15 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     const [avatar, setAvatar] = useState<string | null>(null);
     const [instagram, setInstagram] = useState<string | null>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
-    const [missionProgress, setMissionProgress] = useState<string | null>(null);
+    const [missionProgress, setMissionProgress] = useState<number | null>(null);
+    const [missionData, setMissionData] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    const updateMissionProgress = (progress: string) => {
+    const updateMissionProgress = (progress: number, data?: string[]) => {
         setMissionProgress(progress);
+        if (data) setMissionData(data);
     };
 
     const fetchProfile = async (id: string) => {
@@ -64,6 +68,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                 setInstagram(data.data.contactDetails?.instagram || null);
                 setIsProfileComplete(data.data.isProfileComplete);
                 setMissionProgress(data.data.missionProgress);
+                setMissionData(data.data.missionData || []);
             } else {
                 console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
             }
@@ -133,7 +138,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     }, [searchParams]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, isLoading, updateMissionProgress, refreshIdentity }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, missionData, isLoading, updateMissionProgress, refreshIdentity }}>
             {children}
         </IdentityContext.Provider>
     );

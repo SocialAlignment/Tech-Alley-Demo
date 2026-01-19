@@ -197,3 +197,32 @@ FOR ALL
 TO authenticated 
 USING (true)
 WITH CHECK (true);
+
+-- 9. DONATIONS TABLE (For Sponsor Page)
+CREATE TABLE if not exists public.donations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    donor_name TEXT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    message TEXT,
+    avatar_url TEXT,
+    is_anonymous BOOLEAN DEFAULT FALSE
+);
+
+-- RLS for Donations
+ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
+
+-- Allow Public Read
+CREATE POLICY "Enable read for donations (public)" 
+ON public.donations 
+FOR SELECT 
+TO public 
+USING (true);
+
+-- Allow Public Insert (For demo purposes/simulated payment webhook)
+CREATE POLICY "Enable insert for donations (public)" 
+ON public.donations 
+FOR INSERT 
+TO public 
+WITH CHECK (true);

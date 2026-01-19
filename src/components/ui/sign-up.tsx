@@ -177,6 +177,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", 
     const [modalStatus, setModalStatus] = useState<'closed' | 'loading' | 'error' | 'success'>('closed');
     const [modalErrorMessage, setModalErrorMessage] = useState('');
     const confettiRef = useRef<ConfettiRef>(null);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const isEmailValid = /\S+@\S+\.\S+/.test(email);
     const isPasswordValid = password.length >= 6;
@@ -343,9 +344,23 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "EaseMize", 
 
                             <BlurFade delay={0.25 * 3} className="w-full pt-6">
                                 <div className="flex flex-col gap-4 w-full">
-                                    <GlassButton onClick={onGoogleSignIn} contentClassName="flex items-center justify-center gap-3 w-full px-8" size="lg" className="w-full group !bg-white/5 hover:!bg-white/10 !border-white/10 hover:!border-white/20 hover:!ring-2 hover:!ring-purple-500/30 transition-all duration-300 !shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-                                        <GoogleIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                        <span className="font-bold text-white tracking-wide">Continue with Google</span>
+                                    <GlassButton onClick={() => {
+                                        setIsGoogleLoading(true);
+                                        onGoogleSignIn?.();
+                                    }}
+                                        disabled={isGoogleLoading}
+                                        contentClassName="flex items-center justify-center gap-3 w-full px-8" size="lg" className="w-full group !bg-white/5 hover:!bg-white/10 !border-white/10 hover:!border-white/20 hover:!ring-2 hover:!ring-purple-500/30 transition-all duration-300 !shadow-[0_0_20px_rgba(0,0,0,0.2)]">
+                                        {isGoogleLoading ? (
+                                            <>
+                                                <Loader className="w-5 h-5 animate-spin" />
+                                                <span className="font-bold text-white tracking-wide">Connecting...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <GoogleIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                                <span className="font-bold text-white tracking-wide">Continue with Google</span>
+                                            </>
+                                        )}
                                     </GlassButton>
                                     <p className="text-xs text-center text-white/30">
                                         By continuing, you join the Tech Alley community network.

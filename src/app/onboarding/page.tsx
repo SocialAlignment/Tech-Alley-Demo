@@ -74,15 +74,21 @@ function OnboardingContent() {
     const handleSubmit = async (formData: any) => {
         setIsSubmitting(true);
         try {
-            await fetch('/api/contact/update', {
+            const response = await fetch('/api/contact/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ leadId, ...formData })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update profile');
+            }
+
             router.push(`/hub?id=${leadId}&onboarding=complete`);
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Something went wrong. Please try again.");
+            alert(e.message || "Something went wrong. Please try again.");
         } finally {
             setIsSubmitting(false);
         }

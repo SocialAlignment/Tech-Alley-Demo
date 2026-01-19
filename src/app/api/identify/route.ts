@@ -39,7 +39,8 @@ export async function POST(request: Request) {
                 email: lead.email,
                 avatar: lead.avatar || '',
                 isProfileComplete: !!(lead.company && lead.title && lead.phone && lead.instagram),
-                missionProgress: '[]',
+                missionProgress: lead.mission_progress || 0,
+                missionData: lead.mission_data || [],
                 contactDetails: {
                     // Basic Contact
                     name: lead.name || '',

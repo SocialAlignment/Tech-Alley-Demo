@@ -75,7 +75,7 @@ const Toast = ({ message, show, onClose }: { message: string, show: boolean, onC
 
 export default function ChecklistPage() {
     const router = useRouter();
-    const { leadId, userName, missionProgress, refreshIdentity } = useIdentity();
+    const { leadId, userName, missionProgress, missionData, refreshIdentity, isLoading: isIdentityLoading } = useIdentity();
     const [isAskModalOpen, setIsAskModalOpen] = useState(false);
     const [question, setQuestion] = useState('');
     const [sending, setSending] = useState(false);
@@ -140,23 +140,24 @@ export default function ChecklistPage() {
     // For now, we'll initialize from local storage or just default to empty if not provided.
     const [completedMissions, setCompletedMissions] = useState<Set<string>>(new Set());
 
-    useEffect(() => {
-        const fetchLeaderboard = async () => {
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
-                if (data.success) {
-                    setLeaders(data.leaders || []);
-                    setWinners(data.winners || []);
-                }
-            } catch (e) {
-                console.error("Failed to fetch leaderboard", e);
-            } finally {
-                setLoadingLeaders(false);
+    // --- LEADERBOARD FETCH ---
+    const fetchLeaderboard = async () => {
+        try {
+            const res = await fetch('/api/leaderboard');
+            const data = await res.json();
+            if (data.success) {
+                setLeaders(data.leaders || []);
+                setWinners(data.winners || []);
             }
+        } catch (e) {
+            console.error("Failed to fetch leaderboard", e);
+        } finally {
+            setLoadingLeaders(false);
         }
-        fetchLeaderboard();
+    }
 
+    useEffect(() => {
+        fetchLeaderboard();
         // Poll leaderboard every 30s
         const interval = setInterval(fetchLeaderboard, 30000);
         return () => clearInterval(interval);
@@ -164,11 +165,51 @@ export default function ChecklistPage() {
 
     // Load completed missions from storage to persist roughly across reloads if not fully synced
     useEffect(() => {
+        // 1. Get Local Data
+        let localData: string[] = [];
         const saved = localStorage.getItem(`missions_${leadId}`);
         if (saved) {
-            setCompletedMissions(new Set(JSON.parse(saved)));
+            try {
+                localData = JSON.parse(saved);
+            } catch (e) {
+                console.error("Failed to parse local missions", e);
+            }
         }
-    }, [leadId]);
+
+        // 2. Get DB Data (from context)
+        const dbData = missionData || [];
+
+        // 3. Merge (Union)
+        const merged = new Set([...localData, ...dbData]);
+        setCompletedMissions(merged);
+
+        // 4. Self-Healing: If local has more data than DB, sync back to DB
+        // This fixes cases where a previous update failed or was overwritten
+        if (merged.size > dbData.length && missions.length > 0) {
+            console.log("Found unsaved missions locally. Syncing to database...", merged);
+
+            // Calculate XP for the sync
+            let totalEarned = 0;
+            missions.forEach(m => {
+                if (merged.has(m.id)) totalEarned += m.xp;
+            });
+
+            // Fire and forget update
+            fetch('/api/update-lead', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pageId: leadId,
+                    missionData: Array.from(merged),
+                    missionProgress: totalEarned
+                })
+            }).then(() => {
+                console.log("Sync complete. Refreshing leaderboard.");
+                fetchLeaderboard();
+            }).catch(e => console.error("Sync failed", e));
+        }
+
+    }, [leadId, missionData, missions.length]); // Added missions.length dependency to ensure we can calculate XP
 
     const navigateTo = (path: string) => {
         router.push(leadId ? `${path}?id=${leadId}` : path);
@@ -240,6 +281,10 @@ export default function ChecklistPage() {
                     missionProgress: earnedTotal
                 })
             });
+
+            // Immediately refresh leaderboard to show new score
+            fetchLeaderboard();
+
             // Refresh context to update global nav bar if needed
             if (refreshIdentity) refreshIdentity();
         } catch (e) {

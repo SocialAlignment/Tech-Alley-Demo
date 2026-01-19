@@ -12,6 +12,7 @@ export interface Question {
     content: string;
     timestamp: number;
     is_answered?: boolean;
+    speakerName?: string;
 }
 
 interface QuestionsContextType {
@@ -88,7 +89,7 @@ export function QuestionsProvider({ children }: { children: ReactNode }) {
         // Submit to DB
         await submitFeedback({
             speaker_id: newQuestion.speakerId,
-            speaker_name: 'Unknown', // We might need this prop or lookup
+            speaker_name: newQuestion.speakerName || 'Unknown',
             visitor_name: newQuestion.from,
             topic: newQuestion.topic,
             content: newQuestion.content,

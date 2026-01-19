@@ -1,7 +1,7 @@
 "use server";
 
-import { submitEventToNotion } from "@/lib/notion";
 import { revalidatePath } from "next/cache";
+import { supabase } from "@/lib/supabase";
 
 export async function submitEvent(formData: FormData) {
     const name = formData.get("name") as string;
@@ -15,13 +15,20 @@ export async function submitEvent(formData: FormData) {
     }
 
     try {
-        await submitEventToNotion({
+        const { error } = await supabase.from('events').insert({
             name,
             date,
             time,
             description,
-            link
+            link: link || null,
+            status: 'pending',
+            tags: ['community_submission']
         });
+
+        if (error) {
+            console.error("Supabase Error:", error);
+            throw new Error(error.message);
+        }
 
         // Revalidate the events page just in case, though the event won't appear until approved
         revalidatePath("/hub/upcoming");

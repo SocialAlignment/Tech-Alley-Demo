@@ -53,6 +53,7 @@ export default function SpeakerInteractionModal({
         if (mode === 'question') {
             await addQuestion({
                 speakerId: speaker.id,
+                speakerName: speaker.name,
                 from: name || 'Anonymous',
                 topic: topic,
                 content: content,

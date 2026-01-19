@@ -1,64 +1,35 @@
-
-import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
-
-const EVENTS_DB_ID = '2eb6b72f-a765-8137-a249-e09442a38221';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        console.log("Admin API: Fetching Pending Events");
+        console.log("Admin API: Fetching Pending Events (Supabase)");
 
-        // Use Native Fetch
-        const url = `https://api.notion.com/v1/databases/${EVENTS_DB_ID}/query`;
-        const options = {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                filter: {
-                    property: 'Status',
-                    status: {
-                        equals: 'Pending Review'
-                    }
-                },
-                sorts: [
-                    {
-                        property: 'Date',
-                        direction: 'ascending'
-                    }
-                ]
-            })
-        };
+        const { data: events, error } = await supabase
+            .from('events')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
 
-        const res = await fetch(url, options);
-
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`Notion API Error: ${res.status} ${errorText}`);
+        if (error) {
+            console.error("Supabase Error:", error);
+            throw error;
         }
 
-        const data = await res.json();
-
         // Map simplified structure for Admin Dashboard
-        const events = data.results.map((page: any) => {
-            const props = page.properties;
-            return {
-                id: page.id,
-                name: props.Name?.title?.[0]?.plain_text || 'Untitled',
-                date: props.Date?.date?.start || 'TBD',
-                description: props.Description?.rich_text?.[0]?.plain_text || '',
-                link: props.Location?.rich_text?.[0]?.plain_text || '',
-                status: props.Status?.status?.name || 'Unknown',
-                tags: props.Tags?.multi_select?.map((t: any) => t.name) || []
-            };
-        });
+        const mappedEvents = (events || []).map((event: any) => ({
+            id: event.id,
+            name: event.name,
+            date: event.date,
+            description: event.description || '',
+            link: event.link || '',
+            status: event.status,
+            tags: event.tags || []
+        }));
 
-        return NextResponse.json({ success: true, events });
+        return NextResponse.json({ success: true, events: mappedEvents });
     } catch (error: any) {
         console.error('[ADMIN_PENDING_EVENTS] Error:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

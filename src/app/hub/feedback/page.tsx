@@ -22,7 +22,7 @@ const LOGO_MAP = {
 const FALLBACK_SPEAKERS: ExtendedSpeaker[] = [
     {
         id: '3',
-        name: 'Lorainne Yarde',
+        name: 'Lorraine Yarde',
         title: 'Chapter Lead',
         company: 'Tech Alley Henderson',
         image: '/lorainne-profile.png',

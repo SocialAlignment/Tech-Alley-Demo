@@ -1,150 +1,78 @@
-import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
-
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const EVENTS_DB_ID = '2eb6b72f-a765-8137-a249-e09442a38221'; // Correct Child Database ID found inside the user's page
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    console.log("API: /api/events hit");
-    console.log(`API: Key starts with: ${process.env.NOTION_API_KEY ? process.env.NOTION_API_KEY.substring(0, 4) + '...' : 'UNDEFINED'}`);
-    console.log(`API: Target DB ID: ${EVENTS_DB_ID}`);
+    console.log("API: /api/events hit (Supabase)");
 
     try {
-        // Use Native Fetch to bypass broken Notion Client 'databases.query' method
-        const url = `https://api.notion.com/v1/databases/${EVENTS_DB_ID}/query`;
-        const options = {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                filter: {
-                    and: [
-                        {
-                            property: 'Date',
-                            date: {
-                                on_or_after: new Date().toISOString().split('T')[0]
-                            }
-                        },
-                        {
-                            or: [
-                                {
-                                    property: 'Status',
-                                    status: {
-                                        equals: 'Approved'
-                                    }
-                                },
-                                {
-                                    property: 'Status',
-                                    status: {
-                                        equals: 'Published'
-                                    }
-                                },
-                                {
-                                    property: 'Status',
-                                    status: {
-                                        equals: 'Done'
-                                    }
-                                },
-                                {
-                                    property: 'Status',
-                                    status: {
-                                        equals: 'Course Idea'
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                sorts: [
-                    {
-                        property: 'Date',
-                        direction: 'ascending'
-                    }
-                ]
-            })
-        };
+        const { data: events, error } = await supabase
+            .from('events')
+            .select('*')
+            .in('status', ['approved', 'published', 'done'])
+            .gte('date', new Date().toISOString().split('T')[0])
+            .order('date', { ascending: true });
 
-        const res = await fetch(url, options);
-
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error('[EVENTS_API] Fetch Error:', res.status, errorText);
-            throw new Error(`Notion API Error: ${res.status} ${errorText}`);
+        if (error) {
+            console.error("Supabase Fetch Error:", error);
+            throw error;
         }
 
-        const data = await res.json();
-        const events = data.results.map((page: any) => {
-            const props = page.properties;
+        console.log(`API: Found ${events?.length || 0} events via Supabase.`);
 
-            // Name
-            const eventName = props.Name?.title?.[0]?.plain_text || 'Untitled Event';
-
-            // Date
-            const dateProp = props.Date?.date;
-            const dateStart = dateProp?.start || null;
-
-            // Time string
-            let timeStr = 'TBD';
-            if (dateStart && dateStart.includes('T')) {
-                timeStr = new Date(dateStart).toLocaleTimeString('en-US', {
+        const mappedEvents = (events || []).map((e: any) => {
+            // Format Time (HH:MM -> 6:00 PM)
+            let timeStr = e.time;
+            try {
+                const [hours, minutes] = e.time.split(':');
+                const date = new Date();
+                date.setHours(parseInt(hours), parseInt(minutes));
+                timeStr = date.toLocaleTimeString('en-US', {
                     hour: 'numeric',
                     minute: '2-digit',
                     hour12: true
                 });
+            } catch (err) {
+                // Keep original if parse fails
             }
 
-            // Location
-            const locationPlace = props.Location?.rich_text?.[0]?.plain_text || 'Tech Alley Henderson';
+            // Heading from tags
+            const heading = (e.tags && e.tags.length > 0) ? e.tags[0] : 'Community Event';
 
-            // Description
-            const description = props.Description?.rich_text?.[0]?.plain_text || '';
+            // Location / Presenter
+            const location = e.submitted_by_name
+                ? `Presented By: ${e.submitted_by_name}`
+                : 'Tech Alley Henderson';
 
-            // Presenter
-            const presenterList = props['Presented By']?.multi_select || [];
-            const presenter = presenterList.map((p: any) => p.name).join(', ') || 'Tech Alley';
-
-            // Tag (Heading)
-            const tagObj = props.Tags?.select;
-            const tagName = tagObj?.name || 'Event';
-            const primaryTag = tagName.split(' ')[0];
-
-            // Image
-            let imageUrl = '';
-            if (props['Event Image']?.files?.length > 0) {
-                const file = props['Event Image'].files[0];
-                imageUrl = file.file?.url || file.external?.url || '';
-            }
+            // Date formatting (ensure ISO string)
+            // Supabase returns YYYY-MM-DD. We can append time if needed or just use date.
+            // Existing card might expect full ISO. Let's create one.
+            const fullDate = `${e.date}T${e.time}:00`;
 
             return {
-                id: page.id,
-                heading: primaryTag,
-                eventName: eventName,
-                description: description,
-                date: dateStart,
+                id: e.id,
+                heading: heading,
+                eventName: e.name,
+                description: e.description || '',
+                date: fullDate,
                 time: timeStr,
-                location: presenter ? `Presented By: ${presenter}` : locationPlace,
-                imageUrl: imageUrl,
-                imageAlt: eventName,
-                actionLabel: "Add to Calendar"
+                location: location,
+                imageUrl: '', // No image support in form yet
+                imageAlt: e.name,
+                actionLabel: "Add to Calendar",
+                link: e.link // Optional extra field if needed
             };
         });
 
-        console.log(`API: Found ${events.length} events via Native Fetch.`);
-        return NextResponse.json({ success: true, events });
+        return NextResponse.json({ success: true, events: mappedEvents });
     } catch (error: any) {
         console.error('[EVENTS_API] Error:', error);
         return NextResponse.json(
             {
                 success: false,
                 error: 'Failed to fetch events',
-                details: error.message,
-                code: error.code || 'UNKNOWN_ERROR',
-                status: error.status || 500
+                details: error.message
             },
             { status: 500 }
         );
