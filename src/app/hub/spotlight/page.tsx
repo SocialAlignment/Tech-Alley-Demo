@@ -17,8 +17,8 @@ export default function SpotlightPage() {
                 {/* Header */}
                 <div className="flex flex-col items-center justify-center text-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Startup Spotlight</h1>
-                        <p className="text-slate-500">Discover the innovators building the future.</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tight text-slate-900">Startup Spotlight</h1>
+                        <p className="text-2xl font-medium text-slate-500 mt-6">Discover the innovators building the future.</p>
                     </div>
                 </div>
 

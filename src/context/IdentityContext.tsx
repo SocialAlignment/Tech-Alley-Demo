@@ -13,6 +13,7 @@ interface IdentityContextType {
     missionProgress: string | null;
     isLoading: boolean;
     updateMissionProgress: (progress: string) => void;
+    refreshIdentity: () => Promise<void>;
 }
 
 const IdentityContext = createContext<IdentityContextType>({
@@ -25,6 +26,7 @@ const IdentityContext = createContext<IdentityContextType>({
     missionProgress: null,
     isLoading: true,
     updateMissionProgress: () => { },
+    refreshIdentity: async () => { },
 });
 
 export function IdentityProvider({ children }: { children: ReactNode }) {
@@ -41,6 +43,39 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
 
     const updateMissionProgress = (progress: string) => {
         setMissionProgress(progress);
+    };
+
+    const fetchProfile = async (id: string) => {
+        try {
+            console.log("IdentityContext: Fetching profile for", id);
+            const res = await fetch('/api/identify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId: id })
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.data) {
+                console.log("IdentityContext: Profile loaded", data.data.name);
+                setUserName(data.data.name);
+                setEmail(data.data.email);
+                setAvatar(data.data.avatar);
+                setInstagram(data.data.contactDetails?.instagram || null);
+                setIsProfileComplete(data.data.isProfileComplete);
+                setMissionProgress(data.data.missionProgress);
+            } else {
+                console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
+            }
+        } catch (fetchError) {
+            console.error("IdentityContext: Fetch error", fetchError);
+        }
+    };
+
+    const refreshIdentity = async () => {
+        if (leadId) {
+            await fetchProfile(leadId);
+        }
     };
 
     useEffect(() => {
@@ -75,38 +110,8 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                     }
 
                     // Fetch details
-                    console.log("IdentityContext: Fetching profile for", activeId);
-                    try {
-                        const res = await fetch('/api/identify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ leadId: activeId })
-                        });
-                        console.log("IdentityContext: Fetch response status:", res.status);
+                    await fetchProfile(activeId);
 
-                        const data = await res.json();
-                        console.log("IdentityContext: Fetch response data:", data);
-
-                        if (isMounted) {
-                            if (data.success && data.data) {
-                                console.log("IdentityContext: Profile loaded", data.data.name);
-                                setUserName(data.data.name);
-                                setEmail(data.data.email);
-                                setAvatar(data.data.avatar);
-                                setInstagram(data.data.contactDetails?.instagram || null);
-                                setIsProfileComplete(data.data.isProfileComplete);
-                                setMissionProgress(data.data.missionProgress);
-                            } else {
-                                console.warn("IdentityContext: Profile fetch failed or invalid ID", data);
-                                // Invalid ID? Maybe clear it so we don't loop?
-                                if (localId && !urlId) {
-                                    localStorage.removeItem('techalley_lead_id');
-                                }
-                            }
-                        }
-                    } catch (fetchError) {
-                        console.error("IdentityContext: Fetch error", fetchError);
-                    }
                 } else {
                     console.log("IdentityContext: No ID found");
                 }
@@ -128,7 +133,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     }, [searchParams]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, isLoading, updateMissionProgress }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, isLoading, updateMissionProgress, refreshIdentity }}>
             {children}
         </IdentityContext.Provider>
     );

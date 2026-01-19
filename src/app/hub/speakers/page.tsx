@@ -15,7 +15,7 @@ const LOGO_MAP = {
     techAlley: '/ta-header-badge.png',
     deadSprint: '/logos/new/logo-4.png',
     goed: '/logos/new/logo-2.png',
-    socialAlignment: '/logos/new/logo-1.png',
+    socialAlignment: '/logos/new/logo-0.png',
     silverSevens: '/logos/new/logo-3.png'
 };
 
@@ -193,11 +193,20 @@ export default function SpeakersPage() {
                     transition={{ duration: 0.8 }}
                     className="mb-16 text-center"
                 >
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-fuchsia-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.6)]">
-                            TONIGHT&apos;S LINEUP
-                        </span>
-                    </h1>
+                    <div className="relative inline-block mx-auto mb-10 group cursor-default">
+                        {/* Neon Sign Borders */}
+                        <div className="absolute inset-0 rounded-[2rem] border-[6px] border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.6),inset_0_0_20px_rgba(37,99,235,0.3)] opacity-80" />
+                        <div className="absolute inset-3 rounded-[1.5rem] border-[3px] border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6),inset_0_0_15px_rgba(168,85,247,0.3)] opacity-90" />
+
+                        {/* Text Container */}
+                        <div className="relative px-12 py-8">
+                            <h1 className="text-5xl md:text-8xl font-black tracking-tighter uppercase text-center">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-purple-200 to-fuchsia-300 drop-shadow-[0_0_25px_rgba(168,85,247,0.8)]">
+                                    TONIGHT&apos;S LINEUP
+                                </span>
+                            </h1>
+                        </div>
+                    </div>
                     <p className="text-xl text-slate-400 font-medium tracking-wide">Minds shaping the conversation.</p>
                 </motion.div>
 

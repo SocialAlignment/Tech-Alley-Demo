@@ -230,7 +230,15 @@ export default function HubPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.3 + (i * 0.1) }}
                             >
-                                <SpeakerCard {...speaker} />
+                                <SpeakerCard
+                                    speaker={{
+                                        ...speaker,
+                                        id: i.toString(),
+                                        completion: 100,
+                                        status: 'complete'
+                                    }}
+                                    variant="dark"
+                                />
                             </motion.div>
                         ))}
                     </div>
