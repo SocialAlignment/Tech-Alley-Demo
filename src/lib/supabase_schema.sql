@@ -42,4 +42,158 @@ with check (true);
 
 -- 6. Enable Realtime updates for this table
 -- (Already enabled appropriately if you see an error about it being a member)
--- alter publication supabase_realtime add table public.feedback;
+
+-- IWT Grant Qualification Submissions
+CREATE TABLE if not exists iwt_qualifications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Contact
+    contact_name TEXT NOT NULL,
+    contact_email TEXT NOT NULL,
+    contact_phone TEXT NOT NULL,
+    
+    -- Business
+    business_name TEXT NOT NULL,
+    business_address TEXT,
+    ein TEXT,
+    has_business_license BOOLEAN,
+    has_workers_comp BOOLEAN,
+    has_liability_insurance BOOLEAN,
+    has_payroll_systems BOOLEAN,
+    
+    -- Purpose
+    purpose_avert_layoff BOOLEAN DEFAULT FALSE,
+    purpose_wage_increase BOOLEAN DEFAULT FALSE,
+    purpose_promotion BOOLEAN DEFAULT FALSE,
+    purpose_title_change BOOLEAN DEFAULT FALSE,
+    
+    -- Employee Requirements
+    trainee_count INTEGER,
+    employees_work_authorized BOOLEAN,
+    employees_performance_qualified BOOLEAN,
+    commit_to_retention BOOLEAN,
+    will_displace_employees BOOLEAN,
+    training_already_started BOOLEAN,
+    
+    -- Training Details
+    training_type TEXT,
+    training_provider TEXT,
+    estimated_cost DECIMAL(10,2),
+    preferred_timeline TEXT,
+    
+    -- Qualification Result
+    qualification_status TEXT NOT NULL CHECK (qualification_status IN ('qualified', 'disqualified', 'needs_review')),
+    disqualification_reasons TEXT[],
+    warnings TEXT[],
+    
+    -- Tracking
+    source TEXT DEFAULT 'live_event',
+    lead_id TEXT,
+    discovery_call_booked BOOLEAN DEFAULT FALSE,
+    notes TEXT
+);
+
+-- Index for quick lookups
+CREATE INDEX if not exists idx_iwt_qual_status ON iwt_qualifications(qualification_status);
+CREATE INDEX if not exists idx_iwt_qual_created ON iwt_qualifications(created_at DESC);
+CREATE INDEX if not exists idx_iwt_qual_email ON iwt_qualifications(contact_email);
+
+
+-- Enable RLS for iwt_qualifications
+ALTER TABLE iwt_qualifications ENABLE ROW LEVEL SECURITY;
+
+-- Allow anyone to insert (public form)
+CREATE POLICY "Enable insert for everyone" 
+ON iwt_qualifications 
+FOR INSERT 
+TO public 
+WITH CHECK (true);
+
+-- Allow reading only by authenticated users (or specific roles if needed, for now just auth/service_role)
+-- For now, we don't strictly need a select policy for the public form, but if admins need to see it via client:
+CREATE POLICY "Enable select for authenticated users only"
+ON iwt_qualifications
+FOR SELECT
+TO authenticated
+USING (true);
+
+-- 7. EVENTS TABLE (For Community Submissions)
+CREATE TABLE if not exists public.events (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    name TEXT NOT NULL,
+    date DATE NOT NULL,
+    time TEXT NOT NULL, -- "18:00"
+    description TEXT,
+    link TEXT, -- URL for RSVP
+    
+    status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'published', 'done')) DEFAULT 'pending',
+    tags TEXT[], -- Array of strings e.g. ['community']
+
+    -- Metadata
+    submitted_by_name TEXT,
+    submitted_by_email TEXT
+);
+
+-- RLS for Events
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+
+-- Allow Public Insert (Submission)
+DROP POLICY IF EXISTS "Enable insert for events (public)" ON public.events;
+CREATE POLICY "Enable insert for events (public)" 
+ON public.events 
+FOR INSERT 
+TO public 
+WITH CHECK (true);
+
+-- Allow Public Read (Only Approved/Published)
+DROP POLICY IF EXISTS "Enable read for events (public)" ON public.events;
+CREATE POLICY "Enable read for events (public)" 
+ON public.events 
+FOR SELECT 
+TO public 
+USING (status IN ('approved', 'published', 'done'));
+
+-- Allow Update for Authenticated (Admins)
+DROP POLICY IF EXISTS "Enable update for events (admins)" ON public.events;
+CREATE POLICY "Enable update for events (admins)" 
+ON public.events 
+FOR UPDATE 
+TO authenticated 
+USING (true)
+WITH CHECK (true);
+
+-- 8. MISSIONS TABLE (For Checklist)
+CREATE TABLE if not exists public.missions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    title TEXT NOT NULL,
+    description TEXT,
+    xp INTEGER DEFAULT 10 NOT NULL,
+    icon_name TEXT,
+    action_path TEXT,
+    
+    is_active BOOLEAN DEFAULT TRUE,
+    notion_id TEXT -- To prevent duplicates during migration
+);
+
+-- RLS for Missions
+ALTER TABLE public.missions ENABLE ROW LEVEL SECURITY;
+
+-- Allow Public Read
+CREATE POLICY "Enable read for missions (public)" 
+ON public.missions 
+FOR SELECT 
+TO public 
+USING (is_active = true);
+
+-- Allow Admin Write (Service Role will bypass, but good to have)
+CREATE POLICY "Enable write for missions (admins)" 
+ON public.missions 
+FOR ALL 
+TO authenticated 
+USING (true)
+WITH CHECK (true);
