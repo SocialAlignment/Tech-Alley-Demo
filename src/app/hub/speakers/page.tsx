@@ -300,9 +300,9 @@ export default function SpeakersPage() {
                                                 <p className="text-base text-slate-400 mb-4 line-clamp-1">{speaker.title}, {speaker.company}</p>
 
                                                 <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5 flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                                                    <span className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Speaking On</span>
-                                                    <span className="text-sm text-cyan-200/80 truncate">{speaker.topics[0]}</span>
+                                                    <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                                                    <span className="text-base font-semibold text-slate-300 uppercase tracking-wide">Speaking On</span>
+                                                    <span className="text-base text-cyan-200/80 truncate">{speaker.topics[0]}</span>
                                                 </div>
                                             </div>
                                         </div>
