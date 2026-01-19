@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { useIdentity } from '@/context/IdentityContext';
 import AIMRIWizard from '@/components/ui/ai-mri-wizard';
-
-const FADE_UP = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
+import { HubLandingNavbar } from '@/components/landing/HubLandingNavbar';
+import { MRIHero } from '@/components/landing/MRIHero';
+import { MRIInfo } from '@/components/landing/MRIInfo';
+import { Loader2 } from 'lucide-react';
 
 export default function AIMRIPage() {
     const router = useRouter();
@@ -21,8 +19,6 @@ export default function AIMRIPage() {
     const handleSubmit = async (formData: any) => {
         setIsSubmitting(true);
         try {
-            console.log("Submitting MRI Data:", { leadId, aiMriResponse: formData });
-
             const response = await fetch('/api/contact/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -37,9 +33,7 @@ export default function AIMRIPage() {
                 throw new Error(errorData.details || errorData.error || 'Failed to save audit');
             }
 
-            // Success!!
             alert("Audit Saved! Generating Report...");
-            // Redirect to Hub or Results page
             router.push(`/hub?id=${leadId}&audit=complete`);
         } catch (e: any) {
             console.error(e);
@@ -83,37 +77,50 @@ export default function AIMRIPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen w-full bg-[#020817] flex flex-col items-center justify-center gap-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+            <div className="min-h-screen w-full bg-[#020817] flex justify-center items-center">
+                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#020817] text-white p-4 flex flex-col items-center justify-start py-12 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.15),rgba(255,255,255,0))]">
-            <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={FADE_UP}
-                className="w-full max-w-5xl flex flex-col items-center space-y-8"
-            >
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
-                        Productivity Audit (Mini MRI)
-                    </h1>
-                    <p className="text-gray-400 max-w-lg mx-auto">
-                        Identify bottlenecks, tech waste, and opportunities to reclaim 10+ hours a week.
-                    </p>
+        <div className="min-h-screen w-full bg-[#020817] text-white overflow-hidden font-sans selection:bg-cyan-500/30">
+            <HubLandingNavbar
+                links={[
+                    { label: "Features", onClick: () => document.getElementById('mri-benefits')?.scrollIntoView({ behavior: 'smooth' }) },
+                    { label: "Report", onClick: () => document.getElementById('mri-benefits')?.scrollIntoView({ behavior: 'smooth' }) }
+                ]}
+                cta={{ label: "Start Audit", onClick: () => document.getElementById('ai-mri-wizard')?.scrollIntoView({ behavior: 'smooth' }) }}
+            />
+
+            <MRIHero />
+
+            <div id="mri-benefits">
+                <MRIInfo />
+            </div>
+
+            <div id="ai-mri-wizard" className="py-24 bg-slate-900/50 relative border-t border-white/5">
+                <div className="container mx-auto px-4 max-w-3xl">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-white mb-4">Start Your Audit</h2>
+                        <p className="text-slate-400">Answer 6 quick questions to generate your report.</p>
+                    </div>
+
+                    <div className="bg-[#0b1221] border border-cyan-500/20 rounded-2xl p-6 md:p-10 shadow-[0_0_50px_-12px_rgba(6,182,212,0.15)]">
+                        <AIMRIWizard
+                            key={initialData ? 'loaded' : 'new'}
+                            onSubmit={handleSubmit}
+                            isSubmitting={isSubmitting}
+                            initialValues={initialData}
+                        />
+                    </div>
                 </div>
+            </div>
 
-                <AIMRIWizard
-                    key={initialData ? 'loaded' : 'new'}
-                    onSubmit={handleSubmit}
-                    isSubmitting={isSubmitting}
-                    initialValues={initialData}
-                />
-
-            </motion.div>
+            {/* Simple Footer */}
+            <footer className="py-8 bg-[#020817] border-t border-white/5 text-center text-slate-600 text-sm">
+                <p>© {new Date().getFullYear()} Social Alignment. All rights reserved.</p>
+            </footer>
         </div>
     );
 }

@@ -112,6 +112,18 @@ export async function syncUpdateToNotion(email: string, updateData: any) {
         // Check Social Profile Completed if verified
         properties['Social Profile Completed'] = { checkbox: true };
 
+        // Missions & Gamification
+        if (updateData.missionData && Array.isArray(updateData.missionData)) {
+            // Map mission IDs to the 'Completed Missions' multi-select property
+            // Note: Options must exist or be created by the API (Notion allows creating options on the fly for select/multi-select usually)
+            properties['Completed Missions'] = {
+                multi_select: updateData.missionData.map((m: string) => ({ name: m }))
+            };
+        }
+        if (typeof updateData.missionProgress === 'number') {
+            properties['Mission Score'] = { number: updateData.missionProgress };
+        }
+
         // 3. Update Page
         await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
             method: 'PATCH',
@@ -127,5 +139,59 @@ export async function syncUpdateToNotion(email: string, updateData: any) {
 
     } catch (e) {
         console.error("Notion Sync Update Error", e);
+    }
+}
+
+// Helper to Submit Event to Notion (Pending Review)
+export async function submitEventToNotion(eventData: {
+    name: string;
+    date: string; // ISO Date String YYYY-MM-DD
+    time: string; // HH:mm
+    description: string;
+    link?: string;
+}) {
+    // Hardcoded Event DB ID from /api/events/route.ts
+    const EVENTS_DB_ID = '2eb6b72f-a765-8137-a249-e09442a38221';
+
+    if (!process.env.NOTION_API_KEY) {
+        console.warn("Skipping Notion Event Submission: API Key missing");
+        throw new Error("Missing Notion API Key");
+    }
+
+    try {
+        const apiKey = process.env.NOTION_API_KEY;
+        console.log("Submitting Event to Notion:", eventData.name);
+
+        // Combine Date and Time
+        // Input: date="2024-01-31", time="18:00"
+        // Output: "2024-01-31T18:00:00" (ISO 8601 without Z for local time or add timezone if needed)
+        // For Notion, we can just send the string ISO if we want
+        const startDateTime = `${eventData.date}T${eventData.time}:00`;
+
+        await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                parent: { database_id: EVENTS_DB_ID },
+                properties: {
+                    Name: { title: [{ text: { content: eventData.name } }] },
+                    Date: { date: { start: startDateTime } },
+                    Description: { rich_text: [{ text: { content: eventData.description } }] },
+                    Location: { rich_text: [{ text: { content: eventData.link || '' } }] }, // Storing Link in Location or we could use a Link property if it exists. Using Location as a fallback text field.
+                    Status: { status: { name: 'Pending Review' } }, // CRITICAL: Tag as Pending
+                    Tags: { multi_select: [{ name: 'Community Submission' }] }
+                }
+            })
+        });
+
+        console.log("Notion Event Submission Success:", eventData.name);
+        return { success: true };
+    } catch (e) {
+        console.error("Notion Event Submission Error", e);
+        throw e;
     }
 }

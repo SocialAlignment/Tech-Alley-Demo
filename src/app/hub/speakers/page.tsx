@@ -15,7 +15,7 @@ const LOGO_MAP = {
     techAlley: '/ta-header-badge.png',
     deadSprint: '/logos/new/logo-4.png',
     goed: '/logos/new/logo-2.png',
-    socialAlignment: '/logos/new/logo-0.png',
+    socialAlignment: '/logos/new/logo-1.png',
     silverSevens: '/logos/new/logo-3.png'
 };
 
@@ -142,7 +142,13 @@ export default function SpeakersPage() {
             try {
                 const data = await getTonightLineup();
                 if (data && data.length > 0) {
-                    setSpeakers(data);
+                    const patchedData = data.map(s => {
+                        if (s.id === '4' || s.name.includes('Jonathan')) {
+                            return { ...s, promoImage: LOGO_MAP.socialAlignment };
+                        }
+                        return s;
+                    });
+                    setSpeakers(patchedData);
                 } else {
                     setSpeakers(FALLBACK_SPEAKERS);
                 }
@@ -191,7 +197,7 @@ export default function SpeakersPage() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="mb-16 text-center"
+                    className="mb-6 text-center"
                 >
                     <div className="relative inline-block mx-auto mb-10 group cursor-default">
                         {/* Neon Sign Borders */}
@@ -207,7 +213,6 @@ export default function SpeakersPage() {
                             </h1>
                         </div>
                     </div>
-                    <p className="text-xl text-slate-400 font-medium tracking-wide">Minds shaping the conversation.</p>
                 </motion.div>
 
                 {/* Main Content Grid */}
@@ -269,7 +274,7 @@ export default function SpeakersPage() {
 
                                             {/* Logo Badge - Optimized */}
                                             <div className={`w-44 h-44 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500 ${speaker.id === '5' ? 'p-0' : 'p-4'}`}>
-                                                <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain scale-150 ${speaker.id === '3' ? 'translate-y-2' : '-translate-y-1'}`} />
+                                                <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain ${speaker.id === '3' ? 'scale-[1.8] translate-y-8' : speaker.id === '5' ? 'scale-150 -translate-y-6' : 'scale-150 -translate-y-1'}`} />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -295,7 +300,7 @@ export default function SpeakersPage() {
                                                 </div>
                                                 {/* Logo - Sized Up & Filtered */}
                                                 {/* Logo - Sized Up & Filtered */}
-                                                <div className={`w-40 h-40 transition-all duration-500 p-1 flex items-center justify-center ${speaker.id === '4' ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
+                                                <div className={`w-40 h-40 transition-all duration-500 p-1 flex items-center justify-center ${(speaker.id === '4' || speaker.name.includes('Jonathan')) ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
                                                     {speaker.id === '2' ? (
                                                         <HelpCircle className="w-24 h-24 text-white opacity-80" />
                                                     ) : (
@@ -337,7 +342,9 @@ export default function SpeakersPage() {
                             <p className="text-white mb-8 text-xl max-w-3xl leading-relaxed">
                                 We're looking for innovators, builders, and storytellers to share their expertise.
                             </p>
-                            <button className="whitespace-nowrap px-10 py-5 bg-white text-slate-950 font-bold rounded-full text-xl hover:scale-105 transition-transform shadow-xl flex items-center gap-2">
+                            <button
+                                onClick={() => router.push('/hub/speaker-application')}
+                                className="whitespace-nowrap px-10 py-5 bg-white text-slate-950 font-bold rounded-full text-xl hover:scale-105 transition-transform shadow-xl flex items-center gap-2">
                                 Now Isn't the Time to Be Modest <ArrowUpRight className="w-6 h-6" />
                             </button>
                         </div>

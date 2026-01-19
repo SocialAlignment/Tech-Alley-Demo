@@ -1,0 +1,4 @@
+[dotenv@17.2.3] injecting env (17) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+Notion DataBases keys: [ 'retrieve', 'create', 'update' ]
+Has retrieve? function
+Has query? undefined

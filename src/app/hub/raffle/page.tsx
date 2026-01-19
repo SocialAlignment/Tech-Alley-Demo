@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useIdentity } from '@/context/IdentityContext';
 import GenAIRaffleWizard from '@/components/ui/gen-ai-raffle-wizard';
+import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StarsBackground } from "@/components/ui/stars-background";
 
 const FADE_UP = {
     hidden: { opacity: 0, y: 10 },
@@ -89,22 +91,17 @@ export default function GenAIRafflePage() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#020817] text-white p-4 flex flex-col items-center justify-start py-12 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(168,85,247,0.15),rgba(255,255,255,0))]">
+        <div className="min-h-screen w-full bg-slate-950 relative overflow-hidden text-white p-4 flex flex-col items-center justify-start py-12">
+            <div className="fixed inset-0 z-0 bg-transparent pointer-events-none">
+                <ShootingStars />
+                <StarsBackground />
+            </div>
             <motion.div
                 initial="hidden"
                 animate="visible"
                 variants={FADE_UP}
-                className="w-full max-w-5xl flex flex-col items-center space-y-8"
+                className="w-full max-w-2xl flex flex-col items-center z-10"
             >
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-                        Win a Free GenAI Audit
-                    </h1>
-                    <p className="text-gray-400 max-w-lg mx-auto">
-                        Tell us about your experience and expectations to enter the raffle.
-                    </p>
-                </div>
-
                 <GenAIRaffleWizard
                     key={initialData ? 'loaded' : 'new'}
                     onSubmit={handleSubmit}

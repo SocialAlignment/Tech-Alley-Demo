@@ -1,15 +1,19 @@
 'use client';
 
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-    Calendar, Mic2, Gift, Sparkles, CheckSquare, MessageSquare, X,
-    Loader2, Send, ArrowRight, Camera, Rocket
+    Gift, Users, Calendar, Megaphone, BookOpen,
+    Zap, Mail, ArrowRight, Play, ExternalLink
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useIdentity } from '@/context/IdentityContext';
 import SpeakerCard from '@/components/SpeakerCard';
-import RaffleWheel from '@/components/RaffleWheel';
+import { cn } from '@/lib/utils';
 
 // --- DATA CONSTANTS ---
 
@@ -19,221 +23,286 @@ const SPEAKERS = [
         title: "Founder & Organizer",
         company: "Tech Alley Henderson",
         image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
-        topics: ["State of the Alley", "Innovation Hub", "Community Growth"]
+        topics: ["State of the Alley", "Innovation Hub", "Community Growth"],
+        id: "0"
     },
     {
         name: "Jonathan",
         title: "Host",
         company: "Social Alignment",
         image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=200",
-        topics: ["System Automation", "Lead Gen", "Digital Strategy"]
+        topics: ["System Automation", "Lead Gen", "Digital Strategy"],
+        id: "1"
     },
     {
         name: "Jorge 'HOZ' Hernandez",
         title: "Host",
         company: "Dead Sprint",
         image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200",
-        topics: ["Podcasting", "Content Strategy", "Community"]
+        topics: ["Podcasting", "Content Strategy", "Community"],
+        id: "2"
     }
 ];
 
-const AGENDA_ITEMS = [
-    { time: '6:00 PM', event: 'Networking & Check-In', desc: 'Grab a drink, meet the community.' },
-    { time: '6:30 PM', event: 'Kickoff & "State of the Alley"', desc: 'Welcome from Lorraine & The Team.' },
-    { time: '7:00 PM', event: 'Startup Spotlight: Vegas AI', desc: 'Demo from local innovators.' },
-    { time: '7:30 PM', event: 'Guest Speaker: The Future of work', desc: 'Deep dive into AI workflows.' },
-    { time: '8:15 PM', event: 'Raffle & Closing Remarks', desc: 'Win the AI Commercial!' },
-];
+// --- COMPONENTS ---
 
-// --- ANIMATION VARIANTS ---
+const CircuitryBackground = () => (
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#020617]">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        {/* Animated Orbs/Glows */}
+        <motion.div
+            animate={{ opacity: [0.15, 0.3, 0.15], scale: [1, 1.1, 1] }}
+            transition={{ duration: 8, repeat: Infinity }}
+            className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+            animate={{ opacity: [0.1, 0.2, 0.1], scale: [1.1, 1, 1.1] }}
+            transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+            className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[120px]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+    </div>
+);
 
-const itemParams = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-};
+const FeatureTile = ({ icon: Icon, title, desc, href, delay }: { icon: any, title: string, desc: string, href: string, delay: number }) => (
+    <Link href={href}>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.5 }}
+            whileHover={{ scale: 1.03, y: -5 }}
+            className="group relative h-full bg-slate-900/40 border border-slate-800/60 hover:border-cyan-500/50 rounded-2xl p-6 backdrop-blur-sm overflow-hidden transition-all duration-300 shadow-lg hover:shadow-cyan-500/20"
+        >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            {/* Light Sweep */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700 bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 translate-x-[-100%] group-hover:animate-shine" />
+
+            <div className="relative z-10 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-xl bg-slate-800/80 group-hover:bg-cyan-950/50 border border-slate-700 group-hover:border-cyan-500/50 flex items-center justify-center mb-4 transition-colors duration-300">
+                    <Icon className="w-6 h-6 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-100 group-hover:text-white mb-2 transition-colors">{title}</h3>
+                <p className="text-sm text-slate-400 group-hover:text-slate-300 mb-4 flex-grow">{desc}</p>
+
+                <div className="flex items-center text-xs font-bold text-slate-500 group-hover:text-cyan-400 transition-colors uppercase tracking-wider">
+                    Explore <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                </div>
+            </div>
+        </motion.div>
+    </Link>
+);
+
+const ConnectionTile = ({ label, children, delay }: { label: string, children: React.ReactNode, delay: number }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay, duration: 0.5 }}
+        className="flex-1 bg-slate-900/60 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors backdrop-blur-sm flex flex-col justify-center items-center text-center group"
+    >
+        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3 group-hover:text-slate-400 transition-colors">{label}</div>
+        {children}
+    </motion.div>
+);
 
 export default function HubPage() {
     const router = useRouter();
     const { leadId, userName } = useIdentity();
     const displayName = userName ? userName.split(' ')[0] : 'Innovator';
 
-    // --- STATE FOR ASK MODAL ---
-    const [isAskModalOpen, setIsAskModalOpen] = useState(false);
-    const [question, setQuestion] = useState('');
-    const [sending, setSending] = useState(false);
-    const [agendaItems, setAgendaItems] = useState(AGENDA_ITEMS);
-
-    useEffect(() => {
-        const fetchAgenda = async () => {
-            try {
-                const res = await fetch('/api/agenda');
-                const data = await res.json();
-                if (data.success && data.agenda && data.agenda.length > 0) {
-                    setAgendaItems(data.agenda);
-                }
-            } catch (e) {
-                console.error("Failed to fetch agenda", e);
-            }
-        };
-        fetchAgenda();
-    }, []);
-
     const navigateTo = (path: string) => {
         router.push(leadId ? `${path}?id=${leadId}` : path);
     };
 
-    const handleAskSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSending(true);
-
-        try {
-            const res = await fetch('/api/update-lead', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    leadId,
-                    updates: {
-                        eventFeedback: `ASKED QUESTION: ${question}`
-                    }
-                })
-            });
-
-            if (res.ok) {
-                setTimeout(() => {
-                    setSending(false);
-                    setIsAskModalOpen(false);
-                    setQuestion('');
-                    alert("Question sent to the stage!");
-                }, 800);
-            }
-        } catch (err) {
-            console.error(err);
-            setSending(false);
-        }
+    const startTour = () => {
+        const driverObj = driver({
+            showProgress: true,
+            steps: [
+                { element: '#hub-hero', popover: { title: 'Welcome Console', description: 'Your main dashboard for the event.' } },
+                { element: '#nav-start-here', popover: { title: 'Start Here', description: 'Begin your journey and set up your profile.' } },
+                { element: '#nav-agenda', popover: { title: 'Agenda', description: 'Plan your evening with the event schedule.' } },
+                { element: '#hub-tiles', popover: { title: 'Feature Hub', description: 'Quick access to all key event resources.' } },
+                { element: '#hub-speakers', popover: { title: 'Speakers', description: 'Meet tonight\'s industry leaders.' } },
+                { element: '#hub-connect-bar', popover: { title: 'Connection Zone', description: 'Network, find resources, and contact us.' } },
+            ]
+        });
+        driverObj.drive();
     };
 
     return (
-        <div className="flex flex-col xl:flex-row gap-8 pb-24">
+        <div className="min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden">
+            <CircuitryBackground />
 
-            {/* --- ASK MODAL --- */}
-            <AnimatePresence>
-                {isAskModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl border border-blue-100"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-slate-900">Ask Lorraine</h3>
-                                <button onClick={() => setIsAskModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
-                                    <X size={20} />
-                                </button>
+            {/* --- TOP NAV --- */}
+            <nav className="relative z-50 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo Area */}
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                <Zap className="w-5 h-5 text-white fill-white" />
                             </div>
-
-                            <form onSubmit={handleAskSubmit} className="space-y-4">
-                                <textarea
-                                    autoFocus
-                                    value={question}
-                                    onChange={(e) => setQuestion(e.target.value)}
-                                    placeholder="Type your question here..."
-                                    className="w-full h-32 p-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-200 text-slate-700 resize-none font-medium placeholder:text-slate-400"
-                                    required
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={sending}
-                                    className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all flex items-center justify-center gap-2"
-                                >
-                                    {sending ? <Loader2 className="animate-spin" /> : <Send size={18} />}
-                                    {sending ? 'Sending...' : 'Send to Stage'}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-
-            {/* --- CENTER COLUMN (Main Content) --- */}
-            <div className="flex-1 space-y-8 min-w-0">
-
-
-
-                {/* 2. PERSONAL HERO + ACTIONS (White Design) */}
-                <motion.div
-                    variants={itemParams}
-                    initial="hidden"
-                    animate="show"
-                    className="relative bg-white rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-[0_20px_50px_-12px_rgba(200,200,255,0.3)] border border-slate-50"
-                >
-                    {/* Decorative Blobs */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-yellow-100/50 to-blue-100/50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none mix-blend-multiply"></div>
-
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                        <div className="flex-1">
-                            <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-                                Hello, <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">{displayName}.</span>
-                            </h2>
-                            <div className="text-slate-500 text-lg mb-8 max-w-md font-medium leading-relaxed">
-                                <p className="mb-2">You are now connected to the Tech Alley Henderson interactive hub. Use this throughout the event to access:</p>
-                                <ul className="list-disc list-inside space-y-1 pl-2 marker:text-blue-500">
-                                    <li>Tonight's Agenda</li>
-                                    <li>Announcements</li>
-                                    <li>Speaker Resources</li>
-                                    <li>New Ways to Network</li>
-                                    <li>And More</li>
-                                </ul>
-                            </div>
-
-                            <div className="flex flex-wrap gap-4">
-                                <button onClick={() => navigateTo('/hub/mri')} className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_15px_35px_-10px_rgba(37,99,235,0.6)] transition-all transform hover:-translate-y-0.5">
-                                    Start Audit
-                                </button>
-                                <button onClick={() => setIsAskModalOpen(true)} className="px-6 py-3.5 bg-white text-slate-700 font-bold rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:bg-slate-50 hover:shadow-md transition-all flex items-center gap-2 group">
-                                    <MessageSquare size={18} className="text-blue-500 group-hover:scale-110 transition-transform" />
-                                    Ask Lorraine
-                                </button>
-                            </div>
+                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                                Alignment Hub
+                            </span>
                         </div>
 
-                        {/* Illustration */}
-                        <div className="w-full md:w-5/12 flex justify-center relative">
-                            <motion.div
-                                animate={{ y: [0, -15, 0] }}
-                                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                                className="relative z-10"
+                        {/* Desktop Links */}
+                        <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+                            <Link id="nav-start-here" href="/hub/start" className="hover:text-white transition-colors">Start Here</Link>
+                            <Link id="nav-agenda" href="/hub/agenda" className="hover:text-white transition-colors">Agenda</Link>
+                            <Link href="/hub/upcoming" className="hover:text-white transition-colors">Upcoming Events</Link>
+                            <Link href="/hub/checklist" className="hover:text-white transition-colors">Missions</Link>
+
+                            <button
+                                onClick={startTour}
+                                className="px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-wide transition-all border border-slate-700"
                             >
-                                <img
-                                    src="/hero-whimsical.png"
-                                    alt="Innovation Hub"
-                                    className="w-full max-w-[320px] object-contain drop-shadow-2xl"
-                                />
-                            </motion.div>
+                                Take a Tour
+                            </button>
                         </div>
                     </div>
-                </motion.div>
+                </div>
+            </nav>
 
-                {/* 3. SPEAKERS SECTION (Purple Design) */}
-                <section className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xl font-bold text-slate-900">Tonight's Speakers</h3>
-                        <span className="text-xs font-bold text-purple-600 cursor-pointer hover:underline">View All</span>
+            <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 flex flex-col space-y-16 pb-24">
+
+                {/* --- 1. HERO CONSOLE --- */}
+                <section id="hub-hero" className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-cyan-500/5 rounded-[2.5rem] blur-xl" />
+                    <div className="relative bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-8 md:p-16 overflow-hidden backdrop-blur-sm shadow-2xl">
+
+                        {/* Background Detail */}
+                        <div className="absolute top-0 right-0 p-12 opacity-30 pointer-events-none">
+                            <div className="w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl mix-blend-screen animate-pulse" />
+                        </div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
+                            <div className="flex-1 space-y-8 text-center md:text-left">
+                                <div className="space-y-2">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/30 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-widest mb-4">
+                                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                                        Interactive Console
+                                    </div>
+                                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                                        Welcome to the<br />
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                                            Innovation Hub
+                                        </span>
+                                    </h1>
+                                </div>
+
+                                <div className="space-y-4 max-w-lg mx-auto md:mx-0">
+                                    <h2 className="text-2xl font-bold text-slate-200 flex items-center justify-center md:justify-start gap-2">
+                                        Hello, <span className="text-blue-400">{displayName}.</span>
+                                    </h2>
+                                    <p className="text-slate-400 text-lg leading-relaxed">
+                                        You are now connected to the Tech Alley Henderson interactive hub. Use this dashboard to navigate your event experience.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-2">
+                                    <button
+                                        onClick={startTour}
+                                        className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                                    >
+                                        <Zap className="w-5 h-5 fill-current" />
+                                        Take a Tour
+                                        <span className="flex h-3 w-3 relative ml-1">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-white/50"></span>
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => navigateTo('/genai-raffle')}
+                                        className="px-8 py-4 bg-transparent border border-white/20 hover:border-cyan-400/50 text-white hover:text-cyan-400 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 group"
+                                    >
+                                        <Gift className="w-5 h-5 group-hover:scale-110 transition-transform text-purple-400" />
+                                        Win Free GenAI Video Content
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Hero Visual */}
+                            <div className="w-full md:w-5/12 flex justify-center">
+                                <motion.div
+                                    animate={{ y: [0, -15, 0], rotate: [0, 1, 0] }}
+                                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                                    className="relative w-64 h-64 md:w-80 md:h-80 bg-gradient-to-tr from-slate-800 to-slate-900 rounded-full border border-slate-700/50 flex items-center justify-center shadow-2xl shadow-blue-500/10"
+                                >
+                                    <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-[spin_10s_linear_infinite]" />
+                                    <div className="absolute inset-4 rounded-full border border-blue-500/20 animate-[spin_15s_linear_infinite_reverse]" />
+                                    <Zap className="w-32 h-32 text-slate-700 drop-shadow-lg" />
+
+                                    {/* Floating stats or icons could go here */}
+                                    <div className="absolute -right-4 top-10 bg-slate-900 border border-slate-700 p-3 rounded-xl shadow-xl flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                        <span className="text-xs font-bold text-slate-300">HUB ACTIVE</span>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                </section>
+
+                {/* --- 2. FEATURE TILES --- */}
+                <section id="hub-tiles" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <FeatureTile
+                        icon={Calendar}
+                        title="Tonight's Agenda"
+                        desc="View the full run of show and timing."
+                        href="/hub/agenda"
+                        delay={0.1}
+                    />
+                    <FeatureTile
+                        icon={Megaphone}
+                        title="Announcements"
+                        desc="Live updates and important news."
+                        href="/hub/announcements"
+                        delay={0.2}
+                    />
+                    <FeatureTile
+                        icon={BookOpen}
+                        title="Speaker Resources"
+                        desc="Slides, links, and key takeaways."
+                        href="/hub/speaker-resources"
+                        delay={0.3}
+                    />
+                    <FeatureTile
+                        icon={Users}
+                        title="Networking"
+                        desc="Connect with attendees and grow."
+                        href="/hub/networking"
+                        delay={0.4}
+                    />
+                </section>
+
+                {/* --- 3. SPEAKERS SPOTLIGHT --- */}
+                <section id="hub-speakers" className="space-y-6">
+                    <div className="flex items-center justify-between px-2 border-b border-slate-800 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1.5 h-6 bg-purple-500 rounded-full" />
+                            <h3 className="text-2xl font-bold text-white">Tonight's Speakers</h3>
+                        </div>
+                        <Link href="/hub/speakers" className="text-xs font-bold text-purple-400 hover:text-purple-300 uppercase tracking-widest border border-purple-500/30 px-4 py-2 rounded-full hover:bg-purple-950/30 transition-all">
+                            View All
+                        </Link>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-3">
                         {SPEAKERS.map((speaker, i) => (
                             <motion.div
                                 key={i}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + (i * 0.1) }}
+                                initial={{ opacity: 0, y: 24 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.3, delay: 0.2 + (i * 0.1) }}
                             >
                                 <SpeakerCard
                                     speaker={{
                                         ...speaker,
-                                        id: i.toString(),
                                         completion: 100,
                                         status: 'complete'
                                     }}
@@ -244,156 +313,61 @@ export default function HubPage() {
                     </div>
                 </section>
 
-                {/* 4. AGENDA (White Design) */}
-                <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="font-bold text-xl text-slate-800">Tonight's Agenda</h3>
-                        <span className="p-2 bg-slate-50 rounded-full text-slate-400"><Calendar size={20} /></span>
+                {/* --- 4. CONNECTION BAR --- */}
+                <section id="hub-connect-bar" className="flex flex-col md:flex-row gap-4 pt-8">
+                    <ConnectionTile label="Connect with Others" delay={0.5}>
+                        <Link href="/hub/networking" className="w-full h-full flex items-center justify-center p-2 hover:bg-white/5 rounded-lg transition-colors">
+                            <div className="flex flex-col items-center gap-2">
+                                <Users className="w-6 h-6 text-blue-400" />
+                                <span className="text-sm font-semibold text-slate-200">Attendee Directory</span>
+                            </div>
+                        </Link>
+                    </ConnectionTile>
+
+                    <ConnectionTile label="Free Resources" delay={0.6}>
+                        <Link href="/hub/resources" className="w-full h-full flex items-center justify-center p-2 hover:bg-white/5 rounded-lg transition-colors">
+                            <div className="flex flex-col items-center gap-2">
+                                <BookOpen className="w-6 h-6 text-purple-400" />
+                                <span className="text-sm font-semibold text-slate-200">Access Library</span>
+                            </div>
+                        </Link>
+                    </ConnectionTile>
+
+                    <ConnectionTile label="Connect With Us" delay={0.7}>
+                        <div className="flex items-center gap-4 bg-slate-950/50 p-3 rounded-lg border border-slate-800 w-full hover:border-slate-700 transition-colors">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                                <img src="/logo-sa.png" alt="JS" className="w-full h-full object-cover opacity-80" />
+                            </div>
+                            <div className="text-left overflow-hidden">
+                                <p className="text-sm font-bold text-white truncate">Jonathan Sterritt</p>
+                                <a href="mailto:jonathan@socialalignment.biz" className="text-xs text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-1 truncate">
+                                    <Mail size={10} /> jonathan@socialalignment.biz
+                                </a>
+                            </div>
+                        </div>
+                    </ConnectionTile>
+                </section>
+
+                {/* --- FOOTER --- */}
+                <footer className="pt-12 pb-8 flex flex-col items-center justify-center gap-4 opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-2" />
+                    <div className="flex items-center gap-2 select-none pointer-events-none">
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Powered By</span>
+                        <div className="flex items-center gap-1.5 grayscale opacity-80">
+                            {/* Simple text logo representation or SVG if available */}
+                            <span className="text-xs font-black text-slate-300 tracking-tighter">TECH ALLEY</span>
+                        </div>
                     </div>
-                    <div className="space-y-6">
-                        {agendaItems.map((item, i) => (
-                            <div key={i} className="flex gap-6 items-start group">
-                                <span className="text-sm font-bold text-slate-400 w-16 pt-1">{item.time}</span>
-                                <div className="flex-1 p-4 bg-slate-50 rounded-2xl group-hover:bg-blue-50 transition-colors border border-slate-100 group-hover:border-blue-100">
-                                    <h4 className="font-bold text-slate-800 group-hover:text-blue-700 mb-1">{item.event}</h4>
-                                    <p className="text-sm text-slate-500">{item.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 5. RAFFLE SECTION (Purple Design) */}
-                <motion.section
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden"
-                >
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-50 to-transparent pointer-events-none"></div>
-
-                    <div className="text-center mb-8 relative z-10">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Exclusive Raffle</h2>
-                        <p className="text-sm text-slate-500">Spin for a chance to win a Free GenAI Video Audit!</p>
-                    </div>
-
-                    <div className="flex justify-center relative z-10">
-                        <RaffleWheel />
-                    </div>
-                </motion.section>
-
-            </div>
-
-
-            {/* --- RIGHT COLUMN (Sidebar from White Design) --- */}
-            <div className="w-full xl:w-[350px] space-y-6 shrink-0">
-
-                <div className="space-y-4">
-                    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest pl-4">Interact & Win</h3>
-
-                    <div className="grid grid-cols-1 gap-4">
-                        {/* 0. Photo Booth (Orange Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/photo-booth')}
-                            className="bg-gradient-to-r from-orange-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-orange-100 hover:border-orange-200 hover:shadow-[0_10px_20px_-5px_rgba(249,115,22,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-orange-50 shadow-sm flex items-center justify-center text-orange-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                                <Camera size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Photo Booth</h4>
-                                <p className="text-orange-400 text-xs font-medium">Capture & Share</p>
-                            </div>
-                        </motion.div>
-                        {/* 1. Enter Raffle (Pink Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/raffle')}
-                            className="bg-gradient-to-r from-pink-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-pink-100 hover:border-pink-200 hover:shadow-[0_10px_20px_-5px_rgba(236,72,153,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-pink-50 shadow-sm flex items-center justify-center text-pink-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                                <Gift size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Enter Raffle</h4>
-                                <p className="text-pink-400 text-xs font-medium">Win a GenAI Audit</p>
-                            </div>
-                        </motion.div>
-
-                        {/* 2. Business MRI (Cyan Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/mri')}
-                            className="bg-gradient-to-r from-cyan-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-cyan-100 hover:border-cyan-200 hover:shadow-[0_10px_20px_-5px_rgba(6,182,212,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-cyan-50 shadow-sm flex items-center justify-center text-cyan-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
-                                <Sparkles size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Productivity Audit</h4>
-                                <p className="text-cyan-400 text-xs font-medium">Mini MRI (10+ Hrs Back)</p>
-                            </div>
-                        </motion.div>
-
-                        {/* 3. Innovation Grant (Violet Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/grant')}
-                            className="bg-gradient-to-r from-violet-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-violet-100 hover:border-violet-200 hover:shadow-[0_10px_20px_-5px_rgba(139,92,246,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-violet-50 shadow-sm flex items-center justify-center text-violet-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                                <Rocket size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Innovation Grant</h4>
-                                <p className="text-violet-400 text-xs font-medium">$5k in AI Architecture</p>
-                            </div>
-                        </motion.div>
-
-                        {/* 3. Feedback (Purple Pastel) */}
-
-
-                        {/* 4. Speak Here (Blue Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/apply-to-speak')}
-                            className="bg-gradient-to-r from-blue-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-blue-100 hover:border-blue-200 hover:shadow-[0_10px_20px_-5px_rgba(59,130,246,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-blue-50 shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
-                                <Mic2 size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">Speak Here</h4>
-                                <p className="text-blue-400 text-xs font-medium">Apply for the stage</p>
-                            </div>
-                        </motion.div>
-
-                        {/* 5. My Checklist (Emerald Pastel) */}
-                        <motion.div
-                            variants={itemParams}
-                            initial="hidden" animate="show"
-                            onClick={() => navigateTo('/hub/checklist')}
-                            className="bg-gradient-to-r from-emerald-50 to-white rounded-[1.5rem] p-4 cursor-pointer border border-emerald-100 hover:border-emerald-200 hover:shadow-[0_10px_20px_-5px_rgba(16,185,129,0.15)] transition-all flex items-center gap-4 group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-50 shadow-sm flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
-                                <CheckSquare size={22} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 text-sm">My Checklist</h4>
-                                <p className="text-emerald-400 text-xs font-medium">Your Companion Guide</p>
-                            </div>
-                        </motion.div>
-
-                    </div>
-                </div>
+                    {/* Hidden Admin Trigger - Kept from original */}
+                    <div
+                        onClick={() => router.push('/admin')}
+                        className="w-20 h-4 mt-2 cursor-default"
+                        title=""
+                    />
+                </footer>
 
             </div>
         </div>
     );
 }
+

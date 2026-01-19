@@ -1,139 +1,257 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { Loader2, RefreshCw } from 'lucide-react';
-import RaffleWheel from '@/components/RaffleWheel';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Users, Ticket, CheckSquare, Bell, Mail, MessageSquare, RefreshCw, Trophy, LogOut } from 'lucide-react';
+import { WarpBackground } from '@/components/ui/warp-background';
+import RaffleWheel from '@/components/admin/RaffleWheel';
+import BroadcastModal from '@/components/admin/BroadcastModal';
 
-interface Lead {
-    id: string;
-    name: string;
-    company: string;
-    interest: string;
-    isQualified: boolean;
+// Data Interfaces
+export interface DashboardStats {
+    totalUsers: number;
+    photoUploads: number;
+    questions: number;
+    raffleEntries: number;
+    forms: {
+        grant: number;
+        mri: number;
+        genai: number;
+    }
 }
 
-export default function AdminPage() {
+export interface Lead {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    company: string;
+}
+
+interface BentoCardProps {
+    children: React.ReactNode;
+    className?: string;
+    delay?: number;
+}
+
+export default function AdminDashboardPage() {
+    const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [showRaffleWheel, setShowRaffleWheel] = useState(false);
+    const [broadcastState, setBroadcastState] = useState<{ isOpen: boolean, type: 'email' | 'sms' | 'voice' }>({
+        isOpen: false,
+        type: 'email'
+    });
+
+    // Data State
+    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
-    const [wheelMode, setWheelMode] = useState(false);
-
-    const fetchLeads = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/leads');
-            const data = await res.json();
-            if (data.success) {
-                setLeads(data.leads);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
-        fetchLeads();
-        // Poll every 10 seconds for live updates
-        const interval = setInterval(fetchLeads, 10000);
+        // Auth Bypass (Debugging)
+        setIsAuthenticated(true);
+
+        // Fetch Data
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+
+                if (data.stats) setStats(data.stats);
+                if (data.recentLeads) setLeads(data.recentLeads);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+        const interval = setInterval(fetchData, 15000); // Poll every 15s
+
         return () => clearInterval(interval);
-    }, []);
+    }, [router]);
+
+    if (!isAuthenticated) return null;
+
+    const BentoCard = ({ children, className = "", delay = 0 }: BentoCardProps) => (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.5 }}
+            className={`relative overflow-hidden rounded-2xl bg-slate-900/50 border border-white/10 backdrop-blur-md hover:border-purple-500/50 transition-colors group ${className}`}
+        >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative z-10 p-6 h-full flex flex-col">
+                {children}
+            </div>
+        </motion.div>
+    );
 
     return (
-        <div className="min-h-screen bg-black text-white p-8 font-sans">
-            <div className="max-w-7xl mx-auto">
-                <header className="flex items-center justify-between mb-8">
+        <main className="relative min-h-screen bg-black text-white p-4 md:p-8 font-sans">
+
+            {/* Background */}
+            <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
+                <WarpBackground className="w-full h-full" gridColor="rgba(139, 92, 246, 0.3)" />
+            </div>
+
+            <div className="relative z-10 max-w-7xl mx-auto space-y-6">
+
+                {/* Header */}
+                <header className="flex justify-between items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-[#9d4edd] to-[#e0aaff] bg-clip-text text-transparent">
-                            God Mode
+                        <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                            MISSION CONTROL
                         </h1>
-                        <p className="text-gray-400">Tech Alley Henderson | Control Center</p>
+                        <p className="text-slate-400">Tech Alley Henderson • Live Operations</p>
                     </div>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={fetchLeads}
-                            className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-                        >
-                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                            Refresh
-                        </button>
-                        <button className="bg-[#9d4edd] hover:bg-[#7b2cbf] px-4 py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-purple-500/20">
-                            Trigger 9PM SMS
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => {
+                            sessionStorage.removeItem('admin_access');
+                            router.push('/');
+                        }}
+                        className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
+                    >
+                        <LogOut className="w-6 h-6" />
+                    </button>
                 </header>
 
-                <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Live Data */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <section className="glass-panel p-6 border border-white/10 rounded-2xl">
-                            <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
-                                <span>Live Leads Feed</span>
-                                <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-400">{leads.length} Total</span>
-                            </h2>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="text-gray-500 border-b border-white/10">
-                                        <tr>
-                                            <th className="pb-3">Name</th>
-                                            <th className="pb-3">Company</th>
-                                            <th className="pb-3">Interest / Goal</th>
-                                            <th className="pb-3 text-right">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {loading && leads.length === 0 ? (
-                                            <tr><td colSpan={4} className="py-8 text-center text-gray-500">Loading live data...</td></tr>
-                                        ) : leads.map((lead) => (
-                                            <tr key={lead.id} className="group hover:bg-white/5 transition-colors">
-                                                <td className="py-3 font-medium">{lead.name}</td>
-                                                <td className="py-3 text-gray-400">{lead.company}</td>
-                                                <td className="py-3 text-gray-400 truncate max-w-[200px]">{lead.interest}</td>
-                                                <td className="py-3 text-right">
-                                                    <span className={`inline-block px-2 py-1 rounded-full text-[10px] uppercase font-bold ${lead.isQualified ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                                                        {lead.isQualified ? 'Entered' : 'Viewed'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </section>
-                    </div>
+                {/* Bento Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]">
 
-                    {/* Right Column: The Stage */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <section className="glass-panel p-6 border border-[#9d4edd]/30 rounded-2xl bg-gradient-to-br from-black to-[#240046]/50 sticky top-8">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                <span className="text-2xl">🎡</span> The Wheel
-                            </h2>
+                    {/* Stat: Total Attendees */}
+                    <BentoCard className="md:col-span-1" delay={0.1}>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="p-2 bg-blue-500/20 rounded-lg text-blue-400"><Users className="w-6 h-6" /></span>
+                            <span className="text-xs text-green-400 flex items-center gap-1">Live <span className="bg-green-500 w-1.5 h-1.5 rounded-full animate-pulse" /></span>
+                        </div>
+                        <div className="mt-auto">
+                            <h3 className="text-4xl font-bold text-white">{loading ? '...' : stats?.totalUsers || 0}</h3>
+                            <p className="text-sm text-slate-400">Total Check-ins</p>
+                        </div>
+                    </BentoCard>
 
-                            {wheelMode ? (
-                                <div className="mb-4">
-                                    <RaffleWheel candidates={leads.filter(l => l.isQualified).map(l => l.name)} />
-                                </div>
+                    {/* Stat: Raffle Entries */}
+                    <BentoCard className="md:col-span-1" delay={0.2}>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="p-2 bg-purple-500/20 rounded-lg text-purple-400"><Ticket className="w-6 h-6" /></span>
+                            <span className="text-xs text-purple-400">Active Pool</span>
+                        </div>
+                        <div className="mt-auto">
+                            <h3 className="text-4xl font-bold text-white">{loading ? '...' : stats?.raffleEntries || 0}</h3>
+                            <p className="text-sm text-slate-400">Raffle Entries</p>
+                        </div>
+                    </BentoCard>
+
+                    {/* Stat: Missions & Forms */}
+                    <BentoCard className="md:col-span-1" delay={0.3}>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="p-2 bg-pink-500/20 rounded-lg text-pink-400"><CheckSquare className="w-6 h-6" /></span>
+                        </div>
+                        <div className="mt-auto">
+                            <h3 className="text-4xl font-bold text-white">{loading ? '...' : (stats?.photoUploads || 0) + (stats?.forms.grant || 0)}</h3>
+                            <p className="text-sm text-slate-400">Actions / Uploads</p>
+                        </div>
+                    </BentoCard>
+
+                    {/* Action: Broadcast (High Priority) */}
+                    <BentoCard className="md:col-span-1 md:row-span-2 bg-gradient-to-b from-red-900/20 to-slate-900/50 border-red-500/30 hover:border-red-500/60" delay={0.4}>
+                        <div className="flex items-center gap-2 mb-6">
+                            <Bell className="w-5 h-5 text-red-400" />
+                            <h3 className="font-bold text-red-100">BROADCAST</h3>
+                        </div>
+                        <div className="space-y-3 mt-auto">
+                            <button
+                                onClick={() => setBroadcastState({ isOpen: true, type: 'email' })}
+                                className="w-full py-3 bg-red-500/20 hover:bg-red-500 hover:text-black border border-red-500/50 rounded-lg flex items-center justify-center gap-2 transition-all group/btn"
+                            >
+                                <Mail className="w-4 h-4" />
+                                <span>Send Email Blast</span>
+                            </button>
+                            <button
+                                onClick={() => setBroadcastState({ isOpen: true, type: 'sms' })}
+                                className="w-full py-3 bg-red-500/20 hover:bg-red-500 hover:text-black border border-red-500/50 rounded-lg flex items-center justify-center gap-2 transition-all"
+                            >
+                                <MessageSquare className="w-4 h-4" />
+                                <span>Send SMS Alert</span>
+                            </button>
+                            <button
+                                onClick={() => setBroadcastState({ isOpen: true, type: 'voice' })}
+                                className="w-full py-3 bg-purple-500/20 hover:bg-purple-500 hover:text-black border border-purple-500/50 rounded-lg flex items-center justify-center gap-2 transition-all"
+                            >
+                                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                <span>Deploy Voice Agent</span>
+                            </button>
+                            <p className="text-[10px] text-red-400/60 text-center mt-2">Will notify all active attendees immediately.</p>
+                        </div>
+                    </BentoCard>
+
+                    {/* Data Feed: Recent Activity */}
+                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.5}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold flex items-center gap-2">
+                                <RefreshCw className={`w-4 h-4 text-slate-400 ${loading ? 'animate-spin' : ''}`} /> Live Feed
+                            </h3>
+                            <span className="text-xs bg-slate-800 px-2 py-1 rounded border border-white/5">Real-time</span>
+                        </div>
+                        <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mx-4 px-4 space-y-2">
+                            {leads.length === 0 ? (
+                                <p className="text-slate-500 text-sm text-center py-4">Waiting for check-ins...</p>
                             ) : (
-                                <div className="aspect-square bg-black/50 rounded-xl flex items-center justify-center border border-white/10 mb-4 flex-col gap-2 p-4 text-center">
-                                    <p className="text-gray-300 font-bold">Ready to Draw?</p>
-                                    <p className="text-gray-500 text-xs text-balance">
-                                        {leads.filter(l => l.isQualified).length} Qualified Entrants Found
-                                    </p>
-                                </div>
+                                leads.map((lead) => (
+                                    <div key={lead.id} className="flex items-center justify-between p-3 rounded bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-sm text-white">{lead.name}</span>
+                                            <span className="text-xs text-slate-400">{lead.email}</span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">{lead.role}</span>
+                                            <span className="text-[10px] text-slate-500 mt-1">{lead.company}</span>
+                                        </div>
+                                    </div>
+                                ))
                             )}
+                        </div>
+                    </BentoCard>
 
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => setWheelMode(!wheelMode)}
-                                    className="bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors col-span-2"
-                                >
-                                    {wheelMode ? 'Hide Wheel' : 'Launch Big Screen Mode'}
-                                </button>
+                    {/* Action: Raffle Wheel (The "Cool" Thing) */}
+                    <BentoCard className="md:col-span-1 md:row-span-1 bg-gradient-to-br from-amber-500/10 to-purple-600/10 border-amber-500/30 hover:border-amber-400 transition-all cursor-pointer group/wheel" delay={0.6}>
+                        <div
+                            onClick={() => setShowRaffleWheel(true)}
+                            className="h-full flex flex-col items-center justify-center text-center gap-4 py-4"
+                        >
+                            <div className="p-4 rounded-full bg-gradient-to-br from-amber-400 to-purple-600 shadow-[0_0_30px_rgba(251,191,36,0.4)] group-hover/wheel:scale-110 transition-transform duration-500">
+                                <Trophy className="w-8 h-8 text-white" />
                             </div>
-                        </section>
-                    </div>
-                </main>
+                            <div>
+                                <h3 className="font-bold text-xl text-amber-100">Spin the Wheel</h3>
+                                <p className="text-xs text-amber-200/60">Launch Digital Raffle</p>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                </div>
             </div>
-        </div>
+
+            {/* Raffle Wheel Modal */}
+            {showRaffleWheel && (
+                <RaffleWheel
+                    onClose={() => setShowRaffleWheel(false)}
+                    candidates={leads.map(l => l.name)}
+                />
+            )}
+
+            {/* Broadcast Modal */}
+            <BroadcastModal
+                isOpen={broadcastState.isOpen}
+                onClose={() => setBroadcastState(prev => ({ ...prev, isOpen: false }))}
+                type={broadcastState.type}
+                leads={leads}
+            />
+
+        </main>
     );
 }

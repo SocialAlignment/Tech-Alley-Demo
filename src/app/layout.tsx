@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Outfit } from 'next/font/google';
 import './globals.css';
 import { IdentityProvider } from '@/context/IdentityContext';
+import { QuestionsProvider } from '@/context/QuestionsContext';
 import { Suspense } from 'react';
 import Sidebar from '@/components/Sidebar';
 
@@ -11,9 +12,26 @@ const outfit = Outfit({
   variable: '--font-outfit',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: 'Innovation Henderson Alignment Hub | Tech Alley Henderson',
   description: 'The official companion experience for Tech Alley Henderson.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Tech Alley',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +44,9 @@ export default function RootLayout({
       <body className={`${outfit.variable} antialiased bg-background text-foreground overflow-x-hidden`} suppressHydrationWarning>
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-900 text-primary">Loading Innovation Hub Alignment Hub...</div>}>
           <IdentityProvider>
-            {children}
+            <QuestionsProvider>
+              {children}
+            </QuestionsProvider>
           </IdentityProvider>
         </Suspense>
       </body>

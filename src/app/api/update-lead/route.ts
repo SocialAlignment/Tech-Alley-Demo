@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { syncToNotion } from '@/lib/notion';
+import { syncToNotion, syncUpdateToNotion } from '@/lib/notion';
 
 export async function PATCH(request: Request) {
     try {
@@ -78,38 +78,19 @@ export async function PATCH(request: Request) {
             throw new Error(`Supabase Update Failed: ${error.message}`);
         }
 
-        // 3. Background Sync to Notion (Best Effort)
-        // We can reuse the syncToNotion lib, or custom logic here if fields map differently.
-        // The existing body structure matches what the Notion API expected, so we can potentially
-        // just call the specialized Notion logic or keep the existing code as a fallback.
-        // For now, let's trigger a sync.
+        // 3. Sync to Notion (Background)
+        // We need the email to find the Notion page. Fetch it from Supabase.
+        const { data: leadData } = await adminAuthClient
+            .from('leads')
+            .select('email')
+            .eq('id', pageId)
+            .single();
 
-        // However, the existing 'syncToNotion' helper in lib/notion might only handle basic fields.
-        // To respect the complex Notion update logic (rich_text, selects) from the original file,
-        // we might want to Import that logic or Keep it here. 
-        // Refactoring strictly to Supabase for the Mission Control speed is key.
-        // Let's Keep the Notion update for now to ensure data integrity in both places.
-
-        // --- Legacy Notion Update (Preserved for compatibility) ---
-        // We wrap this in a non-blocking promise or await it if we want strict consistency.
-        const notionUpdate = async () => {
-            const apiKey = process.env.NOTION_API_KEY;
-            // ... [Insert mapped Notion Logic if needed, or rely on a separate sync] ...
-            // For this specific 'update-lead' endpoint which handles complex surveys, 
-            // it's safer to keep the specific Notion mapping code from the original file temporarily 
-            // BUT we must filter based on the ID.
-            // Wait... 'pageId' from client might be UUID (Supabase) but Notion needs Page ID.
-            // We need to look up the Notion Page ID from Supabase if we want to update Notion!
-            // Or, we assume the client passed the UUID and we rely on the backend to find the Notion Page.
-
-            // Simplification: We will skip strict Notion sync for this specific tool call to avoid breakage
-            // and rely on the fact that we are moving to Supabase. 
-            // IF the user *needs* Notion for the raffle, we need the Notion Page ID. 
-            // Let's checking if 'syncToNotion' handles this.
-        };
-
-        // For now, return success immediately after Supabase Update.
-        // We can implement a robust "Supabase changes -> Webhook -> Notion" later.
+        if (leadData?.email) {
+            // Pass the original body which contains 'missionData' and 'missionProgress'
+            // The utility function will handle mapping these to Notion properties
+            await syncUpdateToNotion(leadData.email, body);
+        }
 
         return NextResponse.json({ success: true });
 

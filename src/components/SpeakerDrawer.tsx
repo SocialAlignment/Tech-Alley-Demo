@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, ArrowRight, User, Briefcase, Award, FileText, Mail, Linkedin, Globe, Phone, Share2, MessageSquare, Quote, Monitor, Mic2, AlertCircle, Check, Camera, Save, ChevronRight, HelpCircle } from 'lucide-react';
+import { X, MapPin, Calendar, Clock, ArrowRight, User, Briefcase, Award, FileText, Mail, Linkedin, Globe, Phone, Share2, MessageSquare, Quote, Monitor, Mic2, AlertCircle, Check, Camera, Save, ChevronRight, HelpCircle, HelpCircle as QuestionIcon, Star } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useQuestions } from '@/context/QuestionsContext';
+import { QuestionsStack } from './QuestionsStack';
 
 
 // --- Types ---
@@ -50,6 +52,7 @@ interface SpeakerDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     speaker: ExtendedSpeaker | null;
+    initialTab?: 'bio' | 'questions' | 'feedback';
 }
 
 // --- Components ---
@@ -102,10 +105,20 @@ const SocialDisplayRow = ({ icon, value, placeholder, iconColorClass = "text-sla
 
 // --- Main Drawer ---
 
-export default function SpeakerDrawer({ isOpen, onClose, speaker }: SpeakerDrawerProps) {
-    const [activeTab, setActiveTab] = useState('bio');
+export default function SpeakerDrawer({ isOpen, onClose, speaker, initialTab = 'bio' }: SpeakerDrawerProps) {
+    const [activeTab, setActiveTab] = useState<'bio' | 'questions' | 'feedback' | 'business' | 'expertise' | 'resources' | 'contact'>(initialTab);
+    const { getQuestionsBySpeakerId, markAsAnswered } = useQuestions();
+
+    // Reset tab when drawer opens with a new initialTab
+    useState(() => {
+        if (isOpen) {
+            setActiveTab(initialTab);
+        }
+    });
 
     if (!speaker) return null;
+
+    const speakerQuestions = getQuestionsBySpeakerId(speaker.id);
 
     return (
         <AnimatePresence>
@@ -229,6 +242,8 @@ export default function SpeakerDrawer({ isOpen, onClose, speaker }: SpeakerDrawe
                                     {/* TAB NAVIGATION */}
                                     <nav className="flex items-center px-6 border-b border-white/10 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/50 pt-2 backdrop-blur-md">
                                         <TabButton active={activeTab === 'bio'} onClick={() => setActiveTab('bio')} label="Bio & Info" icon={User} />
+                                        <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} label="Questions" icon={QuestionIcon} />
+
                                         <TabButton active={activeTab === 'business'} onClick={() => setActiveTab('business')} label="Business" icon={Monitor} />
                                         <TabButton active={activeTab === 'expertise'} onClick={() => setActiveTab('expertise')} label="Expertise" icon={Mic2} />
                                         <TabButton active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} label="Resources" icon={Share2} />
@@ -310,6 +325,20 @@ export default function SpeakerDrawer({ isOpen, onClose, speaker }: SpeakerDrawe
                                                 <DisplayField label="Session Abstract" value={speaker.sessionAbstract} />
                                             </div>
                                         )}
+
+                                        {activeTab === 'questions' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <SectionHeader title="Q&A Questions">
+                                                    Submitted questions for the session.
+                                                </SectionHeader>
+
+                                                <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden min-h-[400px]">
+                                                    <QuestionsStack questions={speakerQuestions} onMarkAnswered={markAsAnswered} />
+                                                </div>
+                                            </div>
+                                        )}
+
+
 
                                         {activeTab === 'resources' && (
                                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">

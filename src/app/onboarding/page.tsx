@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import UnifiedProfileWizard from '@/components/ui/unified-profile-wizard';
-import { MultiShapeLightformHero } from '@/components/ui/multi-shape'; // Changed import
+import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StarsBackground } from "@/components/ui/stars-background";
 import { Suspense, useState, useEffect } from 'react';
 
 import { supabase } from '@/lib/supabase';
@@ -88,7 +89,7 @@ function OnboardingContent() {
     };
 
     return (
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-2xl">
             <UnifiedProfileWizard
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
@@ -102,9 +103,10 @@ export default function OnboardingPage() {
     return (
         <main className="relative min-h-screen w-full overflow-hidden bg-slate-900 flex items-center justify-center p-4">
             <div className="absolute inset-0 z-0">
-                <MultiShapeLightformHero />
+                <ShootingStars />
+                <StarsBackground />
             </div>
-            <div className="relative z-10 w-full flex justify-center">
+            <div className="relative z-10 w-full flex justify-center max-w-2xl">
                 <Suspense fallback={<div className="text-white">Loading...</div>}>
                     <OnboardingContent />
                 </Suspense>

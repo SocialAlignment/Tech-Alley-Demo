@@ -73,6 +73,13 @@ export default function WelcomePage() {
           </div>
           {/* Negative margin to pull text up into the logo's whitespace */}
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium -mt-6">Tech Alley Henderson • Community Hub</p>
+
+          {/* Mystery Admin Button */}
+          <button
+            onClick={() => router.push('/admin')}
+            className="mt-4 w-2 h-2 rounded-full bg-slate-800 hover:bg-purple-500 transition-colors duration-500 pointer-events-auto cursor-help opacity-20 hover:opacity-100 hover:scale-150"
+            aria-label="Admin Access"
+          />
         </motion.div>
 
       </div>

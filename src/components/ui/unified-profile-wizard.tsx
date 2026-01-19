@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { Check, ChevronsUpDown, X, UserCheck, UserCircle } from 'lucide-react';
+import Image from 'next/image';
+import { useIdentity } from '@/context/IdentityContext';
 
 // --- Components ---
 
@@ -56,7 +58,7 @@ const MultiSelect = ({ options, selected, onChange, label, max, placeholder = "S
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between bg-slate-950/50 border-slate-800 text-slate-300 hover:bg-slate-900 hover:text-white"
+                    className="w-full justify-between bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-white"
                 >
                     {selected.length > 0 ? (
                         <span className="truncate">
@@ -68,7 +70,7 @@ const MultiSelect = ({ options, selected, onChange, label, max, placeholder = "S
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full min-w-[300px] p-0 bg-slate-950 border-slate-800">
+            <PopoverContent className="w-full min-w-[300px] p-0 bg-slate-950 border-slate-700">
                 <div className="max-h-64 overflow-y-auto p-1">
                     {options.map((option) => (
                         <div
@@ -87,7 +89,7 @@ const MultiSelect = ({ options, selected, onChange, label, max, placeholder = "S
                     ))}
                 </div>
                 {max && (
-                    <div className="p-2 text-xs text-slate-500 text-center border-t border-slate-800">
+                    <div className="p-2 text-xs text-slate-500 text-center border-t border-slate-700">
                         Max {max} selections
                     </div>
                 )}
@@ -192,25 +194,25 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
                 <Input value={formData.email} disabled className="bg-slate-900/50 border-slate-700 text-slate-300 cursor-not-allowed opacity-100" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="preferredName" className="text-slate-200">Preferred Name / Nickname</Label>
+                <Label htmlFor="preferredName" className="text-slate-300">Preferred Name / Nickname</Label>
                 <Input
                     id="preferredName"
                     name="preferredName"
                     value={formData.preferredName}
                     onChange={updateFormData}
                     placeholder="What should we call you?"
-                    className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 focus:border-blue-500"
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-200">Phone Number</Label>
+                <Label htmlFor="phone" className="text-slate-300">Phone Number</Label>
                 <Input
                     id="phone"
                     name="phone"
                     value={formData.phone}
                     onChange={updateFormData}
                     placeholder="(555) 123-4567"
-                    className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 focus:border-blue-500"
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
                 />
             </div>
 
@@ -223,16 +225,16 @@ const ProfessionalInfoStep = ({ formData, updateFormData }: any) => {
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="company" className="text-slate-200">Company / Organization</Label>
-                    <Input id="company" name="company" value={formData.company} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="Acme Inc." />
+                    <Label htmlFor="company" className="text-slate-300">Company / Organization</Label>
+                    <Input id="company" name="company" value={formData.company} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="Acme Inc." />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="role" className="text-slate-200">Your Role</Label>
-                    <Input id="role" name="role" value={formData.role} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="Founder, CEO, etc." />
+                    <Label htmlFor="role" className="text-slate-300">Your Role</Label>
+                    <Input id="role" name="role" value={formData.role} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="Founder, CEO, etc." />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="industry" className="text-slate-200">Industry</Label>
-                    <select name="industry" value={formData.industry} onChange={updateFormData} className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <Label htmlFor="industry" className="text-slate-300">Industry</Label>
+                    <select name="industry" value={formData.industry} onChange={updateFormData} className="flex h-10 w-full rounded-md border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="" disabled>Select...</option>
                         <option value="Technology & AI">Technology & AI</option>
                         <option value="Software & SaaS">Software & SaaS</option>
@@ -251,8 +253,8 @@ const ProfessionalInfoStep = ({ formData, updateFormData }: any) => {
                     </select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="businessType" className="text-slate-200">Business Type</Label>
-                    <select name="businessType" value={formData.businessType} onChange={updateFormData} className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <Label htmlFor="businessType" className="text-slate-300">Business Type</Label>
+                    <select name="businessType" value={formData.businessType} onChange={updateFormData} className="flex h-10 w-full rounded-md border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="" disabled>Select...</option>
                         <option value="B2B">B2B (Business to Business)</option>
                         <option value="B2C">B2C (Business to Consumer)</option>
@@ -265,8 +267,8 @@ const ProfessionalInfoStep = ({ formData, updateFormData }: any) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="website" className="text-slate-200">Website</Label>
-                    <Input id="website" name="website" value={formData.website} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="https://..." />
+                    <Label htmlFor="website" className="text-slate-300">Website</Label>
+                    <Input id="website" name="website" value={formData.website} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="https://..." />
                 </div>
             </div>
         </div>
@@ -293,7 +295,7 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-6">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none text-slate-200 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center">
+                    <label className="text-sm font-medium leading-none text-slate-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center">
                         Intention for Tonight
                         <HelpBubble content="Pick up to 3 goals for tonight's event." />
                     </label>
@@ -318,22 +320,22 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
                     {intentionArray.includes("Other") && (
                         <Input
                             name="goalForTonightOther"
-                            className="mt-2 bg-slate-950/50 border-slate-800 text-white"
+                            className="mt-2 bg-slate-800/50 border-slate-700 text-white"
                             placeholder="Please specify..."
                         />
                     )}
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-slate-200 flex items-center">
+                    <Label className="text-slate-300 flex items-center">
                         3 Month Success Vision
                         <HelpBubble content="Where do you want your business/project to be in 90 days?" />
                     </Label>
-                    <Textarea name="vision" value={formData.vision} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="I want to have launched my MVP..." />
+                    <Textarea name="vision" value={formData.vision} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="I want to have launched my MVP..." />
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-slate-200 flex items-center">
+                    <Label className="text-slate-300 flex items-center">
                         Learning Preferences
                         <HelpBubble content="How do you prefer to consume new information or skills?" />
                     </Label>
@@ -346,7 +348,7 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
                     />
                     {formData.learningPreference?.includes("Other") && (
                         <Input
-                            className="mt-2 bg-slate-950/50 border-slate-800 text-white"
+                            className="mt-2 bg-slate-800/50 border-slate-700 text-white"
                             placeholder="Please specify..."
                         />
                     )}
@@ -354,12 +356,12 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label className="text-slate-200">Ask Me About...</Label>
-                        <Textarea name="askMeAbout" value={formData.askMeAbout} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 min-h-[80px]" placeholder="AI Agents, Sourdough bread..." />
+                        <Label className="text-slate-300">Ask Me About...</Label>
+                        <Textarea name="askMeAbout" value={formData.askMeAbout} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 min-h-[80px]" placeholder="AI Agents, Sourdough bread..." />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-slate-200">I Can Help You By...</Label>
-                        <Textarea name="helpYouBy" value={formData.helpYouBy} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 min-h-[80px]" placeholder="Designing your logo, reviewing code..." />
+                        <Label className="text-slate-300">I Can Help You By...</Label>
+                        <Textarea name="helpYouBy" value={formData.helpYouBy} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 min-h-[80px]" placeholder="Designing your logo, reviewing code..." />
                     </div>
                 </div>
             </div>
@@ -374,35 +376,35 @@ const SocialsStep = ({ formData, updateFormData, toggleCommPref }: any) => {
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label className="text-slate-200">Instagram</Label>
-                    <Input name="instagram" value={formData.instagram} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="@username" />
+                    <Label className="text-slate-300">Instagram</Label>
+                    <Input name="instagram" value={formData.instagram} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="@username" />
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-slate-200">LinkedIn</Label>
-                    <Input name="linkedin" value={formData.linkedin} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="https://linkedin.com/in/..." />
+                    <Label className="text-slate-300">LinkedIn</Label>
+                    <Input name="linkedin" value={formData.linkedin} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="https://linkedin.com/in/..." />
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-slate-200">Facebook</Label>
-                    <Input name="facebook" value={formData.facebook} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="URL" />
+                    <Label className="text-slate-300">Facebook</Label>
+                    <Input name="facebook" value={formData.facebook} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="URL" />
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-slate-200">YouTube</Label>
-                    <Input name="youtube" value={formData.youtube} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="Channel URL" />
+                    <Label className="text-slate-300">YouTube</Label>
+                    <Input name="youtube" value={formData.youtube} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="Channel URL" />
                 </div>
             </div>
 
             <div className="space-y-2 pt-4 border-t border-white/5">
                 <div className="space-y-2">
-                    <Label className="text-slate-200">Scheduling Link (Calendly etc.)</Label>
-                    <Input name="schedulingLink" value={formData.schedulingLink} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="https://cal.com/..." />
+                    <Label className="text-slate-300">Scheduling Link (Calendly etc.)</Label>
+                    <Input name="schedulingLink" value={formData.schedulingLink} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="https://cal.com/..." />
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-slate-200">Best Time to Reach</Label>
-                    <Input name="bestTime" value={formData.bestTime} onChange={updateFormData} className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500" placeholder="Weekdays after 5pm" />
+                    <Label className="text-slate-300">Best Time to Reach</Label>
+                    <Input name="bestTime" value={formData.bestTime} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="Weekdays after 5pm" />
                 </div>
 
                 <div className="space-y-2 mt-4">
-                    <Label className="text-slate-200">Communication Preferences</Label>
+                    <Label className="text-slate-300">Communication Preferences</Label>
                     <div className="flex flex-wrap gap-2">
                         {commOptions.map(opt => (
                             <button
@@ -411,7 +413,7 @@ const SocialsStep = ({ formData, updateFormData, toggleCommPref }: any) => {
                                 onClick={() => toggleCommPref(opt)}
                                 className={`px-3 py-1.5 rounded-md text-xs border transition-all ${formData.commPrefs?.includes(opt)
                                     ? "border-blue-500 bg-blue-500/20 text-blue-200"
-                                    : "border-slate-800 bg-slate-950/50 hover:bg-slate-800 text-gray-400"
+                                    : "border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-gray-400"
                                     }`}
                             >
                                 {opt}
@@ -430,6 +432,7 @@ const SocialsStep = ({ formData, updateFormData, toggleCommPref }: any) => {
 
 export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitting }: { initialData?: any, onSubmit: (data: any) => void, isSubmitting?: boolean }) {
     const [currentStep, setCurrentStep] = useState(0);
+    const { leadId, userName } = useIdentity();
     const [formData, setFormData] = useState<ProfileData>(initialProfileData);
 
     // Hydration
@@ -473,43 +476,41 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
+        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
 
-            {/* Top Navigation Tabs */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-4 p-2 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/10 sticky top-4 z-20 shadow-xl">
-                {steps.map((step, index) => {
-                    const isActive = currentStep === index;
-                    const isCompleted = index < currentStep; // Simple logic for now
-                    return (
-                        <button
-                            key={step.id}
-                            onClick={() => setCurrentStep(index)}
-                            className={`flex items-center gap-2 px-3 md:px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${isActive
-                                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
-                                : "text-slate-400 hover:text-white hover:bg-white/5"
-                                }`}
-                        >
-                            {isCompleted ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <span className="w-4 h-4 text-center text-xs opacity-50">{index + 1}</span>}
-                            <span>{step.label}</span>
-                        </button>
-                    )
-                })}
-            </div>
 
-            {/* Content Card */}
+
+            {/* Container */}
             <motion.div
-                layout
-                className="bg-[#0B1120] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative z-10 w-full max-w-2xl bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden"
             >
-                {/* Header for current Step */}
-                <div className="px-8 py-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between gap-6">
+                {/* Header */}
+                <div className="bg-slate-900/80 px-8 py-6 border-b border-white/5 flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">{steps[currentStep].label}</h2>
-                        <p className="text-slate-400 text-sm mt-1">Please ensure your information is accurate.</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                            <Image src="/social-alignment-icon.png" alt="Social Alignment" width={32} height={32} className="w-8 h-8 object-contain" />
+                            {steps[currentStep].label}
+                        </h2>
+                        {leadId ? (
+                            <p className="text-blue-400 text-sm flex items-center gap-1 mt-1">
+                                <UserCheck className="w-3 h-3" /> Connected as {userName || 'User'}
+                            </p>
+                        ) : (
+                            <p className="text-slate-400 text-sm mt-1">Please ensure your information is accurate.</p>
+                        )}
                     </div>
-                    {/* Wide Banner Logo - Seamlessly blends with background */}
-                    <div className="flex-1 max-w-[400px] flex justify-end">
-                        <img src="/tech-alley-wide-banner.png" alt="Tech Alley Henderson" className="w-full h-auto object-contain max-h-[100px] opacity-90" />
+                    <div className="text-right">
+                        <div className="text-sm font-medium text-blue-400">Step {currentStep + 1} of {steps.length}</div>
+                        <div className="h-1.5 w-32 bg-slate-800 rounded-full mt-2 overflow-hidden">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                                transition={{ duration: 0.5 }}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -523,12 +524,12 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-8 py-6 bg-white/[0.02] border-t border-white/5 flex items-center justify-between">
+                <div className="bg-slate-900/40 px-8 py-6 flex justify-between items-center border-t border-white/5">
                     <Button
                         variant="ghost"
                         onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                         disabled={currentStep === 0}
-                        className="text-slate-400 hover:text-white"
+                        className="text-slate-400 hover:text-white hover:bg-white/5"
                     >
                         <ChevronLeft className="w-4 h-4 mr-2" /> Previous
                     </Button>
@@ -537,7 +538,7 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
                         {currentStep < steps.length - 1 ? (
                             <Button
                                 onClick={() => setCurrentStep(currentStep + 1)}
-                                className="bg-blue-600 hover:bg-blue-500 text-white min-w-[120px]"
+                                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold shadow-lg shadow-blue-900/20"
                             >
                                 Next <ChevronRight className="w-4 h-4 ml-2" />
                             </Button>
@@ -545,7 +546,7 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="bg-green-600 hover:bg-green-500 text-white min-w-[160px] font-bold shadow-lg shadow-green-900/20"
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold shadow-lg shadow-green-900/20"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -555,20 +556,6 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
                                 {isSubmitting ? "Finishing..." : "Complete Setup"}
                             </Button>
                         )}
-                    </div>
-                </div>
-
-                {/* Branding Footer */}
-                {/* Branding Footer */}
-                <div className="pb-8 flex flex-col items-center justify-center gap-4 opacity-80 hover:opacity-100 transition-opacity pt-6 bg-[#0B1120]">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-blue-500/70 font-bold mt-0.5">Powered By</span>
-                        <img
-                            src="/social-alignment-logo.png"
-                            alt="Social Alignment"
-                            className="h-6 w-auto object-contain brightness-0 invert opacity-90 sepia-[.5] hue-rotate-[190deg] saturate-[500%]" // Blueish tint hack or use CSS filter
-                            style={{ filter: "brightness(0) saturate(100%) invert(44%) sepia(35%) saturate(718%) hue-rotate(176deg) brightness(87%) contrast(85%)" }} // #4d8cc5 approx
-                        />
                     </div>
                 </div>
 

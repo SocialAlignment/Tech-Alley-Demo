@@ -52,6 +52,7 @@ const NavItem = ({ item, pathname, handleNav }: { item: any, pathname: string, h
 
     return (
         <button
+            id={item.id}
             onClick={() => handleNav(item.path)}
             className={clsx(
                 "w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
@@ -73,12 +74,13 @@ const NavItem = ({ item, pathname, handleNav }: { item: any, pathname: string, h
     );
 };
 
-const CollapsibleSection = ({ title, items, pathname, handleNav, defaultOpen = false }: { title: string, items: any[], pathname: string, handleNav: (path: string) => void, defaultOpen?: boolean }) => {
+const CollapsibleSection = ({ title, items, pathname, handleNav, defaultOpen = false, triggerId }: { title: string, items: any[], pathname: string, handleNav: (path: string) => void, defaultOpen?: boolean, triggerId?: string }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
         <div className="space-y-2">
             <button
+                id={triggerId}
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 hover:text-white transition-colors"
             >
@@ -117,44 +119,48 @@ export default function Sidebar() {
         {
             title: "", // Main Section (No Header)
             items: [
-                { label: 'Start Here', icon: Zap, path: '/hub/start' },
-                { label: 'Home', icon: Home, path: '/hub' },
+                { label: 'Start Here', icon: Zap, path: '/hub/start', id: 'nav-start-here' },
+                { label: 'Home', icon: Home, path: '/hub', id: 'nav-home' },
             ]
         },
         {
             title: "Tonight's Event",
+            triggerId: 'nav-toggle-event',
             items: [
-                { label: 'Agenda', icon: Calendar, path: '/hub/agenda' },
-                { label: 'Announcements', icon: Megaphone, path: '/hub/announcements' },
-                { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight' },
-                { label: 'Guest Speakers', icon: Mic2, path: '/hub/speakers' },
-                { label: 'Sponsors', icon: Heart, path: '/hub/sponsors' },
+                { label: 'Agenda', icon: Calendar, path: '/hub/agenda', id: 'nav-item-agenda' },
+                { label: 'Announcements', icon: Megaphone, path: '/hub/announcements', id: 'nav-item-announcements' },
+                { label: 'Startup Spotlight', icon: Star, path: '/hub/spotlight', id: 'nav-item-spotlight' },
+                { label: 'Guest Speakers', icon: Mic2, path: '/hub/speakers', id: 'nav-item-speakers' },
+                { label: 'Sponsors', icon: Heart, path: '/hub/sponsors', id: 'nav-item-sponsors' },
             ]
         },
         {
             title: "Connect with Others",
+            triggerId: 'nav-toggle-connect',
             items: [
-                { label: 'Your Interactive Hub', icon: CheckSquare, path: '/hub/checklist' },
-                { label: 'Photo Booth', icon: Camera, path: '/hub/photo-booth' },
-                { label: 'IRL Rolodex', icon: Users, path: '/hub/networking' },
-                { label: 'Upcoming Events', icon: Calendar, path: '/hub/upcoming' },
+                { label: 'Your Interactive Hub', icon: CheckSquare, path: '/hub/checklist', id: 'nav-item-checklist' },
+                { label: 'Photo Booth', icon: Camera, path: '/hub/photo-booth', id: 'nav-item-photo' },
+                { label: 'IRL Rolodex', icon: Users, path: '/hub/networking', id: 'nav-item-networking' },
+                { label: 'Upcoming Events', icon: Calendar, path: '/hub/upcoming', id: 'nav-item-upcoming' },
             ]
         },
         {
             title: "Free Resources",
+            triggerId: 'nav-toggle-resources',
             items: [
-                { label: 'Speaker Resources', icon: Mic2, path: '/hub/speaker-resources' },
-                { label: 'Enter Raffle', icon: Gift, path: '/hub/raffle' },
-                { label: 'Free AI Readiness Audit', icon: Brain, path: '/hub/mri' },
-                { label: 'Get AI Training', icon: Rocket, path: '/hub/grant' },
+                { label: 'Speaker Resources', icon: Mic2, path: '/hub/speaker-resources', id: 'nav-item-resources' },
+                { label: 'Enter Raffle', icon: Gift, path: '/genai-raffle', id: 'nav-item-raffle' },
+                { label: 'Free AI Readiness Audit', icon: Brain, path: '/hub/mri', id: 'nav-item-audit' },
+                { label: 'Get AI Training', icon: Rocket, path: '/hub/grant', id: 'nav-item-grant' },
             ]
         },
         {
             title: "Connect With Us",
+            triggerId: 'nav-toggle-contact',
             items: [
-                { label: 'Speaker Qualifier', icon: Mic2, path: '/hub/apply-to-speak' },
-                { label: 'Feedback', icon: MessageSquare, path: '/hub/feedback' },
-                { label: 'Ask Lorraine', icon: MessageCircleQuestion, path: '/hub/ask-lorraine' },
+                { label: 'Speaker Qualifier', icon: Mic2, path: '/hub/speaker-application', id: 'nav-item-qualifier' },
+                { label: 'Feedback', icon: MessageSquare, path: '/hub/feedback', id: 'nav-item-feedback' },
+                { label: 'Ask Lorraine', icon: MessageCircleQuestion, path: '/hub/ask-lorraine', id: 'nav-item-ask' },
             ]
         }
     ];
@@ -232,7 +238,8 @@ export default function Sidebar() {
                     "fixed inset-y-0 left-0 z-40 w-72 md:w-full bg-[#0F172A] p-4 flex flex-col shadow-2xl md:shadow-none",
                     // Desktop Specifics: Floating Card
                     "md:!relative md:!translate-x-0 md:!block md:!opacity-100 md:h-full md:rounded-[32px]",
-                    !isOpen && !isDesktop && "hidden"
+                    // Remove 'hidden' so animation can play. Off-screen positioning handles visibility.
+                    !isOpen && !isDesktop && "pointer-events-none"
                 )}
             >
                 {/* Brand Header */}
@@ -280,6 +287,7 @@ export default function Sidebar() {
                     <div id="tour-tonights-event">
                         <CollapsibleSection
                             title="Tonight's Event"
+                            triggerId={NAV_SECTIONS[1].triggerId}
                             items={NAV_SECTIONS[1].items}
                             pathname={pathname}
                             handleNav={handleNav}
@@ -290,6 +298,7 @@ export default function Sidebar() {
                     <div id="tour-connect-with-others">
                         <CollapsibleSection
                             title={NAV_SECTIONS[2].title}
+                            triggerId={NAV_SECTIONS[2].triggerId}
                             items={NAV_SECTIONS[2].items}
                             pathname={pathname}
                             handleNav={handleNav}
@@ -300,6 +309,7 @@ export default function Sidebar() {
                     <div id="tour-free-resources">
                         <CollapsibleSection
                             title={NAV_SECTIONS[3].title}
+                            triggerId={NAV_SECTIONS[3].triggerId}
                             items={NAV_SECTIONS[3].items}
                             pathname={pathname}
                             handleNav={handleNav}
@@ -310,6 +320,7 @@ export default function Sidebar() {
                     <div id="tour-connect-with-us">
                         <CollapsibleSection
                             title={NAV_SECTIONS[4].title}
+                            triggerId={NAV_SECTIONS[4].triggerId}
                             items={NAV_SECTIONS[4].items}
                             pathname={pathname}
                             handleNav={handleNav}
@@ -318,7 +329,7 @@ export default function Sidebar() {
                     </div>
                 </nav>
 
-                <div className="mt-4">
+                <div className="mt-4" id="nav-profile">
                     <UserProfileDemo />
                 </div>
             </motion.aside>

@@ -23,10 +23,36 @@ export async function GET() {
             },
             body: JSON.stringify({
                 filter: {
-                    property: 'Date',
-                    date: {
-                        on_or_after: new Date().toISOString().split('T')[0]
-                    }
+                    and: [
+                        {
+                            property: 'Date',
+                            date: {
+                                on_or_after: new Date().toISOString().split('T')[0]
+                            }
+                        },
+                        {
+                            or: [
+                                {
+                                    property: 'Status',
+                                    status: {
+                                        equals: 'Approved'
+                                    }
+                                },
+                                {
+                                    property: 'Status',
+                                    status: {
+                                        equals: 'Published'
+                                    }
+                                },
+                                {
+                                    property: 'Status',
+                                    status: {
+                                        equals: 'Done'
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 },
                 sorts: [
                     {

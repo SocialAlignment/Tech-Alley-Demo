@@ -16,76 +16,62 @@ import { CyberpunkCard } from '@/components/ui/cyberpunk-card';
 import { ElectricProgressBar } from '@/components/ui/electric-progress-bar';
 import { CircuitBoardBackground } from '@/components/ui/circuit-board-background';
 
+// Icon Mapping
+const ICON_MAP: Record<string, any> = {
+    // Lucide Icons
+    'Users': Users,
+    'UserPlus': Users, // Map common variations
+    'HelpCircle': HelpCircle,
+    'User': User,
+    'Camera': Camera,
+    'ChevronRight': ChevronRight,
+    'CheckCircle': CheckCircle2, // Map 'CheckCircle' (default fallback) to CheckCircle2
+    'CheckCircle2': CheckCircle2,
+    'Trophy': Trophy,
+    'Mic2': Mic2,
+    'Activity': Activity,
+    'Send': Send,
+    'Star': Trophy,
+    // Add common social ones if user uses them in Notion
+    'Youtube': Activity, // Fallback if explicit icon not imported
+    'Linkedin': Users,   // Fallback
+    'Facebook': Users,   // Fallback
+    'Instagram': Camera, // Fallback
+};
+
 // --- DATA CONSTANTS ---
 
-const SPEAKERS = [
-    {
-        name: "Lorraine",
-        title: "Founder & Organizer",
-        company: "Tech Alley Henderson",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
-        topics: ["State of the Alley", "Innovation Hub", "Community Growth"]
-    },
-    {
-        name: "Jonathan",
-        title: "Host",
-        company: "Social Alignment",
-        image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=200",
-        topics: ["System Automation", "Lead Gen", "Digital Strategy"]
-    },
-    {
-        name: "Jorge 'HOZ' Hernandez",
-        title: "Host",
-        company: "Dead Sprint",
-        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200",
-        topics: ["Podcasting", "Content Strategy", "Community"]
-    }
-];
+// Speakers removed per layout refactor
 
-const MISSION_ITEMS = [
-    {
-        id: 'connect',
-        title: "Connect with 5 New People",
-        subtitle: "18 XP (Important) Memorize their names",
-        xp: 18,
-        icon: Users,
-        actionPath: '/hub/networking'
-    },
-    {
-        id: 'feedback',
-        title: "Submit a Question or give Feedback",
-        subtitle: "10 XP Top to complete",
-        xp: 10,
-        icon: HelpCircle,
-        actionPath: null // Modal
-    },
-    {
-        id: 'profile',
-        title: "Complete your Social Profile",
-        subtitle: "36 XP Top to complete",
-        xp: 36,
-        icon: User,
-        actionPath: '/hub/profile'
-    },
-    {
-        id: 'photo',
-        title: "Submit a photo to the photo booth",
-        subtitle: "10 XP Top to complete",
-        xp: 10,
-        icon: Camera,
-        actionPath: '/hub/photo-booth'
-    },
-    {
-        id: 'selfie',
-        title: "Grab a photo with Jonathan Sterritt",
-        subtitle: "10 XP He Wont Bite",
-        xp: 10,
-        icon: Camera,
-        actionPath: '/hub/photo-booth'
-    },
-    // Adding extra items to reach closer to 100 XP total if needed, or adjust weights.
-    // Current Total: 18+10+36+10+10 = 84. Let's buff 'Connect' to 34 to make 100? No, let's just use raw score.
-];
+const MISSION_ACTIONS: Record<string, string> = {
+    "Connect with 5 New People": "/hub/networking",
+    "Complete your Social Profile": "/hub/profile",
+    "Submit a photo to the photo booth": "/hub/photo-booth",
+    "Enter the GenAi video giveaway": "/hub/raffle",
+    "Follow Tech Alley Henderson on LinkedIn": "https://www.linkedin.com/company/tech-alley-henderson",
+    "Follow Hello Henderson on YouTube": "https://www.youtube.com/@HelloHenderson"
+};
+
+const MISSION_ITEMS: any[] = [];
+
+import confetti from 'canvas-confetti';
+
+// Simple Toast Component
+const Toast = ({ message, show, onClose }: { message: string, show: boolean, onClose: () => void }) => (
+    <AnimatePresence>
+        {show && (
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white px-6 py-3 rounded-full border border-cyan-500 shadow-[0_0_20px_rgba(34,211,238,0.3)] flex items-center gap-3 backdrop-blur-md"
+            >
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-bold text-sm tracking-wide">{message}</span>
+            </motion.div>
+        )}
+    </AnimatePresence>
+);
 
 export default function ChecklistPage() {
     const router = useRouter();
@@ -99,6 +85,54 @@ export default function ChecklistPage() {
     const [winners, setWinners] = useState<any[]>([]);
     const [loadingLeaders, setLoadingLeaders] = useState(true);
     const [prizeRevealed, setPrizeRevealed] = useState(false);
+    const [showAllMissions, setShowAllMissions] = useState(false); // Toggle state
+
+    // --- DYNAMIC MISSIONS STATE ---
+    const [missions, setMissions] = useState<any[]>([]);
+    const [isMissionsLoading, setIsMissionsLoading] = useState(true);
+
+    // Fetch Missions on Mount
+    // Fetch Missions on Mount
+    useEffect(() => {
+        const fetchMissions = async () => {
+            try {
+                const res = await fetch('/api/missions');
+                const data = await res.json();
+
+                // API returns an array, not { success: true, ... }
+                if (Array.isArray(data)) {
+                    const mappedMissions = data.map((m: any) => ({
+                        // Map API response keys to component state keys
+                        id: m.id,
+                        title: m.Name,         // Map Name -> title
+                        subtitle: m.Description, // Map Description -> subtitle
+                        xp: m.XP,              // Map XP -> xp
+                        // Use static map if API ActionPath is empty or fallback to empty string
+                        actionPath: m.ActionPath || MISSION_ACTIONS[m.Name] || '',
+
+                        // Fix casing and fallback
+                        icon: ICON_MAP[m.IconName] || ICON_MAP['CheckCircle']
+                    }));
+                    setMissions(mappedMissions);
+                } else {
+                    console.error("Invalid mission data format:", data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch missions:", error);
+            } finally {
+                setIsMissionsLoading(false);
+            }
+        };
+
+        fetchMissions();
+    }, []);
+
+    // --- TOAST STATE ---
+    const [toast, setToast] = useState({ show: false, message: '' });
+    const showToast = (msg: string) => {
+        setToast({ show: true, message: msg });
+        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+    };
 
     // --- MISSION STATE ---
     // We'll track completed mission IDs locally for immediate feedback, then sync.
@@ -140,12 +174,35 @@ export default function ChecklistPage() {
         router.push(leadId ? `${path}?id=${leadId}` : path);
     };
 
+    // Calculate Progress Based on Dynamic Missions
+    const calculateProgress = () => {
+        if (!completedMissions || missions.length === 0) return 0;
+
+        let totalXP = 0;
+        let earnedXP = 0;
+
+        missions.forEach(mission => {
+            totalXP += mission.xp;
+            // Check if mission is effectively completed
+            const isDone = completedMissions.has(mission.id);
+
+            if (isDone) {
+                earnedXP += mission.xp;
+            }
+        });
+
+        return totalXP === 0 ? 0 : Math.round((earnedXP / totalXP) * 100);
+    };
+
     const toggleMission = async (missionId: string, xp: number) => {
         const newCompleted = new Set(completedMissions);
+        let added = false;
+
         if (newCompleted.has(missionId)) {
             newCompleted.delete(missionId);
         } else {
             newCompleted.add(missionId);
+            added = true;
         }
 
         setCompletedMissions(newCompleted);
@@ -153,14 +210,25 @@ export default function ChecklistPage() {
 
         // Calculate new Progress
         let totalXP = 0;
-        newCompleted.forEach(id => {
-            const item = MISSION_ITEMS.find(m => m.id === id);
-            if (item) totalXP += item.xp;
+        let earnedTotal = 0;
+        missions.forEach(m => {
+            totalXP += m.xp;
+            if (newCompleted.has(m.id)) earnedTotal += m.xp;
         });
 
-        // Cap at 100 for display, or allow overfill? Let's cap at 100 for the bar.
-        // Actually, let's normalize. If total possible is ~84, maybe we just send raw XP as progress?
-        // Or specific progress logic. Let's just send the raw sum for now.
+        // Toast Feedback
+        if (added) {
+            showToast(`Mission Completed! +${xp} XP`);
+            if (totalXP > 0 && (earnedTotal / totalXP) >= 1) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#22d3ee', '#a855f7', '#ffffff']
+                });
+                showToast("MAXIMUM LEVEL REACHED!");
+            }
+        }
 
         try {
             await fetch('/api/update-lead', {
@@ -169,7 +237,7 @@ export default function ChecklistPage() {
                 body: JSON.stringify({
                     pageId: leadId, // Important: API expects 'pageId' as the UUID (legacy naming in route)
                     missionData: Array.from(newCompleted),
-                    missionProgress: totalXP
+                    missionProgress: earnedTotal
                 })
             });
             // Refresh context to update global nav bar if needed
@@ -205,7 +273,7 @@ export default function ChecklistPage() {
                     setSending(false);
                     setIsAskModalOpen(false);
                     setQuestion('');
-                    alert("Question sent to the stage!");
+                    showToast("Message Transmitted to Stage!");
                 }, 800);
             }
         } catch (err) {
@@ -215,21 +283,18 @@ export default function ChecklistPage() {
     };
 
     // Calculate current visual progress
-    let currentXP = 0;
-    completedMissions.forEach(id => {
-        const item = MISSION_ITEMS.find(m => m.id === id);
-        if (item) currentXP += item.xp;
-    });
-    // Assuming 100 XP is max for 100% bar
-    const progressPercent = Math.min(100, currentXP);
+    const progressPercent = calculateProgress();
 
     return (
         <div className="flex flex-col min-h-screen bg-[#0f0518] text-white font-sans overflow-x-hidden selection:bg-cyan-500/30">
 
             <CircuitBoardBackground />
 
+            <Toast show={toast.show} message={toast.message} onClose={() => setToast({ ...toast, show: false })} />
+
             {/* --- MAIN LAYOUT --- */}
             <main className="relative z-10 flex flex-col xl:flex-row gap-6 p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto w-full flex-1">
+
 
                 {/* --- LEFT COLUMN: HERO & MISSIONS --- */}
                 <div className="flex-1 flex flex-col gap-6 min-w-0">
@@ -270,7 +335,7 @@ export default function ChecklistPage() {
                                     Systems Optimized
                                 </span>
                             </div>
-                            <span className="text-[10px] text-cyan-500/70 font-mono">{completedMissions.size}/{MISSION_ITEMS.length} MISSIONS ACCOMPLISHED</span>
+                            <span className="text-[10px] text-cyan-500/70 font-mono">{completedMissions.size}/{missions.length} MISSIONS ACCOMPLISHED</span>
                         </div>
 
                         {/* Custom Electric Progress Bar */}
@@ -279,7 +344,11 @@ export default function ChecklistPage() {
 
                     {/* MISSIONS LIST */}
                     <div className="grid gap-3">
-                        {MISSION_ITEMS.map((item, idx) => {
+                        {isMissionsLoading ? (
+                            <div className="flex justify-center py-10">
+                                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                            </div>
+                        ) : (showAllMissions ? missions : missions.slice(0, 5)).map((item, idx) => {
                             const isCompleted = completedMissions.has(item.id);
                             const Icon = item.icon;
 
@@ -287,50 +356,68 @@ export default function ChecklistPage() {
                                 <CyberpunkCard
                                     key={item.id}
                                     variant={isCompleted ? 'active' : 'default'}
-                                    className={`cursor-pointer transition-all duration-300 ${isCompleted ? 'bg-cyan-950/20 border-cyan-500/50' : ''}`}
-                                    onClick={() => {
-                                        if (item.actionPath) {
-                                            toggleMission(item.id, item.xp);
-                                            navigateTo(item.actionPath);
-                                        } else if (item.id === 'feedback') {
-                                            setIsAskModalOpen(true);
-                                        } else {
-                                            toggleMission(item.id, item.xp);
-                                        }
-                                    }}
+                                    className={`transition-all duration-300 ${isCompleted ? 'bg-cyan-950/20 border-cyan-500/50' : ''}`}
                                 >
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-lg border flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] transition-colors ${isCompleted
-                                                ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                                                : 'bg-black/50 border-cyan-500/20 text-slate-500'
-                                                }`}>
-                                                {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            {/* CHECKBOX / ICON - TOGGLES COMPLETION */}
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleMission(item.id, item.xp);
+                                                }}
+                                                className={`w-10 h-10 rounded-lg border flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] transition-all cursor-pointer hover:bg-cyan-500/10 hover:border-cyan-400 hover:scale-105 active:scale-95 ${isCompleted
+                                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
+                                                    : 'bg-black/50 border-cyan-500/20 text-slate-500'
+                                                    }`}
+                                                role="button"
+                                                title={isCompleted ? "Mark as Incomplete" : "Mark as Complete"}
+                                            >
+                                                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                                             </div>
-                                            <div>
-                                                <h3 className={`font-bold text-base tracking-wide transition-colors uppercase ${isCompleted ? 'text-cyan-300 line-through decoration-cyan-500/50' : 'text-white group-hover:text-cyan-200'
+
+                                            {/* TEXT CONTENT */}
+                                            <div className="flex-1">
+                                                <h3 className={`font-bold text-xl tracking-wide transition-colors uppercase ${isCompleted ? 'text-cyan-300 line-through decoration-cyan-500/50' : 'text-white'
                                                     }`}>
                                                     {item.title}
                                                 </h3>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${isCompleted
+                                                    <span className={`text-xs font-bold px-2 py-1 rounded border uppercase tracking-wider ${isCompleted
                                                         ? 'bg-cyan-900/50 text-cyan-200 border-cyan-500/30'
                                                         : 'bg-purple-900/50 text-purple-300 border-purple-500/30'
                                                         }`}>
                                                         +{item.xp} XP
                                                     </span>
-                                                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
-                                                        {item.subtitle.split(' ').slice(2).join(' ')}
+                                                    <span className="text-xs text-slate-400 uppercase tracking-wider">
+                                                        {item.subtitle}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <button className={`px-6 py-2 rounded-full text-xs font-bold transition-all shadow-[0_0_10px_rgba(34,211,238,0.2)] uppercase tracking-wider border ${isCompleted
-                                            ? 'bg-cyan-500 text-black border-cyan-400 hover:bg-cyan-400'
-                                            : 'bg-cyan-950/30 text-cyan-300 border-cyan-500/50 hover:bg-cyan-500 hover:text-black'
-                                            }`}>
-                                            {isCompleted ? 'Done' : 'Start'}
+                                        {/* ACTION BUTTON - NAVIGATES OR PERFORMS ACTION */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (item.actionPath) {
+                                                    navigateTo(item.actionPath);
+                                                } else if (item.id === 'feedback') {
+                                                    setIsAskModalOpen(true);
+                                                } else {
+                                                    // For items without a path (e.g. Sticker, Demo), button also toggles
+                                                    toggleMission(item.id, item.xp);
+                                                }
+                                            }}
+                                            className={`px-6 py-2 rounded-full text-xs font-bold transition-all shadow-[0_0_10px_rgba(34,211,238,0.2)] uppercase tracking-wider border ${isCompleted
+                                                ? 'bg-cyan-950/30 text-cyan-300 border-cyan-500/50 hover:bg-cyan-500 hover:text-black'
+                                                : 'bg-cyan-500 text-black border-cyan-400 hover:bg-cyan-400 min-w-[80px]'
+                                                }`}
+                                        >
+                                            {item.actionPath || item.id === 'feedback'
+                                                ? (isCompleted ? 'View' : 'Start')
+                                                : (isCompleted ? 'Done' : 'Do It')
+                                            }
                                         </button>
                                     </div>
                                 </CyberpunkCard>
@@ -338,76 +425,38 @@ export default function ChecklistPage() {
                         })}
                     </div>
 
-                    {/* SPEAKERS SECTION */}
-                    <section className="pt-6 space-y-4">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-wide">
-                                <Mic2 size={16} className="text-purple-400" />
-                                On Stage Tonight
-                            </h3>
-                            <button
-                                onClick={() => navigateTo('/hub/speakers')}
-                                className="text-xs text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 uppercase"
-                            >
-                                View All <ChevronRight size={12} />
-                            </button>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {SPEAKERS.map((speaker, i) => (
-                                <SpeakerCard
-                                    key={i}
-                                    speaker={{
-                                        ...speaker,
-                                        id: i.toString(),
-                                        completion: 100,
-                                        status: 'complete'
-                                    }}
-                                    isSpotlight={i === 0}
-                                    variant="dark"
-                                />
-                            ))}
-                        </div>
-                    </section>
+                    {/* SHOW MORE TOGGLE */}
+                    {missions.length > 5 && (
+                        <button
+                            onClick={() => setShowAllMissions(!showAllMissions)}
+                            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center justify-center gap-2 group"
+                        >
+                            {showAllMissions ? 'Collapse Missions' : `Show ${missions.length - 5} More Missions`}
+                            <ChevronRight className={`transition-transform duration-300 ${showAllMissions ? '-rotate-90' : 'rotate-90'}`} />
+                        </button>
+                    )}
 
                 </div>
 
                 {/* --- RIGHT COLUMN: LEADERBOARD & PRIZE --- */}
-                <div className="w-full xl:w-[420px] flex flex-col gap-6">
+                <div className="w-full xl:w-[420px] flex flex-col gap-4">
 
-                    {/* LEADERBOARD PANEL */}
-                    <div className="relative rounded-[20px] p-[1px] bg-gradient-to-b from-cyan-500/50 to-purple-500/50 overflow-hidden flex flex-col flex-1 min-h-[500px]">
+                    {/* 1. TOP: LEADERBOARD PANEL (XP Leaders) */}
+                    <div className="relative rounded-[20px] p-[1px] bg-gradient-to-b from-cyan-500/50 to-purple-500/50 overflow-hidden flex flex-col h-[400px]">
                         <div className="absolute inset-0 bg-slate-950 rounded-[20px] m-[1px]" />
                         <div className="relative z-10 bg-slate-900/90 backdrop-blur-xl rounded-[20px] p-6 h-full flex flex-col border border-white/5">
 
                             {/* Header */}
-                            <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4 shrink-0">
-                                <h3 className="font-bold text-white text-lg tracking-wide uppercase">Leaderboard</h3>
-                                <div className="flex items-center gap-2 px-2 py-1 bg-red-500/10 border border-red-500/30 rounded">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Live</span>
+                            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3 shrink-0">
+                                <h3 className="font-bold text-white text-base tracking-wide uppercase flex items-center gap-2">
+                                    <Trophy size={16} className="text-cyan-400" />
+                                    Top Leaders
+                                </h3>
+                                <div className="flex items-center gap-2 px-2 py-1 bg-cyan-900/20 border border-cyan-500/30 rounded">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                    <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest">XP Rank</span>
                                 </div>
                             </div>
-
-                            {/* WINNERS SECTION (Top 5) */}
-                            {winners.length > 0 && (
-                                <div className="mb-6 shrink-0">
-                                    <h4 className="flex items-center gap-2 text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-                                        <Trophy size={14} /> Mission Completed
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {winners.map((winner, i) => (
-                                            <div key={`winner-${winner.id}`} className="flex justify-between items-center p-2 rounded bg-yellow-500/10 border border-yellow-500/30">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-yellow-500 font-black text-sm">#{i + 1}</span>
-                                                    <span className="text-yellow-100 font-bold text-sm truncate max-w-[140px]">{winner.name}</span>
-                                                </div>
-                                                <span className="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded font-bold">WINNER</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="h-[1px] bg-white/10 w-full my-4" />
-                                </div>
-                            )}
 
                             {/* LEADERS LIST (Top 10) */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-1 font-mono text-sm">
@@ -417,56 +466,46 @@ export default function ChecklistPage() {
                                     </div>
                                 ) : (
                                     leaders.map((leader, i) => (
-                                        <div key={leader.id} className="group flex justify-between items-center p-3 rounded bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-500/30 transition-all cursor-default">
+                                        <div key={leader.id} className="group flex justify-between items-center p-2 rounded bg-white/5 hover:bg-white/10 border border-transparent hover:border-cyan-500/30 transition-all cursor-default">
                                             <div className="flex items-center gap-3">
-                                                <span className={`font-bold w-6 text-center text-xs ${i === 0 ? 'text-cyan-300' : 'text-slate-500'}`}>
+                                                <span className={`font-bold w-5 text-center text-xs ${i === 0 ? 'text-cyan-300' : 'text-slate-500'}`}>
                                                     {i + 1}
                                                 </span>
-                                                <span className="text-slate-200 font-bold truncate max-w-[140px] group-hover:text-white transition-colors">
+                                                <span className="text-slate-200 font-bold truncate max-w-[140px] group-hover:text-white transition-colors text-xs">
                                                     {leader.name}
                                                 </span>
                                             </div>
-                                            <span className="text-cyan-400 font-medium">{leader.score} XP</span>
+                                            <span className="text-cyan-400 font-bold text-xs">{leader.score} XP</span>
                                         </div>
                                     ))
                                 )}
                             </div>
-
-                            {/* Decorative */}
-                            <div className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-cyan-500/20 rounded-br-xl pointer-events-none" />
                         </div>
                     </div>
 
-                    {/* PRIZE PANEL - Now flex-1 to fill space */}
-                    <CyberpunkCard className="flex-1 min-h-[250px] flex flex-col items-center justify-center text-center p-8 bg-black/60 !border-purple-500/30 relative overflow-hidden group">
+                    {/* 2. MIDDLE: PRIZE PANEL - COMPACT */}
+                    <CyberpunkCard className="h-[200px] flex flex-col items-center justify-center text-center p-4 bg-black/60 !border-purple-500/30 relative overflow-hidden group hover:!border-purple-400/50 transition-colors">
                         {/* Background Glow */}
-                        <div className={`absolute inset-0 transition-colors duration-1000 ${prizeRevealed ? 'bg-purple-500/20' : 'bg-purple-500/5 group-hover:bg-purple-500/10'}`} />
+                        <div className={`absolute inset-0 transition-colors duration-1000 ${prizeRevealed ? 'bg-purple-900/20' : 'bg-purple-500/5 group-hover:bg-purple-500/10'}`} />
 
-                        <h3 className="text-xs font-bold text-purple-400 tracking-[0.3em] uppercase mb-auto pt-2 border-b border-purple-500/30 pb-2 w-full text-center relative z-10">
-                            {prizeRevealed ? 'PRIZE UNLOCKED' : "Tonight's Prize"}
+                        <h3 className="text-[10px] font-bold text-purple-400 tracking-[0.3em] uppercase mb-2 w-full text-center relative z-10">
+                            {prizeRevealed ? "PRIZE UNLOCKED" : "MYSTERY DROP"}
                         </h3>
 
                         {/* Prize Content Container */}
-                        <div className="relative w-48 h-48 my-8 flex items-center justify-center z-10">
-
+                        <div className="relative w-full max-w-[120px] aspect-square my-auto flex items-center justify-center z-10">
                             <AnimatePresence mode='wait'>
                                 {!prizeRevealed ? (
                                     <motion.div
                                         key="locked"
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 1.2, filter: "blur(10px)" }}
-                                        className="relative w-full h-full bg-slate-900 rounded-2xl flex items-center justify-center border border-purple-500/50 shadow-[0_0_40px_rgba(168,85,247,0.3)] cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                                        exit={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+                                        className="relative w-full h-full bg-slate-900/80 rounded-xl flex items-center justify-center border border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.2)] cursor-pointer group-hover:scale-105 transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
                                         onClick={() => setPrizeRevealed(true)}
                                     >
-                                        <div className="absolute inset-0 bg-purple-500/10 mix-blend-overlay rounded-2xl" />
-                                        <div className="text-8xl animate-bounce-slow">
+                                        <div className="text-5xl animate-bounce-slow filter drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
                                             🎁
-                                        </div>
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm rounded-2xl">
-                                            <span className="text-xs font-bold text-white px-4 py-2 bg-purple-600 rounded-full shadow-lg border border-purple-400 hover:bg-purple-500 transition-colors">
-                                                CLICK TO REVEAL
-                                            </span>
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -475,29 +514,60 @@ export default function ChecklistPage() {
                                         initial={{ opacity: 0, scale: 0.5, rotateY: 90 }}
                                         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                                        className="relative w-full h-full bg-gradient-to-br from-purple-900/80 to-black rounded-2xl flex flex-col items-center justify-center border border-purple-400 shadow-[0_0_60px_rgba(168,85,247,0.6)]"
+                                        className="relative w-full h-full bg-gradient-to-br from-purple-900/80 to-black rounded-xl flex flex-col items-center justify-center border border-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.6)]"
                                     >
-                                        <div className="text-6xl mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                                            👕
-                                        </div>
-                                        <div className="text-lg font-black text-white uppercase tracking-wider drop-shadow-md">
-                                            Dev T-Shirt
-                                        </div>
-                                        <div className="text-[10px] text-purple-200 font-mono mt-1">
-                                            Rarity: LEGENDARY
-                                        </div>
-
-                                        {/* Particle Effects (CSS only for simplicity) */}
-                                        <div className="absolute -inset-4 bg-purple-500/20 blur-xl -z-10 animate-pulse" />
+                                        <div className="text-4xl mb-1">👕</div>
+                                        <div className="text-xs font-black text-white uppercase tracking-wider">Dev Shirt</div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        <p className={`text-[10px] font-mono uppercase tracking-widest mb-auto pb-2 relative z-10 transition-colors ${prizeRevealed ? 'text-purple-300' : 'text-slate-500'}`}>
-                            {prizeRevealed ? 'VISIT BOOTH #4 TO CLAIM' : 'DECRYPTING_SIGNAL...'}
+                        <p className="text-[9px] font-mono uppercase tracking-widest mt-2 relative z-10 text-purple-300/70">
+                            {prizeRevealed ? 'BOOTH #4' : 'CLICK TO REVEAL'}
                         </p>
                     </CyberpunkCard>
+
+                    {/* 3. BOTTOM: WINNERS PANEL (Fastest Completion) */}
+                    <div className="relative rounded-[20px] p-[1px] bg-gradient-to-br from-yellow-500/50 to-orange-500/50 overflow-hidden flex flex-col min-h-[250px] flex-1">
+                        <div className="absolute inset-0 bg-slate-950 rounded-[20px] m-[1px]" />
+                        <div className="relative z-10 bg-slate-900/90 backdrop-blur-xl rounded-[20px] p-6 h-full flex flex-col border border-white/5">
+
+                            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3 shrink-0">
+                                <h3 className="font-bold text-white text-base tracking-wide uppercase flex items-center gap-2">
+                                    <Trophy size={16} className="text-yellow-400" />
+                                    Hall of Fame
+                                </h3>
+                                <span className="text-[9px] font-bold text-yellow-500 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-500/30 uppercase tracking-widest">
+                                    Fastest
+                                </span>
+                            </div>
+
+                            {winners.length > 0 ? (
+                                <div className="space-y-2 overflow-y-auto custom-scrollbar flex-1">
+                                    {winners.map((winner, i) => (
+                                        <div key={`winner-${winner.id}`} className="flex justify-between items-center p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 hover:bg-yellow-500/10 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-6 h-6 rounded-full bg-yellow-500 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-yellow-500/20">
+                                                    #{i + 1}
+                                                </div>
+                                                <span className="text-yellow-100 font-bold text-sm truncate max-w-[120px]">{winner.name}</span>
+                                            </div>
+                                            <div className="text-[10px] text-yellow-400/80 font-mono">
+                                                {new Date(winner.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 space-y-2">
+                                    <Trophy size={32} className="opacity-20" />
+                                    <p className="text-xs uppercase tracking-widest text-center">No Champions Yet</p>
+                                    <p className="text-[10px] text-center max-w-[200px]">Be the first to complete all missions to claim your spot!</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                 </div>
             </main>

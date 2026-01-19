@@ -161,6 +161,18 @@
   }
 
   --animate-globe-spin: globe-spin 40s linear infinite;
+  /* Float Animation */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  --animate-float: float 3s ease-in-out infinite;
+
 }
 
 body {

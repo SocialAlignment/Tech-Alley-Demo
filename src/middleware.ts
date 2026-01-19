@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+    // DISABLE AUTH FOR DEMO
+    return NextResponse.next();
+
+    /* ORIGINAL AUTH LOGIC - DISABLED
     // Only protect /admin routes
     if (!request.nextUrl.pathname.startsWith('/admin')) {
         return NextResponse.next();
@@ -30,6 +34,7 @@ export function middleware(request: NextRequest) {
             'WWW-Authenticate': 'Basic realm="Secure Area"',
         },
     });
+    */
 }
 
 export const config = {
