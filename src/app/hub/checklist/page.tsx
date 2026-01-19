@@ -181,61 +181,75 @@ export default function ChecklistPage() {
     const isLoading = isLoadingMissions || isIdentityLoading;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 text-white">
 
             {/* --- CENTER COLUMN (Main Content) --- */}
             <div className="lg:col-span-8 space-y-8">
 
-                {/* Header */}
                 {/* Header / Video Player */}
-                <div className="w-full">
-                    <VideoPlayer
-                        thumbnailUrl="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop"
-                        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                        title="Welcome to Tech Alley"
-                        description="Your companion for the best event experience."
-                        className="rounded-[2rem] shadow-sm w-full"
-                        aspectRatio="16/9"
-                    />
+                <div className="w-full relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-[2.2rem] opacity-30 group-hover:opacity-60 blur-lg transition duration-500"></div>
+                    <div className="relative">
+                        <VideoPlayer
+                            thumbnailUrl="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop"
+                            videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                            title="Welcome to Tech Alley"
+                            description="Your companion for the best event experience."
+                            className="rounded-[2rem] shadow-2xl bg-slate-900/50 backdrop-blur-xl border border-white/10 w-full"
+                            aspectRatio="16/9"
+                        />
+                    </div>
                     {isSaving && (
-                        <div className="text-xs text-purple-500 flex items-center justify-end gap-2 animate-pulse mt-2">
-                            <Loader2 size={12} className="animate-spin" /> Saving progress...
+                        <div className="text-xs text-purple-400 flex items-center justify-end gap-2 animate-pulse mt-2 font-mono">
+                            <Loader2 size={12} className="animate-spin" /> SAVING_PROGRESS...
                         </div>
                     )}
                 </div>
 
                 {/* Progress Card */}
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-8">
-                    <div className="flex justify-between items-end mb-3">
+                <div className="bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] shadow-xl border border-white/10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10"></div>
+
+                    <div className="flex justify-between items-end mb-6">
                         <div>
-                            <span className="text-4xl font-bold text-slate-900">{progress}%</span>
-                            <span className="text-slate-400 text-sm ml-2">Completed</span>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-sm text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full inline-block">
-                                {checkedItems.size} / {missions.length} Tasks
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tighter">{progress}%</span>
+                                <span className="text-purple-400 font-bold uppercase tracking-wider text-sm">Completed</span>
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
-                                {earnedPoints} / {maxPoints} XP
+                        </div>
+                        <div className="text-right space-y-2">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Status</div>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/80 border border-white/10 text-cyan-400 text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+                                <CheckSquare size={14} />
+                                {checkedItems.size} / {missions.length} Missions
+                            </div>
+                            <div className="text-xs text-slate-500 font-mono">
+                                {earnedPoints} / {maxPoints} XP EARNED
                             </div>
                         </div>
                     </div>
-                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+
+                    <div className="w-full h-4 bg-slate-950/50 rounded-full overflow-hidden border border-white/5 box-border p-0.5">
                         <motion.div
-                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full relative"
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.5 }}
-                        />
+                            transition={{ duration: 0.8, ease: "circOut" }}
+                        >
+                            <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[2px]"></div>
+                        </motion.div>
                     </div>
                 </div>
 
                 {/* Tasks List */}
                 <div className="space-y-4">
                     {isLoading ? (
-                        <div className="text-center py-10 text-slate-400">Loading missions...</div>
+                        <div className="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
+                            <Loader2 className="animate-spin w-10 h-10 text-purple-500" />
+                            <p className="font-mono text-sm tracking-widest">INITIALIZING_MISSIONS...</p>
+                        </div>
                     ) : missions.length === 0 ? (
-                        <div className="text-center py-10 text-slate-400">No missions active right now.</div>
+                        <div className="text-center py-20 text-slate-500 font-mono">NO MISSIONS DETECTED</div>
                     ) : (
                         missions.map((item) => {
                             const isChecked = checkedItems.has(item.id);
@@ -260,54 +274,64 @@ export default function ChecklistPage() {
                                     key={item.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className={`
-                                    group p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-4
-                                    ${isChecked
-                                            ? 'bg-purple-50 border-purple-100'
-                                            : 'bg-white border-slate-100 hover:border-purple-200 hover:shadow-sm'
-                                        }
-                                `}
+                                    className={clsx(
+                                        "group relative p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center gap-5 overflow-hidden backdrop-blur-sm",
+                                        isChecked
+                                            ? 'bg-slate-900/40 border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.05)]'
+                                            : 'bg-slate-900/60 border-white/5 hover:border-white/10 hover:bg-slate-800/60'
+                                    )}
                                     onClick={() => toggleItem(item.id)}
                                 >
-                                    <div className={`
-                                    w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors shrink-0
-                                    ${isChecked
-                                            ? 'bg-purple-500 border-purple-500 text-white'
-                                            : 'border-slate-300 text-transparent group-hover:border-purple-300'
-                                        }
-                                `}>
-                                        <Check size={14} strokeWidth={3} />
+                                    {/* Active Glow for unchecked */}
+                                    {!isChecked && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>}
+
+                                    {/* Checkbox */}
+                                    <div className={clsx(
+                                        "w-8 h-8 rounded-xl border flex items-center justify-center transition-all duration-300 shrink-0 shadow-lg",
+                                        isChecked
+                                            ? 'bg-gradient-to-br from-purple-600 to-indigo-600 border-transparent text-white scale-110'
+                                            : 'bg-slate-950 border-slate-700 text-transparent group-hover:border-purple-400/50'
+                                    )}>
+                                        <Check size={16} strokeWidth={4} />
                                     </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className={`font-bold transition-colors truncate ${isChecked ? 'text-purple-900 line-through decoration-purple-300' : 'text-slate-800'}`}>
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0 z-10">
+                                        <h3 className={clsx(
+                                            "font-bold text-lg transition-colors truncate",
+                                            isChecked ? 'text-slate-500 line-through decoration-purple-500/50' : 'text-white group-hover:text-purple-200'
+                                        )}>
                                             {item.text}
                                         </h3>
-                                        <p className="text-xs text-slate-400 truncate">
-                                            {isChecked ? 'Completed!' : (item.description || `Tap to complete (+${item.points} XP)`)}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 shrink-0">
-                                        <div className="text-xs font-bold text-slate-300 group-hover:text-purple-400 whitespace-nowrap">
-                                            +{item.points} XP
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={clsx(
+                                                "text-xs font-mono px-1.5 py-0.5 rounded border",
+                                                isChecked
+                                                    ? 'text-green-400 border-green-500/20 bg-green-500/10'
+                                                    : 'text-purple-400 border-purple-500/20 bg-purple-500/10'
+                                            )}>
+                                                +{item.points} XP
+                                            </span>
+                                            <p className="text-sm text-slate-400 truncate">
+                                                {isChecked ? 'Mission Complete' : (item.description || 'Tap to complete')}
+                                            </p>
                                         </div>
-
-                                        {/* Action Button */}
-                                        {!isChecked && actionUrl && (
-                                            <div onClick={(e) => e.stopPropagation()}>
-                                                {isExternal ? (
-                                                    <a href={actionUrl} target="_blank" rel="noopener noreferrer">
-                                                        <GoButton className="h-8 text-xs bg-slate-900 text-white hover:bg-slate-800" text="Go" />
-                                                    </a>
-                                                ) : (
-                                                    <Link href={actionUrl}>
-                                                        <GoButton className="h-8 text-xs bg-slate-900 text-white hover:bg-slate-800" text="Go" />
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
+
+                                    {/* Action Button */}
+                                    {!isChecked && actionUrl && (
+                                        <div onClick={(e) => e.stopPropagation()} className="z-10 group/btn">
+                                            {isExternal ? (
+                                                <a href={actionUrl} target="_blank" rel="noopener noreferrer">
+                                                    <GoButton className="h-10 px-6 text-xs bg-white text-slate-900 hover:bg-cyan-400 hover:text-slate-900 border-0 font-bold tracking-wider" text="START" />
+                                                </a>
+                                            ) : (
+                                                <Link href={actionUrl}>
+                                                    <GoButton className="h-10 px-6 text-xs bg-white text-slate-900 hover:bg-cyan-400 hover:text-slate-900 border-0 font-bold tracking-wider" text="START" />
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
                                 </motion.div>
                             );
                         }))}
@@ -318,13 +342,12 @@ export default function ChecklistPage() {
             <div className="lg:col-span-4 space-y-6">
 
                 {/* Winners Widget */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden">
-                    {/* Background Glow */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full blur-3xl -z-10 opacity-50 pointer-events-none"></div>
+                <div className="bg-slate-900/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-yellow-500/20 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
 
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-900">Tonight's Winners</h3>
-                        <div className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full flex items-center gap-1 border border-yellow-100">
+                        <h3 className="font-bold text-white text-lg">Tonight's Winners</h3>
+                        <div className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
                             <span>🏆</span> Top 5
                         </div>
                     </div>
@@ -332,53 +355,47 @@ export default function ChecklistPage() {
                     <div className="space-y-4">
                         {isLoadingLeaders ? (
                             <div className="flex justify-center py-8">
-                                <Loader2 className="animate-spin text-slate-300" />
+                                <Loader2 className="animate-spin text-purple-500" />
                             </div>
                         ) : (
                             <>
                                 {/* Render Winners */}
                                 {winners.map((winner, index) => (
-                                    <div key={winner.id} className="flex items-center gap-4">
-                                        {/* Rank Badge */}
-                                        <div className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm shrink-0 border border-yellow-200">
+                                    <div key={winner.id} className="flex items-center gap-4 group/item">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 text-slate-900 flex items-center justify-center font-bold text-sm shrink-0 shadow-lg">
                                             {index + 1}
                                         </div>
-
-                                        {/* User Info */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 {winner.avatar ? (
-                                                    <img src={winner.avatar} alt={winner.name} className="w-6 h-6 rounded-full object-cover" />
+                                                    <img src={winner.avatar} alt={winner.name} className="w-6 h-6 rounded-full object-cover ring-2 ring-yellow-500/20" />
                                                 ) : (
-                                                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                                    <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 ring-1 ring-white/10">
                                                         {(winner.name || '?').substring(0, 1)}
                                                     </div>
                                                 )}
-                                                <p className="text-sm font-bold text-slate-800 truncate">
+                                                <p className="text-sm font-bold text-slate-200 truncate group-hover/item:text-yellow-400 transition-colors">
                                                     {winner.name}
                                                 </p>
                                             </div>
-                                            <p className="text-xs text-slate-400 truncate pl-8">
+                                            <p className="text-xs text-slate-500 truncate pl-8">
                                                 {winner.company || 'Community Member'}
                                             </p>
                                         </div>
-
-                                        {/* Time */}
-                                        <div className="font-bold text-slate-900 text-xs text-right leading-tight">
-                                            <div>{new Date(winner.completedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-                                            <div className="text-[10px] text-slate-400 font-normal">Mission Complete</div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-bold text-yellow-500/80">{new Date(winner.completedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
                                         </div>
                                     </div>
                                 ))}
 
                                 {/* Open Slots */}
                                 {Array.from({ length: Math.max(0, 5 - winners.length) }).map((_, i) => (
-                                    <div key={`empty-${i}`} className="flex items-center gap-4 opacity-50">
-                                        <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center font-bold text-sm shrink-0 border border-dashed border-slate-200">
+                                    <div key={`empty-${i}`} className="flex items-center gap-4 opacity-30">
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-slate-500 flex items-center justify-center font-bold text-sm shrink-0">
                                             {winners.length + i + 1}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-slate-400 italic">Open Slot</p>
+                                            <p className="text-sm text-slate-500 font-mono tracking-wider">OPEN_SLOT</p>
                                         </div>
                                     </div>
                                 ))}
@@ -388,47 +405,49 @@ export default function ChecklistPage() {
                 </div>
 
                 {/* Progress Leaderboard Widget */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/5">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-900">Leaderboard</h3>
-                        <div className="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-full flex items-center gap-1">
-                            <span>🔥</span> Top 10
+                        <h3 className="font-bold text-white text-lg">Leaderboard</h3>
+                        <div className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                            <span>🔥</span> Live
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {isLoadingLeaders ? (
                             <div className="flex justify-center py-8">
-                                <Loader2 className="animate-spin text-slate-300" />
+                                <Loader2 className="animate-spin text-purple-500" />
                             </div>
                         ) : leaders.length === 0 ? (
-                            <div className="text-center py-6 text-slate-400 text-sm">
-                                No activity yet. Start your missions!
+                            <div className="text-center py-6 text-slate-500 text-sm font-mono">
+                                NO_ACTIVITY_DETECTED
                             </div>
                         ) : (
                             leaders.map((leader, index) => (
                                 <div key={leader.id || index} className="flex items-center gap-4">
-                                    <div className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0
-                                        ${index < 3 ? 'bg-purple-100 text-purple-700' : 'bg-slate-50 text-slate-500'}
-                                    `}>
+                                    <div className={clsx(
+                                        "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 backdrop-blur-sm",
+                                        index < 3
+                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.1)]'
+                                            : 'bg-white/5 text-slate-500 border border-white/5'
+                                    )}>
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             {leader.avatar ? (
-                                                <img src={leader.avatar} alt={leader.name} className="w-6 h-6 rounded-full object-cover" />
+                                                <img src={leader.avatar} alt={leader.name} className="w-6 h-6 rounded-full object-cover ring-1 ring-white/10" />
                                             ) : (
-                                                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                                <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">
                                                     {(leader.name || '?').substring(0, 1)}
                                                 </div>
                                             )}
-                                            <p className="text-sm font-bold text-slate-800 truncate">
+                                            <p className="text-sm font-bold text-slate-300 truncate">
                                                 {leader.name}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="font-bold text-slate-900 text-sm">
+                                    <div className="font-bold text-white text-sm font-mono">
                                         {leader.score}%
                                     </div>
                                 </div>
@@ -438,26 +457,31 @@ export default function ChecklistPage() {
                 </div>
 
                 {/* Prize Reveal Widget */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center">
-                    <h3 className="font-bold text-slate-900 mb-4">Tonight's Prize</h3>
-                    <div className="rounded-2xl overflow-hidden border-2 border-slate-100">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-[2rem] shadow-xl border border-white/10 flex flex-col items-center text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-grid-white/[0.02] -z-10"></div>
+                    <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400 mb-6 uppercase tracking-wider text-sm">Tonight's Prize</h3>
+                    <div className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-orange-500 opacity-20 blur-lg group-hover:opacity-40 transition duration-500"></div>
                         <ScratchToReveal
                             width={250}
                             height={250}
                             minScratchPercentage={50}
-                            className="flex items-center justify-center bg-slate-50"
+                            className="flex items-center justify-center bg-slate-900 relative z-10"
                             gradientColors={["#A97CF8", "#F38CB8", "#FDCC92"]}
                         >
-                            <div className="flex flex-col items-center justify-center p-4">
-                                <div className="text-6xl mb-4">🤖 🎥</div>
-                                <p className="text-sm font-bold text-slate-800 px-4">
-                                    First 5 people to finish all Tasks get 5 extra entries into GenAI Ad Giveaway!
-                                </p>
+                            <div className="flex flex-col items-center justify-center p-6 space-y-4">
+                                <div className="text-7xl animate-bounce">🤖</div>
+                                <div className="space-y-2">
+                                    <p className="text-white font-bold text-lg">GenAI Ad Giveaway!</p>
+                                    <p className="text-xs font-medium text-slate-400 px-4">
+                                        First 5 people to finish all Tasks get 5 extra entries!
+                                    </p>
+                                </div>
                             </div>
                         </ScratchToReveal>
                     </div>
-                    <p className="text-xs text-slate-400 mt-4">
-                        Scratch to reveal your potential prize!
+                    <p className="text-xs text-slate-500 mt-6 font-mono">
+                        SCRATCH_TO_REVEAL_PRIZE_TIER
                     </p>
                 </div>
 

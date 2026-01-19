@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FileSpreadsheet, Upload, X, CheckCircle2, Loader2, Image as ImageIcon } from "lucide-react";
@@ -18,7 +18,12 @@ export default function FileUpload05() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [caption, setCaption] = useState("");
-    const { leadId, userName, instagram } = useIdentity();
+    const { leadId, userName, instagram: contextInstagram } = useIdentity();
+    const [instagram, setInstagram] = useState("");
+
+    useEffect(() => {
+        if (contextInstagram) setInstagram(contextInstagram);
+    }, [contextInstagram]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -110,7 +115,7 @@ export default function FileUpload05() {
                         s3Key: data.key,
                         caption: caption,
                         userId: userName ? `${userName} (${leadId || 'No ID'})` : undefined,
-                        instagramHandle: instagram
+                        instagramHandle: instagram || contextInstagram
                     })
                 });
 
@@ -243,6 +248,15 @@ export default function FileUpload05() {
                                         placeholder="Add a caption..."
                                         value={caption}
                                         onChange={(e) => setCaption(e.target.value)}
+                                        className="mb-2 w-full border-b border-slate-700 bg-transparent py-1 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+                                        disabled={uploading}
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="@instagram_handle (Optional)"
+                                        value={instagram}
+                                        onChange={(e) => setInstagram(e.target.value)}
                                         className="mb-2 w-full border-b border-slate-700 bg-transparent py-1 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
                                         disabled={uploading}
                                     />

@@ -1,23 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import { ArrowUpRight } from 'lucide-react';
-import SpeakerCard from '@/components/SpeakerCard';
-import SpeakerDrawer, { ExtendedSpeaker } from '@/components/SpeakerDrawer';
 
-// Transformed Data from original Guest Speaker Page
-// Reordered for Layout: Lorraine, Hoz, Shaq, Jonathan, Todd
-const SPEAKERS: ExtendedSpeaker[] = [
+import { ArrowUpRight, Loader2 } from 'lucide-react';
+import SpeakerDrawer, { ExtendedSpeaker } from '@/components/SpeakerDrawer';
+import { motion } from 'framer-motion';
+import { WarpBackground } from '@/components/ui/warp-background';
+import { getTonightLineup } from '@/lib/lineup';
+
+// Tentative mapping of user uploaded logos.
+// 0: Tech Alley, 1: Dead Sprint, 2: GOED, 3: Social Alignment, 4: Silver Sevens
+const LOGO_MAP = {
+    techAlley: '/ta-header-badge.png',
+    deadSprint: '/logos/new/logo-4.png',
+    goed: '/logos/new/logo-2.png',
+    socialAlignment: '/logos/new/logo-1.png',
+    silverSevens: '/logos/new/logo-3.png'
+};
+
+const FALLBACK_SPEAKERS: ExtendedSpeaker[] = [
     {
         id: '3',
-        name: 'Lorainne Yard',
+        name: 'Lorainne Yarde',
         title: 'Chapter Lead',
         company: 'Tech Alley Henderson',
-        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
-        promoImage: '/tech-alley-logo.png',
-        topics: ['State of the Alley', 'Innovation Hub', 'Community Growth'],
+        image: '/lorainne-profile.png',
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.techAlley,
+        topics: ['State of the Alley', 'Innovation Hub'],
         bioShort: 'Leading the charge for innovation and community connection.',
         quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
         industry: 'Community Organization',
@@ -27,11 +38,7 @@ const SPEAKERS: ExtendedSpeaker[] = [
         resourceLink: 'https://techalley.org/resource',
         sessionTitle: 'State of the Alley 2024',
         sessionAbstract: 'An update on the progress of Tech Alley and what lies ahead for the innovation community in Henderson.',
-        socials: {
-            linkedin: 'https://linkedin.com',
-            instagram: 'https://instagram.com',
-            facebook: 'https://facebook.com'
-        },
+        socials: { linkedin: 'https://linkedin.com', instagram: 'https://instagram.com', facebook: 'https://facebook.com' },
         status: 'complete',
         completion: 100,
     },
@@ -39,9 +46,10 @@ const SPEAKERS: ExtendedSpeaker[] = [
         id: '5',
         name: 'Hoz Roushdi',
         title: 'Host',
-        company: 'Hello Henderson Podcast on Dead Sprint Radio',
+        company: 'Hello Henderson Podcast',
         image: '/hoz-profile.jpg',
-        topics: ['Podcasting', 'Content Strategy', 'Community'],
+        promoImage: LOGO_MAP.deadSprint,
+        topics: ['Podcasting', 'Content Strategy'],
         bioShort: 'Voice of the community and podcasting expert.',
         quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
         industry: 'Media & Podcasting',
@@ -49,13 +57,9 @@ const SPEAKERS: ExtendedSpeaker[] = [
         landingPage: 'https://deadsprintradio.com',
         deckLink: 'https://deadsprintradio.com/deck',
         resourceLink: 'https://deadsprintradio.com/resource',
-        sessionTitle: 'Podcasting 101: From Idea to Launch',
+        sessionTitle: 'Podcasting 101',
         sessionAbstract: 'A comprehensive guide to starting your own podcast, from equipment selection to content planning and distribution.',
-        socials: {
-            linkedin: 'https://linkedin.com',
-            youtube: 'https://youtube.com/@deadsprint',
-            instagram: 'https://instagram.com'
-        },
+        socials: { linkedin: 'https://linkedin.com', youtube: 'https://youtube.com/@deadsprint', instagram: 'https://instagram.com' },
         status: 'complete',
         completion: 100,
     },
@@ -64,9 +68,10 @@ const SPEAKERS: ExtendedSpeaker[] = [
         name: 'Shaq Cruz',
         title: 'Entrepreneurship Coordinator',
         company: 'GOED',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
-        promoImage: '/tech-alley-logo.png',
-        topics: ['Resilience', 'Disaster Recovery', 'Local Business'],
+        image: '/shaq-profile.png',
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.goed,
+        topics: ['Resilience', 'Restoration'],
         bioShort: 'Empowering communities through resilience and restoration.',
         quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
         industry: 'Restoration Services',
@@ -75,16 +80,8 @@ const SPEAKERS: ExtendedSpeaker[] = [
         deckLink: 'https://lifesavers.com/deck',
         resourceLink: 'https://lifesavers.com/resource',
         sessionTitle: 'Building Resilient Communities',
-        sessionAbstract: 'Disasters can strike at any time. In this session, we will discuss how to prepare your community for the unexpected and how to recover quickly and effectively.',
-        socials: {
-            linkedin: 'https://linkedin.com',
-            instagram: 'https://instagram.com',
-            facebook: 'https://facebook.com',
-            youtube: 'https://youtube.com',
-            scheduling: 'https://calendly.com',
-            twitter: 'https://x.com/lifesavers',
-            tiktok: 'https://tiktok.com/@lifesavers'
-        },
+        sessionAbstract: 'Disasters can strike at any time. In this session, we will discuss how to prepare your community for the unexpected.',
+        socials: { linkedin: 'https://linkedin.com' },
         status: 'complete',
         completion: 100,
     },
@@ -94,23 +91,19 @@ const SPEAKERS: ExtendedSpeaker[] = [
         title: 'CEO',
         company: 'Social Alignment, LLC',
         image: '/jonathan-profile.jpg',
-        promoImage: '/tech-alley-logo.png', // Main updated promo image
-        topics: ['System Automation', 'Lead Gen', 'Digital Strategy'],
+        imageClassName: "w-full h-full object-cover object-top scale-110 group-hover:scale-125 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.socialAlignment,
+        topics: ['System Automation', 'Lead Gen'],
         bioShort: 'Optimizing digital strategies for maximum impact.',
-
         quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
         industry: 'Digital Marketing',
         valueProposition: 'I help businesses generate more leads using automated digital strategies.',
         landingPage: 'https://socialalignment.biz/speaker',
         deckLink: 'https://socialalignment.biz/deck',
         resourceLink: 'https://socialalignment.biz/resource',
-        sessionTitle: 'Automating Your Lead Generation',
+        sessionTitle: 'Automating Lead Gen',
         sessionAbstract: 'Learn how to set up automated systems that consistently bring in high-quality leads for your business.',
-        socials: {
-            linkedin: 'https://linkedin.com/in/jonathansterritt',
-            website: 'https://socialalignment.biz',
-            scheduling: 'https://calendly.com/jsterritt'
-        },
+        socials: { linkedin: 'https://linkedin.com/in/jonathansterritt', website: 'https://socialalignment.biz' },
         status: 'complete',
         completion: 100,
     },
@@ -120,8 +113,9 @@ const SPEAKERS: ExtendedSpeaker[] = [
         title: 'Vice President',
         company: 'Silver Sevens Hotel and Casino',
         image: '/todd-profile.png',
-        promoImage: '/tech-alley-logo.png',
-        topics: ['Community Integration', 'Hospitality Tech', 'Economic Growth'],
+        imageClassName: "w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out",
+        promoImage: LOGO_MAP.silverSevens,
+        topics: ['Hospitality Tech', 'Growth'],
         bioShort: 'Driving economic growth and community integration in Henderson.',
         quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
         industry: 'Hospitality & Gaming',
@@ -130,12 +124,8 @@ const SPEAKERS: ExtendedSpeaker[] = [
         deckLink: 'https://thepasscasino.com/deck',
         resourceLink: 'https://thepasscasino.com/resource',
         sessionTitle: 'The Future of Hospitality Tech',
-        sessionAbstract: 'Explore how technology is revolutionizing the hospitality industry, enhancing guest experiences, and streamlining operations.',
-        socials: {
-            linkedin: 'https://linkedin.com',
-            website: 'https://thepasscasino.com',
-            twitter: 'https://x.com/thepasscasino'
-        },
+        sessionAbstract: 'Explore how technology is revolutionizing the hospitality industry, enhancing guest experiences.',
+        socials: { linkedin: 'https://linkedin.com' },
         status: 'complete',
         completion: 100,
     }
@@ -143,71 +133,218 @@ const SPEAKERS: ExtendedSpeaker[] = [
 
 export default function SpeakersPage() {
     const [selectedSpeaker, setSelectedSpeaker] = useState<ExtendedSpeaker | null>(null);
+    const [speakers, setSpeakers] = useState<ExtendedSpeaker[]>([]);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const data = await getTonightLineup();
+                if (data && data.length > 0) {
+                    setSpeakers(data);
+                } else {
+                    setSpeakers(FALLBACK_SPEAKERS);
+                }
+            } catch (error) {
+                console.error("Failed to load speakers", error);
+                setSpeakers(FALLBACK_SPEAKERS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
     const handleSpeakerClick = (speaker: ExtendedSpeaker) => {
-        if (speaker.id === '5') { // Hoz / Spotlight
+        if (speaker.id === '5') {
             router.push('/hub/spotlight');
         } else {
             setSelectedSpeaker(speaker);
         }
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.15 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 50 } }
+    };
+
     return (
-        <div className="min-h-screen bg-slate-50/50 pb-24">
-            <Header title="Guest Speakers" description="Minds shaping tonight's conversation." />
-
-            <div className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
-
-                {/* Top Row: Hosts/Organizers (Centered) */}
-                <div className="flex flex-col md:flex-row justify-center gap-6">
-                    {SPEAKERS.slice(0, 2).map((speaker) => (
-                        <div key={speaker.id} className="w-full md:w-[400px]">
-                            <SpeakerCard
-                                speaker={speaker}
-                                onClick={() => handleSpeakerClick(speaker)}
-                                isSpotlight={speaker.id === '5'} // Keep Hoz Spotlight if needed
-                                variant="light"
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                {/* Bottom Row: Guest Speakers (Grid) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {SPEAKERS.slice(2).map((speaker) => (
-                        <SpeakerCard
-                            key={speaker.id}
-                            speaker={speaker}
-                            onClick={() => handleSpeakerClick(speaker)}
-                            variant="light"
-                        />
-                    ))}
-                </div>
-
-                {/* Info Section */}
-                <div className="mt-16 bg-gradient-to-br from-purple-900 to-slate-900 rounded-3xl p-10 text-white relative overflow-hidden">
-                    <div className="relative z-10 max-w-2xl">
-                        <h2 className="text-3xl font-bold mb-4">Interested in Speaking?</h2>
-                        <p className="text-purple-100 mb-8 leading-relaxed">
-                            Tech Alley Henderson is always looking for new voices to share their expertise, stories, and innovations. Connect with our community and amplify your impact.
-                        </p>
-                        <button className="flex items-center gap-2 px-6 py-3 bg-white text-purple-900 font-bold rounded-xl hover:bg-purple-50 transition-colors">
-                            Apply for Next Event <ArrowUpRight size={18} />
-                        </button>
-                    </div>
-                    {/* Abstract Circle Backgrounds */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3" />
-                </div>
+        <main className="min-h-screen relative w-full bg-slate-950 overflow-hidden text-white font-sans selection:bg-cyan-500/30">
+            {/* Warp Background for that 'Welcome Page' Energy */}
+            <div className="fixed inset-0 z-0 bg-transparent">
+                <WarpBackground className="w-full h-full" gridColor="rgba(139, 92, 246, 0.4)" />
             </div>
 
-            {/* Interactive Drawer */}
+            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="mb-16 text-center"
+                >
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-fuchsia-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.6)]">
+                            TONIGHT&apos;S LINEUP
+                        </span>
+                    </h1>
+                    <p className="text-xl text-slate-400 font-medium tracking-wide">Minds shaping the conversation.</p>
+                </motion.div>
+
+                {/* Main Content Grid */}
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-3"
+                >
+                    {/* Featured Speakers (Lorainne & Hoz) - Full Width 'Hero' Cards */}
+                    {loading ? (
+                        <div className="flex justify-center py-20">
+                            <Loader2 className="animate-spin text-cyan-500 w-12 h-12" />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 gap-12">
+                                {speakers.slice(0, 2).map((speaker, idx) => (
+                                    <motion.div
+                                        key={speaker.id}
+                                        variants={itemVariants}
+                                        whileHover={{ scale: 1.01 }}
+                                        onClick={() => handleSpeakerClick(speaker)}
+                                        className={`cursor-pointer relative overflow-hidden rounded-[2.5rem] p-[1px] bg-gradient-to-br ${idx === 0 ? 'from-cyan-500 via-blue-500 to-transparent' : 'from-fuchsia-500 via-purple-500 to-transparent'
+                                            } shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] group`}
+                                    >
+                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
+
+                                        <div className="relative h-full bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 overflow-hidden">
+                                            {/* Background Glow */}
+                                            <div className={`absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 pointer-events-none ${idx === 0 ? 'bg-cyan-500' : 'bg-fuchsia-500'
+                                                }`} />
+
+                                            {/* Image */}
+                                            <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0">
+                                                <div className={`absolute inset-0 rounded-[2rem] rotate-6 opacity-40 blur-md transition-transform duration-500 group-hover:rotate-12 ${idx === 0 ? 'bg-cyan-400' : 'bg-fuchsia-400'
+                                                    }`} />
+                                                <img
+                                                    src={speaker.image}
+                                                    alt={speaker.name}
+                                                    className={`relative w-full h-full object-cover rounded-[2rem] shadow-2xl z-10 transition-transform duration-500 group-hover:scale-105 ${speaker.imageClassName || ''}`}
+                                                />
+                                            </div>
+
+                                            {/* Text */}
+                                            <div className="flex-1 text-center md:text-left z-10">
+                                                <div className={`inline-flex items-center px-4 py-1.5 rounded-full border mb-4 backdrop-blur-md ${idx === 0 ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' : 'bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-300'
+                                                    }`}>
+                                                    <span className="text-xs font-bold tracking-wider uppercase">{idx === 0 ? 'Chapter Lead' : 'Spotlight'}</span>
+                                                </div>
+                                                <h2 className="text-5xl md:text-6xl font-black text-white mb-2 leading-tight tracking-tight">{speaker.name.toUpperCase()}</h2>
+                                                <p className="text-lg text-slate-300 mb-6 font-medium">{speaker.title} • {speaker.company}</p>
+
+                                                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                                                    {speaker.topics.map(topic => (
+                                                        <span key={topic} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors">
+                                                            {topic}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Logo Badge */}
+                                            <div className={`w-44 h-44 flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 ${speaker.id === '5' ? 'p-0' : 'p-4'}`}>
+                                                <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain scale-150 ${speaker.id === '3' ? 'translate-y-2' : '-translate-y-1'}`} />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Grid Speakers (Shaq, Jonathan, Todd) */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {speakers.slice(2).map((speaker) => (
+                                    <motion.div
+                                        key={speaker.id}
+                                        variants={itemVariants}
+                                        whileHover={{ y: -5 }}
+                                        onClick={() => handleSpeakerClick(speaker)}
+                                        className="cursor-pointer group relative overflow-hidden rounded-3xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-colors duration-300 h-full"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                        <div className="p-6 flex flex-col h-full relative z-10">
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-lg border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors">
+                                                    <img src={speaker.image} alt={speaker.name} className={`w-full h-full object-cover ${speaker.imageClassName || ''}`} />
+                                                </div>
+                                                {/* Logo - Sized Up & Filtered */}
+                                                <div className={`w-32 h-32 transition-all duration-500 p-1 ${speaker.id === '4' ? 'opacity-100' : 'brightness-0 invert opacity-70 group-hover:opacity-100'}`}>
+                                                    <img src={speaker.promoImage} alt="Logo" className="w-full h-full object-contain scale-[2.0] translate-y-1 -translate-x-6" />
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-auto">
+                                                <h3 className="text-2xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{speaker.name}</h3>
+                                                <p className="text-sm text-slate-400 mb-4 line-clamp-1">{speaker.title}, {speaker.company}</p>
+
+                                                <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/5 flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                                                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Speaking On</span>
+                                                    <span className="text-xs text-cyan-200/80 truncate">{speaker.topics[0]}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </motion.div>
+
+                {/* Footer CTA */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mt-32 relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 p-12 md:p-16"
+                >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent opacity-50" />
+
+                    <div className="relative z-10 max-w-[90rem] mx-auto flex flex-col xl:flex-row items-center justify-between gap-20">
+                        <div className="text-left flex-1 min-w-[600px]">
+                            <h2 className="text-5xl font-bold text-white mb-6 tracking-tight">Step Into the Spotlight</h2>
+                            <p className="text-white mb-8 text-xl max-w-3xl leading-relaxed">
+                                We're looking for innovators, builders, and storytellers to share their expertise and shape the future of Henderson's tech ecosystem.
+                            </p>
+                            <button className="whitespace-nowrap px-10 py-5 bg-white text-slate-950 font-bold rounded-full text-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center gap-2">
+                                Now Isn't the Time to Be Modest <ArrowUpRight className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Partner Logos */}
+                        <div className="flex items-center gap-6 shrink-0">
+                            <img src="/ta-header-badge.png" alt="Tech Alley" className="h-32 md:h-48 lg:h-64 w-auto object-contain" />
+                            <img src={LOGO_MAP.deadSprint} alt="Dead Sprint Radio" className="h-32 md:h-48 lg:h-64 w-auto object-contain -translate-y-4" />
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+
             <SpeakerDrawer
                 isOpen={!!selectedSpeaker}
                 onClose={() => setSelectedSpeaker(null)}
                 speaker={selectedSpeaker}
             />
-        </div>
+        </main >
     );
 }

@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, ArrowRight, User, Briefcase, Award, FileText, Mail, Linkedin, Globe, Phone, Share2, MessageSquare, Quote, Monitor, Mic2, AlertCircle, Check, Camera, Save, ChevronRight } from 'lucide-react';
+import { X, MapPin, Calendar, Clock, ArrowRight, User, Briefcase, Award, FileText, Mail, Linkedin, Globe, Phone, Share2, MessageSquare, Quote, Monitor, Mic2, AlertCircle, Check, Camera, Save, ChevronRight, HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
+
 
 // --- Types ---
 export interface ExtendedSpeaker {
@@ -38,6 +39,7 @@ export interface ExtendedSpeaker {
 
     // Restored Fields
     sessionTitle?: string;
+    imageClassName?: string;
     sessionAbstract?: string;
 
     status: 'complete' | 'pending' | 'action_required';
@@ -72,27 +74,29 @@ const SectionHeader = ({ title, children }: any) => (
     </div>
 );
 
-const InputField = ({ label, value, placeholder }: any) => (
-    <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-        <input
-            type="text"
-            defaultValue={value}
-            placeholder={placeholder}
-            className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition-all text-sm font-medium text-slate-700"
-        />
+const DisplayField = ({ label, value, className }: any) => (
+    <div className={clsx("space-y-2", className)}>
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</h4>
+        <div className="text-sm font-medium text-slate-200 leading-relaxed bg-white/5 p-3 rounded-xl border border-white/10">
+            {value || <span className="text-slate-500 italic">Not provided</span>}
+        </div>
     </div>
 );
 
-const TextAreaField = ({ label, value, placeholder }: any) => (
-    <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-        <textarea
-            defaultValue={value}
-            placeholder={placeholder}
-            rows={4}
-            className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition-all text-sm font-medium text-slate-700 resize-none"
-        />
+const SocialDisplayRow = ({ icon, value, placeholder, iconColorClass = "text-slate-400", bgClass = "bg-white/5" }: any) => (
+    <div className="flex gap-2">
+        <div className={clsx("p-3 rounded-xl border border-white/10", bgClass, iconColorClass)}>
+            {icon}
+        </div>
+        <div className="flex-1 p-3 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-300 flex items-center overflow-hidden">
+            {value ? (
+                <a href={value} target="_blank" rel="noopener noreferrer" className="hover:text-white hover:underline truncate w-full transition-colors">
+                    {value}
+                </a>
+            ) : (
+                <span className="text-slate-500 italic">{placeholder}</span>
+            )}
+        </div>
     </div>
 );
 
@@ -131,274 +135,266 @@ export default function SpeakerDrawer({ isOpen, onClose, speaker }: SpeakerDrawe
                                 )}
                         >
                             {/* LEFT PANEL: Promo Image (Desktop Only) */}
-                            {speaker.promoImage && (
-                                <div className="hidden md:block w-1/2 h-full shrink-0 relative overflow-hidden bg-slate-900">
+                            {(speaker.promoImage || speaker.image) && (
+                                <div className={clsx(
+                                    "hidden md:block w-1/2 h-full shrink-0 relative overflow-hidden",
+                                    (speaker.id === '1' || speaker.id === '2') ? "bg-[#1C1335]" : "bg-slate-900" // Shaq & Todd: Custom dark bg
+                                )}>
                                     <div className="absolute inset-0 bg-gradient-to-r from-slate-900/20 to-transparent z-10"></div>
-                                    <img
-                                        src={speaker.promoImage}
-                                        alt={`${speaker.name} Promo`}
-                                        className="w-full h-full object-cover object-center"
-                                    />
+
+                                    {/* Render Logic Based on ID */}
+                                    {speaker.id === '2' ? (
+                                        // Todd: Large Question Mark Icon as "Logo"
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <HelpCircle className="w-64 h-64 text-white/90" strokeWidth={1} />
+                                        </div>
+                                    ) : (
+                                        // Others: Image
+                                        <img
+                                            src={
+                                                speaker.id === '1' ? '/shaq-drawer-bg.png' : // Shaq: Custom provided background
+                                                    (speaker.promoImage || speaker.image)
+                                            }
+                                            alt={`${speaker.name} Promo`}
+                                            className={clsx(
+                                                "w-full h-full object-center",
+                                                speaker.id === '1' ? "object-contain scale-75" : "object-cover"
+                                            )}
+                                        />
+                                    )}
                                 </div>
                             )}
 
                             {/* RIGHT PANEL: Content */}
                             <div className={clsx(
-                                "flex-1 bg-white h-full overflow-hidden flex flex-col shadow-2xl z-20",
-                                speaker.promoImage ? "" : "rounded-l-3xl border-l border-white/20" // Square off left side if promo exists
+                                "flex-1 relative h-full overflow-hidden flex flex-col shadow-2xl z-20",
+                                speaker.promoImage ? "" : "rounded-l-3xl border-l border-white/20"
                             )}>
+                                {/* Warp Background Behind Content */}
 
-                                {/* PROMINENT HERO HEADER */}
-                                <div className="relative min-h-[20rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shrink-0">
-                                    {/* Pattern Overlay */}
-                                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
 
-                                    <div className="relative h-full px-8 py-6 flex flex-col justify-between z-20">
-                                        {/* TOP ROW: Name & Info */}
-                                        <div className="text-white flex items-end flex-wrap gap-4 relative z-20">
-                                            <h2 className="text-4xl font-black tracking-tight text-white drop-shadow-md leading-none">{speaker.name}</h2>
-                                            <div className="flex items-center gap-3 text-blue-100 font-medium text-lg pb-1">
-                                                <span className="flex items-center gap-2">
-                                                    <User size={18} className="text-purple-400" />
-                                                    {speaker.title}
-                                                </span>
-                                                <span className="opacity-40">•</span>
-                                                <span className="flex items-center gap-2 opacity-80">
-                                                    <Share2 size={18} className="text-purple-400" />
-                                                    {speaker.company}
-                                                </span>
-                                            </div>
-                                        </div>
+                                <div className="relative z-10 flex flex-col h-full">
 
-                                        {/* BOTTOM ROW: Image & Quote */}
-                                        <div className="flex items-center gap-6 w-full relative">
-                                            {/* Headshot */}
-                                            <div className="w-48 h-48 rounded-2xl border-4 border-white shadow-2xl shrink-0 bg-slate-200 relative ml-4 mb-2 group">
-                                                <img
-                                                    src={speaker.image}
-                                                    alt={speaker.name}
-                                                    className="w-full h-full object-cover object-top scale-125 shadow-inner rounded-xl"
-                                                />
-                                                {/* Speaker Badge */}
-                                                <div className="absolute -bottom-6 -right-16 bg-white text-slate-900 text-base font-bold px-6 py-3 rounded-full shadow-lg border border-slate-100 z-20 flex items-center gap-2">
-                                                    <User size={20} className="text-purple-600 fill-purple-600" />
-                                                    <span>Speaker</span>
-                                                </div>
-                                            </div>
+                                    {/* MINIMAL HEADER */}
+                                    <div className="relative flex flex-col justify-end px-8 py-10 bg-slate-950 border-b border-white/10 shrink-0 z-30 overflow-hidden min-h-[180px]">
+                                        {/* Background Gradient */}
+                                        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black z-0" />
 
-                                            {/* Quote */}
-                                            <div className="flex-1 pr-4 pl-5 text-right relative mb-2">
-                                                <div className="relative inline-block w-full">
-                                                    <p className="text-xl md:text-2xl font-serif italic text-blue-100 leading-relaxed drop-shadow-lg text-balance">
-                                                        "{speaker.quote || "Empowering the next generation of tech leaders through community and innovation."}"
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <img
-                                        src="/ta-header-badge.png"
-                                        alt="Tech Alley Henderson"
-                                        className={clsx(
-                                            "absolute w-40 opacity-90 object-contain z-10 transition-all duration-300",
-                                            (speaker.title.length + speaker.company.length > 40)
-                                                ? "top-2 right-12"
-                                                : (speaker.title.length > 20)
-                                                    ? "top-1 right-24"
-                                                    : "top-0 right-28"
-                                        )}
-                                    />
+                                        {/* Tech Alley Badge - Standard for ALL */}
+                                        <img
+                                            src="/ta-header-badge.png"
+                                            alt="Badge"
+                                            className={clsx(
+                                                "absolute z-10 mix-blend-screen pointer-events-none transition-all duration-500",
+                                                "w-40 right-28 top-0 opacity-100"
+                                            )}
+                                        />
 
-                                    {/* Close Button */}
-                                    <button
-                                        onClick={onClose}
-                                        className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white/70 hover:text-white transition-all backdrop-blur-sm"
-                                    >
-                                        <X size={20} />
-                                    </button>
-
-                                </div>
-
-                                {/* TAB NAVIGATION */}
-                                <nav className="flex items-center px-6 border-b border-slate-100 overflow-x-auto no-scrollbar shrink-0 bg-white pl-[170px] pt-2">
-                                    <TabButton active={activeTab === 'bio'} onClick={() => setActiveTab('bio')} label="Bio & Info" icon={User} />
-                                    <TabButton active={activeTab === 'business'} onClick={() => setActiveTab('business')} label="Business" icon={Monitor} />
-                                    <TabButton active={activeTab === 'expertise'} onClick={() => setActiveTab('expertise')} label="Expertise" icon={Mic2} />
-                                    <TabButton active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} label="Resources" icon={Share2} />
-                                    <TabButton active={activeTab === 'contact'} onClick={() => setActiveTab('contact')} label="Contact" icon={Mail} />
-                                </nav>
-
-                                {/* SCROLLABLE CONTENT AREA */}
-                                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-50/50">
-
-                                    {activeTab === 'bio' && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <SectionHeader title="About the Speaker">
-                                                Share your background, story, and what drives you.
-                                            </SectionHeader>
-                                            <TextAreaField label="Short Bio (Public)" value={speaker.bioShort} placeholder="A concise 1-2 sentence bio..." />
-                                            <TextAreaField label="Full Bio" value={speaker.bioFull} placeholder="Your full professional biography..." />
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <InputField label="Email" value={speaker.email} placeholder="you@company.com" />
-                                                <InputField label="Phone" value={speaker.phone} placeholder="+1 (555) 000-0000" />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {activeTab === 'business' && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <SectionHeader title="Business Info">
-                                                Tell us about your company and what you do.
-                                            </SectionHeader>
-
-                                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3">
-                                                <div className="flex gap-3">
-                                                    <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm h-fit">
-                                                        <AlertCircle size={20} />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-blue-900 text-sm mb-1">Value Proposition Statement</h4>
-                                                        <p className="text-xs text-blue-700 leading-relaxed mb-3">
-                                                            A clear statement following the framework: "I help [Target Audience], do [Benefit/Action], using [Mechanism/Solution]."
-                                                        </p>
-                                                        <input
-                                                            type="text"
-                                                            defaultValue={speaker.valueProposition}
-                                                            className="w-full p-3 bg-white border border-blue-200 rounded-lg text-sm text-slate-700 placeholder:text-blue-300/70 focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none shadow-sm"
-                                                            placeholder="I help startups scale revenue using AI automation..."
+                                        <div className="relative z-20">
+                                            {/* Speaker Name & Avatar */}
+                                            <div className="flex items-end gap-6 mb-2">
+                                                {/* Headshot Avatar */}
+                                                <div className="relative shrink-0">
+                                                    <div className="w-24 h-24 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden bg-slate-800">
+                                                        <img
+                                                            src={speaker.image} // Fixed: Added src
+                                                            alt={speaker.name}
+                                                            className={clsx("w-full h-full object-cover", speaker.imageClassName)}
                                                         />
                                                     </div>
                                                 </div>
+
+                                                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-2xl mb-1">
+                                                    {speaker.name.toUpperCase()}
+                                                </h2>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <InputField label="Company Name" value={speaker.company} />
-                                                <InputField label="Job Title" value={speaker.title} />
-                                                <InputField label="Industry" value={speaker.industry} placeholder="e.g. SaaS, Fintech, Healthcare" />
-                                                <InputField label="Website URL" value={speaker.socials?.website} placeholder="https://..." />
+                                            {/* Title & Company */}
+                                            <div className="flex items-center gap-3 text-lg font-medium text-slate-300">
+                                                <span className="text-cyan-400 font-bold">{speaker.title}</span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                                                <span className="text-slate-400">{speaker.company}</span>
                                             </div>
                                         </div>
-                                    )}
 
-                                    {activeTab === 'expertise' && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <SectionHeader title="Speaking & Expertise">
-                                                Topics you speak on and session details.
-                                            </SectionHeader>
+                                        {/* Close Button */}
+                                        <button
+                                            onClick={onClose}
+                                            className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors z-50 backdrop-blur-md border border-white/5"
+                                        >
+                                            <X size={24} />
+                                        </button>
+                                    </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                                                {speaker.topics.map((topic, i) => (
-                                                    <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-                                                        <span className="text-sm font-medium text-slate-700">{topic}</span>
-                                                        <button className="text-slate-400 hover:text-red-500 transition-colors"><X size={14} /></button>
+                                    {/* TAB NAVIGATION */}
+                                    <nav className="flex items-center px-6 border-b border-white/10 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/50 pt-2 backdrop-blur-md">
+                                        <TabButton active={activeTab === 'bio'} onClick={() => setActiveTab('bio')} label="Bio & Info" icon={User} />
+                                        <TabButton active={activeTab === 'business'} onClick={() => setActiveTab('business')} label="Business" icon={Monitor} />
+                                        <TabButton active={activeTab === 'expertise'} onClick={() => setActiveTab('expertise')} label="Expertise" icon={Mic2} />
+                                        <TabButton active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} label="Resources" icon={Share2} />
+                                        <TabButton active={activeTab === 'contact'} onClick={() => setActiveTab('contact')} label="Contact" icon={Mail} />
+                                    </nav>
+
+                                    {/* SCROLLABLE CONTENT AREA */}
+                                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-transparent">
+
+                                        {activeTab === 'bio' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">
+                                                <SectionHeader title="About the Speaker">
+                                                    Background, story, and drive.
+                                                </SectionHeader>
+
+                                                {/* Quote Section */}
+                                                {speaker.quote && (
+                                                    <div className="relative p-6 bg-white/5 rounded-2xl border border-white/10">
+                                                        <Quote className="absolute top-4 left-4 text-white/10 rotate-180" size={32} />
+                                                        <p className="text-lg italic text-slate-300 relative z-10 pl-4 border-l-2 border-cyan-400/50">
+                                                            "{speaker.quote}"
+                                                        </p>
                                                     </div>
-                                                ))}
-                                                <button className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                                                    <Check size={14} /> Add Topic
-                                                </button>
-                                            </div>
+                                                )}
+                                                <DisplayField label="Short Bio" value={speaker.bioShort} />
+                                                <DisplayField label="Full Bio" value={speaker.bioFull} />
 
-                                            <InputField label="Proposed Session Title" value={speaker.sessionTitle} placeholder="Title of your talk..." />
-                                            <TextAreaField label="Session Abstract / Description" value={speaker.sessionAbstract} placeholder="What will the audience learn?..." />
-                                        </div>
-                                    )}
-
-                                    {activeTab === 'resources' && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <SectionHeader title="Digital Assets">
-                                                Resources for attendees and event promotion.
-                                            </SectionHeader>
-
-                                            <InputField label="Landing Page URL" value={speaker.landingPage} placeholder="Specific offer page for attendees..." />
-                                            <InputField label="Slide Deck Link" value={speaker.deckLink} placeholder="Google Slides / PDF link..." />
-                                            <InputField label="Resource Download Link" value={speaker.resourceLink} placeholder="Link to ebook, guide, etc..." />
-
-                                            <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 flex gap-4 items-start">
-                                                <div className="p-2 bg-white rounded-lg text-orange-500 shadow-sm mt-1">
-                                                    <Calendar size={18} />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <DisplayField label="Email" value={speaker.email} />
+                                                    <DisplayField label="Phone" value={speaker.phone} />
                                                 </div>
-                                                <div className="space-y-2 flex-1">
-                                                    <label className="text-xs font-bold text-orange-800 uppercase tracking-wider">Booking / Scheduling Link</label>
-                                                    <input
-                                                        type="text"
-                                                        defaultValue={speaker.socials?.scheduling}
-                                                        className="w-full p-3 bg-white border border-orange-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-orange-200"
-                                                        placeholder="Cal.com / Calendly link..."
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'business' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">
+                                                <SectionHeader title="Business Info">
+                                                    Company and Value Proposition.
+                                                </SectionHeader>
+
+                                                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-3">
+                                                    <div className="flex gap-3">
+                                                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-300 shadow-sm h-fit">
+                                                            <AlertCircle size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-blue-200 text-sm mb-1">Value Proposition</h4>
+                                                            <p className="text-sm text-blue-100/80 leading-relaxed font-medium">
+                                                                {speaker.valueProposition || "No value proposition provided."}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <DisplayField label="Company Name" value={speaker.company} />
+                                                    <DisplayField label="Job Title" value={speaker.title} />
+                                                    <DisplayField label="Industry" value={speaker.industry} />
+                                                    <DisplayField label="Website URL" value={speaker.socials?.website} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'expertise' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">
+                                                <SectionHeader title="Speaking & Expertise">
+                                                    Topics and Session Details.
+                                                </SectionHeader>
+
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    {speaker.topics.map((topic, i) => (
+                                                        <span key={i} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium text-slate-300">
+                                                            {topic}
+                                                        </span>
+                                                    ))}
+                                                </div>
+
+                                                <DisplayField label="Session Title" value={speaker.sessionTitle} />
+                                                <DisplayField label="Session Abstract" value={speaker.sessionAbstract} />
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'resources' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">
+                                                <SectionHeader title="Digital Assets">
+                                                    Resources for attendees and event promotion.
+                                                </SectionHeader>
+
+                                                <DisplayField label="Landing Page URL" value={speaker.landingPage} />
+                                                <DisplayField label="Slide Deck Link" value={speaker.deckLink} />
+                                                <DisplayField label="Resource Download Link" value={speaker.resourceLink} />
+
+                                                <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex gap-4 items-start">
+                                                    <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400 shadow-sm mt-1">
+                                                        <Calendar size={18} />
+                                                    </div>
+                                                    <div className="space-y-1 flex-1">
+                                                        <label className="text-xs font-bold text-orange-300 uppercase tracking-wider">Booking Link</label>
+                                                        <a href={speaker.socials?.scheduling} target="_blank" rel="noopener noreferrer" className="block text-sm text-orange-200 hover:text-white underline decoration-orange-500/50 hover:decoration-orange-400 transition-all">
+                                                            {speaker.socials?.scheduling || "No link provided"}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'contact' && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-slate-200 bg-slate-900/50 border border-white/10 rounded-xl p-6 shadow-sm">
+                                                <SectionHeader title="Social & Connect">
+                                                    Where can people find you online?
+                                                </SectionHeader>
+
+                                                <div className="grid grid-cols-1 gap-4">
+                                                    <SocialDisplayRow
+                                                        icon={<Linkedin size={20} />}
+                                                        value={speaker.socials?.linkedin}
+                                                        placeholder="LinkedIn URL"
+                                                        iconColorClass="text-blue-400"
+                                                        bgClass="bg-blue-500/10"
+                                                    />
+                                                    <SocialDisplayRow
+                                                        icon={<svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current"><g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>}
+                                                        value={speaker.socials?.twitter}
+                                                        placeholder="X (Twitter) URL"
+                                                        iconColorClass="text-white"
+                                                        bgClass="bg-slate-800"
+                                                    />
+                                                    <SocialDisplayRow
+                                                        icon={<Camera size={20} />}
+                                                        value={speaker.socials?.instagram}
+                                                        placeholder="Instagram URL"
+                                                        iconColorClass="text-pink-400"
+                                                        bgClass="bg-pink-500/10"
+                                                    />
+                                                    <SocialDisplayRow
+                                                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" /></svg>}
+                                                        value={speaker.socials?.tiktok}
+                                                        placeholder="TikTok URL"
+                                                        iconColorClass="text-cyan-400"
+                                                        bgClass="bg-slate-900"
+                                                    />
+                                                    <SocialDisplayRow
+                                                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg>}
+                                                        value={speaker.socials?.youtube}
+                                                        placeholder="YouTube URL"
+                                                        iconColorClass="text-red-400"
+                                                        bgClass="bg-red-500/10"
+                                                    />
+                                                    <SocialDisplayRow
+                                                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>}
+                                                        value={speaker.socials?.facebook}
+                                                        placeholder="Facebook URL"
+                                                        iconColorClass="text-blue-400"
+                                                        bgClass="bg-blue-600/10"
                                                     />
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {activeTab === 'contact' && (
-                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <SectionHeader title="Social & Connect">
-                                                Where can people find you online?
-                                            </SectionHeader>
-
-                                            <div className="grid grid-cols-1 gap-4">
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
-                                                        <Linkedin size={20} />
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.linkedin} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="LinkedIn URL" />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-slate-100 rounded-xl text-slate-800">
-                                                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current"><g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.twitter} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="X (Twitter) URL" />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-pink-50 rounded-xl text-pink-600">
-                                                        <Camera size={20} />
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.instagram} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="Instagram URL" />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-slate-800 text-white rounded-xl">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" /></svg>
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.tiktok} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="TikTok URL" />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-red-50 rounded-xl text-red-600">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg>
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.youtube} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="YouTube URL" />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
-                                                    </div>
-                                                    <input type="text" defaultValue={speaker.socials?.facebook} className="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm" placeholder="Facebook URL" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
+                                    </div>
                                 </div>
-
-                                {/* FOOTER ACTIONS */}
-                                <div className="p-6 border-t border-slate-100 bg-white sticky bottom-0 z-10 flex gap-4">
-                                    <button onClick={onClose} className="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors">
-                                        Cancel
-                                    </button>
-                                    <button onClick={onClose} className="flex-[2] py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all flex items-center justify-center gap-2">
-                                        <Save size={18} />
-                                        Save Changes
-                                    </button>
-                                </div>
-
                             </div>
-
                         </motion.div>
                     </div>
                 </>
-            )
-            }
-        </AnimatePresence >
+            )}
+        </AnimatePresence>
     );
 }

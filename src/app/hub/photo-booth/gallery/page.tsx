@@ -1,35 +1,8 @@
-import GalleryClient from './gallery-client';
-import { ImageData } from '@/components/ui/img-sphere';
-
-// Fallback images if folder is empty (so it still looks good initially)
-const FALLBACK_IMAGES: ImageData[] = [
-    {
-        id: "stock-1",
-        src: "https://images.unsplash.com/photo-1758178309498-036c3d7d73b3?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987",
-        alt: "Mountain Landscape",
-        title: "Sample Gallery",
-        description: "Add images to public/gallery to see them here!"
-    },
-    {
-        id: "stock-2",
-        src: "https://images.unsplash.com/photo-1757647016230-d6b42abc6cc9?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2072",
-        alt: "Portrait Photography",
-        title: "Sample Gallery",
-        description: "Add images to public/gallery to see them here!"
-    },
-    {
-        id: "stock-3",
-        src: "https://images.unsplash.com/photo-1757906447358-f2b2cb23d5d8?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987",
-        alt: "Urban Architecture",
-        title: "Sample Gallery",
-        description: "Add images to public/gallery to see them here!"
-    }
-];
-
-export const dynamic = 'force-dynamic';
-
+import { TestimonialSlider, Review } from '@/components/ui/testimonial-slider'; // Assuming you exported Review type
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+export const dynamic = 'force-dynamic';
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION!,
@@ -39,9 +12,29 @@ const s3Client = new S3Client({
     },
 });
 
-async function getGalleryImages(): Promise<ImageData[]> {
+// Fallback data if no Notion/S3 data found
+const FALLBACK_REVIEWS: Review[] = [
+    {
+        id: "stock-1",
+        name: "Tech Alley Team",
+        affiliation: "@techalley",
+        quote: "Welcome to the Innovation Gallery! Upload your photos to see them featured here.",
+        imageSrc: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=2000",
+        thumbnailSrc: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=200",
+    },
+    {
+        id: "stock-2",
+        name: "Community Member",
+        affiliation: "Attendee",
+        quote: "Networking at its finest. Love the energy here!",
+        imageSrc: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=2000",
+        thumbnailSrc: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=200",
+    }
+];
+
+async function getGalleryReviews(): Promise<Review[]> {
     const NOTION_KEY = process.env.NOTION_API_KEY;
-    const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID;
+    const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID; // 2eb6b72f-a765-81ca-91d7-fca18180af7c
     const S3_BUCKET = process.env.AWS_BUCKET_NAME;
 
     if (!NOTION_KEY || !NOTION_DB_ID) {
@@ -65,7 +58,7 @@ async function getGalleryImages(): Promise<ImageData[]> {
                     },
                 ],
             }),
-            next: { revalidate: 0 }
+            next: { revalidate: 10 } // Cache briefly
         });
 
         if (!res.ok) {
@@ -75,14 +68,28 @@ async function getGalleryImages(): Promise<ImageData[]> {
 
         const data = await res.json();
 
-        // Process images in parallel to get signed URLs
-        const imagesWithUrls = await Promise.all(data.results.map(async (page: any) => {
+        // Process in parallel
+        const reviewsWithUrls = await Promise.all(data.results.map(async (page: any) => {
             const props = page.properties;
-            const caption = props.Caption?.title?.[0]?.plain_text || "Tech Alley Memory";
+
+            // Clean the user string to remove ID (e.g., "Name (uuid)" -> "Name")
+            const rawUser = props.User?.rich_text?.[0]?.plain_text || "Anonymous";
+            const cleanName = rawUser.replace(/\s*\([a-f0-9-]+\)$/i, "").trim();
+
+            let instagram = props.Instagram?.rich_text?.[0]?.plain_text || "";
+            // Clean URL if present
+            if (instagram) {
+                instagram = instagram.replace(/(?:https?:\/\/)?(?:www\.)?instagram\.com\//i, "");
+                instagram = instagram.replace(/\/$/, ""); // Remove trailing slash
+                if (!instagram.startsWith('@')) {
+                    instagram = `@${instagram}`;
+                }
+            }
+            const caption = props.Caption?.title?.[0]?.plain_text || "Checking out the event!";
             const s3Key = props.S3Key?.rich_text?.[0]?.plain_text;
             let finalImageUrl = props.ImageURL?.url;
 
-            // If we have an S3 Key and credentials, generate a fresh presigned URL
+            // Generate Presigned URL if S3 Key exists
             if (s3Key && S3_BUCKET && process.env.AWS_ACCESS_KEY_ID) {
                 try {
                     const command = new GetObjectCommand({
@@ -92,7 +99,6 @@ async function getGalleryImages(): Promise<ImageData[]> {
                     finalImageUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
                 } catch (err) {
                     console.error("Failed to sign URL for key:", s3Key, err);
-                    // Fallback to the stored URL
                 }
             }
 
@@ -100,28 +106,43 @@ async function getGalleryImages(): Promise<ImageData[]> {
 
             return {
                 id: page.id,
-                src: finalImageUrl,
-                alt: caption,
-                title: "Event Photo",
-                description: caption
+                name: instagram || cleanName, // Use IG as primary name if available
+                affiliation: instagram ? cleanName : "Tech Alley Attendee", // Use Name as affiliation
+                quote: caption,
+                imageSrc: finalImageUrl,
+                thumbnailSrc: finalImageUrl,
             };
         }));
 
-        return imagesWithUrls.filter(Boolean) as ImageData[];
+        return reviewsWithUrls.filter(Boolean) as Review[];
 
     } catch (e) {
-        console.error("Failed to fetch gallery images:", e);
+        console.error("Failed to fetch gallery reviews:", e);
         return [];
     }
 }
 
 export default async function GalleryPage() {
-    let images = await getGalleryImages();
-    let displayImages = images;
+    let reviews = await getGalleryReviews();
 
-    if (images.length === 0) {
-        displayImages = FALLBACK_IMAGES;
+    if (reviews.length === 0) {
+        // Double check if we should show fallback or just empty state
+        // For now, show fallback to visually demonstrate the component
+        reviews = FALLBACK_REVIEWS;
     }
 
-    return <GalleryClient images={displayImages} />;
+    return (
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+            {/* Simple Back Button wrapped for layout */}
+            <div className="w-full max-w-[1400px] mb-4 flex justify-start">
+                {/* Navigation handled by layout or global header usually, 
+                     but we can add a simple breadcrumb if needed. 
+                     For now, we rely on the slider's immersive feel. */}
+            </div>
+
+            <div className="w-full max-w-[1400px] border border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm">
+                <TestimonialSlider reviews={reviews} />
+            </div>
+        </div>
+    );
 }
