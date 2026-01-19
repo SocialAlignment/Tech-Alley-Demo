@@ -1,100 +1,213 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Mic2, ArrowRight, Search } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import { ArrowUpRight } from 'lucide-react';
 import SpeakerCard from '@/components/SpeakerCard';
+import SpeakerDrawer, { ExtendedSpeaker } from '@/components/SpeakerDrawer';
 
-const SPEAKERS = [
+// Transformed Data from original Guest Speaker Page
+// Reordered for Layout: Lorraine, Hoz, Shaq, Jonathan, Todd
+const SPEAKERS: ExtendedSpeaker[] = [
     {
-        name: "Shaq Cruz",
-        title: "Founder",
-        company: "Life Savers Restoration",
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-        topics: ["Resilience", "Disaster Recovery", "Local Business"]
+        id: '3',
+        name: 'Lorainne Yard',
+        title: 'Chapter Lead',
+        company: 'Tech Alley Henderson',
+        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+        promoImage: '/tech-alley-logo.png',
+        topics: ['State of the Alley', 'Innovation Hub', 'Community Growth'],
+        bioShort: 'Leading the charge for innovation and community connection.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Community Organization',
+        valueProposition: 'I help tech enthusiasts connect with like-minded individuals using community events.',
+        landingPage: 'https://techalley.org',
+        deckLink: 'https://techalley.org/deck',
+        resourceLink: 'https://techalley.org/resource',
+        sessionTitle: 'State of the Alley 2024',
+        sessionAbstract: 'An update on the progress of Tech Alley and what lies ahead for the innovation community in Henderson.',
+        socials: {
+            linkedin: 'https://linkedin.com',
+            instagram: 'https://instagram.com',
+            facebook: 'https://facebook.com'
+        },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Todd DeRemer",
-        title: "General Manager",
-        company: "The Pass Casino",
-        image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200",
-        topics: ["Community Integration", "Hospitality Tech", "Economic Growth"]
+        id: '5',
+        name: 'Hoz Roushdi',
+        title: 'Host',
+        company: 'Hello Henderson Podcast on Dead Sprint Radio',
+        image: '/hoz-profile.jpg',
+        topics: ['Podcasting', 'Content Strategy', 'Community'],
+        bioShort: 'Voice of the community and podcasting expert.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Media & Podcasting',
+        valueProposition: 'I help creators launch successful podcasts using proven content strategies.',
+        landingPage: 'https://deadsprintradio.com',
+        deckLink: 'https://deadsprintradio.com/deck',
+        resourceLink: 'https://deadsprintradio.com/resource',
+        sessionTitle: 'Podcasting 101: From Idea to Launch',
+        sessionAbstract: 'A comprehensive guide to starting your own podcast, from equipment selection to content planning and distribution.',
+        socials: {
+            linkedin: 'https://linkedin.com',
+            youtube: 'https://youtube.com/@deadsprint',
+            instagram: 'https://instagram.com'
+        },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Lorraine",
-        title: "Founder & Organizer",
-        company: "Tech Alley Henderson",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
-        topics: ["State of the Alley", "Innovation Hub", "Community Growth"]
+        id: '1',
+        name: 'Shaq Cruz',
+        title: 'Entrepreneurship Coordinator',
+        company: 'GOED',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        promoImage: '/tech-alley-logo.png',
+        topics: ['Resilience', 'Disaster Recovery', 'Local Business'],
+        bioShort: 'Empowering communities through resilience and restoration.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Restoration Services',
+        valueProposition: 'I help homeowners recover from disasters using efficient restoration techniques.',
+        landingPage: 'https://lifesavers.com/speaker',
+        deckLink: 'https://lifesavers.com/deck',
+        resourceLink: 'https://lifesavers.com/resource',
+        sessionTitle: 'Building Resilient Communities',
+        sessionAbstract: 'Disasters can strike at any time. In this session, we will discuss how to prepare your community for the unexpected and how to recover quickly and effectively.',
+        socials: {
+            linkedin: 'https://linkedin.com',
+            instagram: 'https://instagram.com',
+            facebook: 'https://facebook.com',
+            youtube: 'https://youtube.com',
+            scheduling: 'https://calendly.com',
+            twitter: 'https://x.com/lifesavers',
+            tiktok: 'https://tiktok.com/@lifesavers'
+        },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Jonathan Sterritt",
-        title: "Host",
-        company: "Social Alignment",
-        image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=200",
-        topics: ["System Automation", "Lead Gen", "Digital Strategy"]
+        id: '4',
+        name: 'Jonathan Sterritt',
+        title: 'CEO',
+        company: 'Social Alignment, LLC',
+        image: '/jonathan-profile.jpg',
+        promoImage: '/tech-alley-logo.png', // Main updated promo image
+        topics: ['System Automation', 'Lead Gen', 'Digital Strategy'],
+        bioShort: 'Optimizing digital strategies for maximum impact.',
+
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Digital Marketing',
+        valueProposition: 'I help businesses generate more leads using automated digital strategies.',
+        landingPage: 'https://socialalignment.biz/speaker',
+        deckLink: 'https://socialalignment.biz/deck',
+        resourceLink: 'https://socialalignment.biz/resource',
+        sessionTitle: 'Automating Your Lead Generation',
+        sessionAbstract: 'Learn how to set up automated systems that consistently bring in high-quality leads for your business.',
+        socials: {
+            linkedin: 'https://linkedin.com/in/jonathansterritt',
+            website: 'https://socialalignment.biz',
+            scheduling: 'https://calendly.com/jsterritt'
+        },
+        status: 'complete',
+        completion: 100,
     },
     {
-        name: "Hoz Roshndi",
-        title: "Host",
-        company: "Dead Sprint",
-        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200",
-        topics: ["Podcasting", "Content Strategy", "Community"],
-        isSpotlight: true
+        id: '2',
+        name: 'Todd DeRemer',
+        title: 'Vice President',
+        company: 'Silver Sevens Hotel and Casino',
+        image: '/todd-profile.png',
+        promoImage: '/tech-alley-logo.png',
+        topics: ['Community Integration', 'Hospitality Tech', 'Economic Growth'],
+        bioShort: 'Driving economic growth and community integration in Henderson.',
+        quote: "It's not about who you become to build the brand, but rather what the brand becomes because YOU make it.",
+        industry: 'Hospitality & Gaming',
+        valueProposition: 'I help local businesses integrate with the community using strategic partnerships.',
+        landingPage: 'https://thepasscasino.com/community',
+        deckLink: 'https://thepasscasino.com/deck',
+        resourceLink: 'https://thepasscasino.com/resource',
+        sessionTitle: 'The Future of Hospitality Tech',
+        sessionAbstract: 'Explore how technology is revolutionizing the hospitality industry, enhancing guest experiences, and streamlining operations.',
+        socials: {
+            linkedin: 'https://linkedin.com',
+            website: 'https://thepasscasino.com',
+            twitter: 'https://x.com/thepasscasino'
+        },
+        status: 'complete',
+        completion: 100,
     }
 ];
 
 export default function SpeakersPage() {
+    const [selectedSpeaker, setSelectedSpeaker] = useState<ExtendedSpeaker | null>(null);
+    const router = useRouter();
+
+    const handleSpeakerClick = (speaker: ExtendedSpeaker) => {
+        if (speaker.id === '5') { // Hoz / Spotlight
+            router.push('/hub/spotlight');
+        } else {
+            setSelectedSpeaker(speaker);
+        }
+    };
+
     return (
-        <div className="flex flex-col gap-8 pb-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="min-h-screen bg-slate-50/50 pb-24">
+            <Header title="Guest Speakers" description="Minds shaping tonight's conversation." />
 
-                {/* --- CENTER COLUMN (Main Content) --- */}
-                <div className="lg:col-span-12 space-y-8">
+            <div className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
 
-                    {/* Header & Search */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-900">Speakers</h1>
-                            <p className="text-slate-500">Minds shaping tonight's conversation.</p>
-                        </div>
-                        <div className="relative w-full md:w-80 group">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-600 transition-colors">
-                                <Search size={18} />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Find a speaker..."
-                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300 transition-all shadow-sm text-slate-700 placeholder:text-slate-400"
+                {/* Top Row: Hosts/Organizers (Centered) */}
+                <div className="flex flex-col md:flex-row justify-center gap-6">
+                    {SPEAKERS.slice(0, 2).map((speaker) => (
+                        <div key={speaker.id} className="w-full md:w-[400px]">
+                            <SpeakerCard
+                                speaker={speaker}
+                                onClick={() => handleSpeakerClick(speaker)}
+                                isSpotlight={speaker.id === '5'} // Keep Hoz Spotlight if needed
+                                variant="light"
                             />
                         </div>
-                    </div>
-
-                    {/* Speakers Grid */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                        {SPEAKERS.map((speaker, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: i * 0.1 }}
-                            >
-                                <SpeakerCard {...speaker} />
-                            </motion.div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
 
+                {/* Bottom Row: Guest Speakers (Grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {SPEAKERS.slice(2).map((speaker) => (
+                        <SpeakerCard
+                            key={speaker.id}
+                            speaker={speaker}
+                            onClick={() => handleSpeakerClick(speaker)}
+                            variant="light"
+                        />
+                    ))}
+                </div>
 
+                {/* Info Section */}
+                <div className="mt-16 bg-gradient-to-br from-purple-900 to-slate-900 rounded-3xl p-10 text-white relative overflow-hidden">
+                    <div className="relative z-10 max-w-2xl">
+                        <h2 className="text-3xl font-bold mb-4">Interested in Speaking?</h2>
+                        <p className="text-purple-100 mb-8 leading-relaxed">
+                            Tech Alley Henderson is always looking for new voices to share their expertise, stories, and innovations. Connect with our community and amplify your impact.
+                        </p>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-white text-purple-900 font-bold rounded-xl hover:bg-purple-50 transition-colors">
+                            Apply for Next Event <ArrowUpRight size={18} />
+                        </button>
+                    </div>
+                    {/* Abstract Circle Backgrounds */}
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3" />
+                </div>
             </div>
 
-            {/* Powered By Watermark */}
-            <div className="w-full flex justify-center py-8 opacity-80 hover:opacity-100 transition-opacity">
-                <img
-                    src="/powered-by.png"
-                    alt="Powered By Tech Alley & Innovation Hub"
-                    className="h-16 w-auto object-contain"
-                />
-            </div>
+            {/* Interactive Drawer */}
+            <SpeakerDrawer
+                isOpen={!!selectedSpeaker}
+                onClose={() => setSelectedSpeaker(null)}
+                speaker={selectedSpeaker}
+            />
         </div>
     );
 }
