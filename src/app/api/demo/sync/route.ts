@@ -63,6 +63,20 @@ export async function POST(req: Request) {
             resultData = data;
         }
 
+        // 3. Ensure Initial Raffle Entry (1 Entry for Registration)
+        const { error: raffleError } = await supabase
+            .from('demo_raffle_entries')
+            .upsert({
+                email: email,
+                name: name || email.split('@')[0],
+                entries_count: 1 // Base entry
+            }, { onConflict: 'email', ignoreDuplicates: true }); // Only insert if not exists to avoid resetting count
+
+        if (raffleError) {
+            console.error("Raffle Init Error:", raffleError);
+            // Don't fail the whole request, just log it
+        }
+
         return NextResponse.json({ success: true, id: resultData.id, entry: resultData });
     } catch (e: any) {
         console.error("Demo Sync Error:", e);

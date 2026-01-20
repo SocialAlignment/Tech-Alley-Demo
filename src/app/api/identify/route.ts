@@ -12,18 +12,45 @@ export async function POST(request: Request) {
 
         console.log("Identify API (Demo): Fetching for ID:", leadId);
 
-        // 1. Fetch from demo_raffle_entries
-        const { data: entry, error } = await supabase
+        // 1. Try Fetching by ID from demo_raffle_entries directly
+        let { data: entry, error } = await supabase
             .from('demo_raffle_entries')
             .select('*')
             .eq('id', leadId)
             .single();
 
-        if (error || !entry) {
-            console.error("Supabase Identity Error (Demo):", error);
-            // Fallback: Check if it's a legacy lead ID? 
-            // In this specific demo workspace, we strictly use demo_raffle_entries.
-            return NextResponse.json({ error: 'Entry not found in demo_raffle_entries' }, { status: 404 });
+        // 2. Fallback: If not found, it might be a 'demo_leads' ID (from registration sync)
+        if (!entry) {
+            const { data: lead } = await supabase
+                .from('demo_leads')
+                .select('email, name')
+                .eq('id', leadId)
+                .single();
+
+            if (lead && lead.email) {
+                // Found a lead, now find the entry by email
+                const { data: linkedEntry } = await supabase
+                    .from('demo_raffle_entries')
+                    .select('*')
+                    .eq('email', lead.email)
+                    .single();
+
+                if (linkedEntry) {
+                    entry = linkedEntry;
+                } else {
+                    // Lead exists but no raffle entry yet? Use lead data as base
+                    entry = {
+                        name: lead.name,
+                        email: lead.email,
+                        profile_data: {}
+                    };
+                }
+            }
+        }
+
+        if (!entry) {
+            console.error("Supabase Identity Error (Demo): Entry not found for ID", leadId);
+            return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
         }
 
         // 2. Map 'profile_data' JSONB + Top Level Columns to IdentityContext shape

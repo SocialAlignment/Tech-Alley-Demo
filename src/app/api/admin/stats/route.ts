@@ -109,22 +109,28 @@ export async function GET() {
             }
         };
 
-        // E. Raffle Entries (Supabase: raffle_entries)
+        // E. Raffle Entries (Supabase: demo_raffle_entries) - Qualified Leads
         const fetchRaffleEntries = async () => {
-            const { count, error } = await supabase
-                .from('raffle_entries')
-                .select('*', { count: 'exact', head: true });
+            const { data, error } = await supabase
+                .from('demo_raffle_entries')
+                .select('*')
+                .order('score', { ascending: false }); // Show highest scores first
 
             if (error) {
                 console.error("Raffle Count Error", error);
-                return 0;
+                return { registrantCount: 0, raffleEntries: 0, entries: [], error };
             }
-            return count || 0;
+
+            // Sum up all entries_count values
+            const registrantCount = (data || []).length
+            const raffleEntries = ((data as any[]) || []).reduce((sum, entry) => sum + (entry.entries_count || 0), 0)
+
+            return { registrantCount, raffleEntries, entries: data || [] };
         };
 
 
         // 3. Execute Parallel
-        const [userData, photos, grants, mris, raffleCount] = await Promise.all([
+        const [userData, photos, grants, mris, raffleData] = await Promise.all([
             fetchUsersAndFeed(),
             fetchPhotos(),
             fetchGrantApps(),
@@ -137,14 +143,16 @@ export async function GET() {
                 totalUsers: userData.count,
                 photoUploads: photos,
                 questions: 0,
-                raffleEntries: raffleCount, // Now sourced from Supabase
+                raffleEntries: raffleData.raffleEntries,
+                registrantCount: raffleData.registrantCount,
                 forms: {
                     grant: grants,
                     mri: mris,
-                    genai: raffleCount // GenAI Video = Raffle
+                    genai: raffleData.registrantCount
                 }
             },
-            recentLeads: userData.recent
+            recentLeads: userData.recent,
+            qualifiedLeads: raffleData.entries, // Send full list to frontend
         });
 
     } catch (e: any) {

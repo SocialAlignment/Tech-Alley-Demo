@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { CommService } from '@/lib/comm-service';
 
 // Use Service Role to bypass RLS for server-side operations
 const supabase = createClient(
@@ -59,6 +60,32 @@ export async function POST(req: Request) {
         if (error) {
             console.error('Supabase update error:', error);
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        }
+
+        // Trigger Welcome SMS if phone and name are available
+        // We check the payload or the profileData to ensure we have the info
+        const phone = updatePayload.phone || profileData.phone;
+        const name = updatePayload.name || profileData.name;
+
+        console.log(`[Demo Update] Checking SMS Triggers. Phone: ${phone}, Name: ${name}`);
+
+        if (phone && name) {
+            // Fire and forget - don't block the response
+            CommService.sendWelcomeSMS(phone, name).catch(err =>
+                console.error("Failed to send welcome SMS:", err)
+            );
+        }
+
+        // Trigger Mailchimp Subscription (Fire & Forget)
+        if (profileData.email && profileData.name) {
+            const tags = ['Demo Registrant'];
+            if (profileData.industry) tags.push(profileData.industry);
+
+            import('@/lib/email-service').then(({ EmailService }) => {
+                EmailService.addSubscriber(profileData.email, profileData.name, '', tags).catch(err =>
+                    console.error("Failed to add to Mailchimp:", err)
+                );
+            });
         }
 
         return NextResponse.json({ success: true });

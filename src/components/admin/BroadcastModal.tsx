@@ -109,6 +109,16 @@ export default function BroadcastModal({ isOpen, onClose, type, leads }: Broadca
         setStep('dispatch');
         let current = 0;
 
+        // --- REAL SMS TRIGGER ---
+        if (type === 'sms') {
+            fetch('/api/admin/sms/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'blast' })
+            }).catch(console.error);
+        }
+
+
         // Filter leads based on selection
         const targetLeads = leads.filter(l => selectedLeads.includes(l.id));
         const finalLeads = targetLeads.length > 0 ? targetLeads : [

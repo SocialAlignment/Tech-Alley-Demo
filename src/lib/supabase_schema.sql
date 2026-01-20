@@ -227,35 +227,82 @@ FOR INSERT
 TO public 
 WITH CHECK (true);
 
--- 10. DEMO RAFFLE ENTRIES TABLE (For Demo Flow)
+-- 10. DEMO RAFFLE ENTRIES TABLE (Sora 2 SOP Enhanced)
 CREATE TABLE if not exists public.demo_raffle_entries (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
+    -- Identity
     name TEXT NOT NULL,
     email TEXT NOT NULL,
-    social_handle TEXT,
-    demo_google_id TEXT, -- Optional ID from the "Demo" Google Auth
+    phone TEXT, -- Captured in new form
+    
+    -- Linkage
+    demo_google_id TEXT,
+    
+    -- The "Max Signal" Data
+    responses JSONB DEFAULT '{}'::jsonb, -- Raw answers for Q1-Q19
+    
+    -- Derived Intelligence (Computed by API)
+    tags TEXT[], -- e.g. ['AI_CURIOUS', 'brand_mismatch']
+    score INTEGER DEFAULT 0, -- 0-100 score
+    score_band TEXT, -- 'NURTURE', 'PRIORITY', etc
+    
+    -- Automation State
+    newsletter_variant TEXT, -- 'Curious Starter', etc
+    sms_status TEXT DEFAULT 'pending', -- 'queued', 'sent', 'failed'
+    email_status TEXT DEFAULT 'pending',
+    
+    -- Wheel & Game State
+    entries_count INTEGER DEFAULT 1, -- Base 1, +5 if qualified
     is_winner BOOLEAN DEFAULT FALSE,
-    is_first_time BOOLEAN DEFAULT FALSE -- New field for tracking first-time visitors
+    winner_draw_id UUID
 );
 
 -- RLS for Demo Raffle Entries
 ALTER TABLE public.demo_raffle_entries ENABLE ROW LEVEL SECURITY;
 
--- Allow Public Insert (Since we might use a public client for the demo flow)
+-- Allow Public Insert
 CREATE POLICY "Enable insert for demo_raffle_entries (public)" 
 ON public.demo_raffle_entries 
 FOR INSERT 
 TO public 
 WITH CHECK (true);
 
--- Allow Read for Admins/Service Role (Authenticated)
+-- Allow Public Update (for the qualify form adding data)
+CREATE POLICY "Enable update for demo_raffle_entries (public)"
+ON public.demo_raffle_entries
+FOR UPDATE
+TO public
+USING (true);
+
+-- Allow Read for Admins
 CREATE POLICY "Enable read for demo_raffle_entries (admins)" 
 ON public.demo_raffle_entries 
 FOR SELECT 
 TO authenticated 
 USING (true);
+
+
+-- 12. COMMUNICATIONS LOG (For Automation Tracking)
+CREATE TABLE if not exists public.comms_log (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    entry_id UUID REFERENCES public.demo_raffle_entries(id),
+    channel TEXT, -- 'sms', 'email'
+    template_id TEXT, -- 'Template A', 'Template B'
+    status TEXT, -- 'sent', 'failed'
+    metadata JSONB -- payload sent
+);
+
+ALTER TABLE public.comms_log ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read/write for comms_log (public)"
+ON public.comms_log
+FOR ALL
+TO public
+USING (true)
+WITH CHECK (true);
 
 -- 11. DEMO LEADS TABLE (For Initial Sync)
 CREATE TABLE if not exists public.demo_leads (

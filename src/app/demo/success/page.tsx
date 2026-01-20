@@ -8,7 +8,12 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { useIdentity } from '@/context/IdentityContext';
+
 export default function DemoSuccessPage() {
+    const { userName } = useIdentity();
+    const firstName = userName ? userName.split(' ')[0] : '';
+
     return (
         <main className="relative w-full min-h-screen overflow-hidden bg-slate-950 flex items-center justify-center">
 
@@ -53,8 +58,9 @@ export default function DemoSuccessPage() {
                 </div>
 
                 {/* Typography */}
-                <h1 className="text-[48px] md:text-[72px] leading-none font-black text-white mb-6 tracking-tight drop-shadow-sm">
-                    You{"'"}re in.
+                <h1 className="text-[36px] md:text-[64px] leading-tight font-black text-white mb-6 tracking-tight drop-shadow-sm">
+                    {firstName ? `Thanks ${firstName},` : 'Thanks,'} <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">You{"'"}re In!</span>
                 </h1>
 
                 <p className="text-[20px] md:text-[24px] leading-relaxed text-balance text-slate-200 font-medium mb-10">
