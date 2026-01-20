@@ -352,11 +352,11 @@ export default function ChecklistPage() {
 
                         <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
                             <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] mb-2">
-                                Tech Alley Portal:<br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Your Mission Control.</span>
+                                Tech Alley Henderson<br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Task Station</span>
                             </h1>
                             <p className="text-sm md:text-base text-cyan-100/70 font-mono tracking-widest uppercase">
-                                Your companion for the best event experience.
+                                Missions
                             </p>
                         </div>
 

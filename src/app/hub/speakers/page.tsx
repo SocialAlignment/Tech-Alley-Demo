@@ -199,13 +199,13 @@ export default function SpeakersPage() {
                     transition={{ duration: 0.8 }}
                     className="mb-6 text-center"
                 >
-                    <div className="relative inline-block mx-auto mb-10 group cursor-default">
+                    <div className="relative inline-block mx-auto mb-6 group cursor-default">
                         {/* Neon Sign Borders */}
                         <div className="absolute inset-0 rounded-[2rem] border-[6px] border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.6),inset_0_0_20px_rgba(37,99,235,0.3)] opacity-80" />
                         <div className="absolute inset-3 rounded-[1.5rem] border-[3px] border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6),inset_0_0_15px_rgba(168,85,247,0.3)] opacity-90" />
 
                         {/* Text Container */}
-                        <div className="relative px-12 py-8">
+                        <div className="relative px-12 py-4">
                             <h1 className="text-5xl md:text-8xl font-black tracking-tighter uppercase text-center">
                                 <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-purple-200 to-fuchsia-300 drop-shadow-[0_0_25px_rgba(168,85,247,0.8)]">
                                     TONIGHT&apos;S LINEUP
@@ -274,7 +274,7 @@ export default function SpeakersPage() {
 
                                             {/* Logo Badge - Optimized */}
                                             <div className={`w-44 h-44 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500 ${speaker.id === '5' ? 'p-0' : 'p-4'}`}>
-                                                <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain ${speaker.id === '3' ? 'scale-[1.8] translate-y-8' : speaker.id === '5' ? 'scale-150 -translate-y-6' : 'scale-150 -translate-y-1'}`} />
+                                                <img src={speaker.promoImage} alt="Logo" className={`w-full h-full object-contain ${speaker.id === '3' ? 'scale-[2.0] translate-y-12' : speaker.id === '5' ? 'scale-150 -translate-y-10' : 'scale-150 -translate-y-1'}`} />
                                             </div>
                                         </div>
                                     </motion.div>

@@ -82,10 +82,12 @@ function OnboardingContent() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update profile');
+                console.error("Submission Error Details:", errorData);
+                const detailedError = errorData.error + (errorData.details ? `\nDetails: ${errorData.details}` : '') + (errorData.hint ? `\nHint: ${errorData.hint}` : '');
+                throw new Error(detailedError || 'Failed to update profile');
             }
 
-            router.push(`/hub?id=${leadId}&onboarding=complete`);
+            router.push(`/hub/start?id=${leadId}&onboarding=complete`);
         } catch (e: any) {
             console.error(e);
             alert(e.message || "Something went wrong. Please try again.");
@@ -100,6 +102,7 @@ function OnboardingContent() {
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
                 initialData={initialData || {}}
+                mode="onboarding"
             />
         </div>
     );

@@ -37,7 +37,7 @@ export default function QualificationPage() {
             // Success!!
             alert("Profile Updated Successfully!");
             // Force hard reload to ensure fresh dashboard state
-            window.location.href = `/hub?id=${leadId}`;
+            window.location.href = `/hub/start?id=${leadId}`;
         } catch (e: any) {
             console.error(e);
             alert(`Error: ${e.message}`);
@@ -59,9 +59,13 @@ export default function QualificationPage() {
                 console.warn("QualificationPage: Fetch timed out. allowing edit.");
                 setLoading(false);
             }
-        }, 5000);
+        }, 1500); // Short timeout for better UX
 
-        if (!leadId) return;
+        if (!leadId) {
+            console.log("QualificationPage: No Lead ID, allowing fresh entry.");
+            setLoading(false);
+            return;
+        }
 
         const fetchProfile = async () => {
             try {
@@ -125,6 +129,7 @@ export default function QualificationPage() {
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}
                     initialData={initialData}
+                    mode="full"
                 />
 
             </motion.div>

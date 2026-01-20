@@ -92,11 +92,29 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
             }
         }, 8000); // 8 second max load time
 
-        const initIdentity = async () => {
-            try {
-                // 1. Try to get ID from URL
-                const urlId = searchParams.get('id');
+        const checkIdentity = async () => {
+            // 1. Try to get ID from URL
+            const urlId = searchParams.get('id');
 
+            // If we have a URL ID and it's different from current leadId, we MUST update
+            if (urlId && urlId !== leadId) {
+                console.log("IdentityContext: Found new ID in URL:", urlId);
+                setLeadId(urlId);
+                try { localStorage.setItem('techalley_lead_id', urlId); } catch (e) { }
+                setIsLoading(true);
+                await fetchProfile(urlId);
+
+                if (isMounted) {
+                    setIsLoading(false);
+                    clearTimeout(failsafeTimer);
+                }
+                return;
+            }
+
+            // If we are already loaded, we don't need to do anything unless it's a fresh load
+            if (!isLoading) return;
+
+            try {
                 // 2. Try to get ID from localStorage (persistence)
                 let localId = null;
                 try {
@@ -130,12 +148,10 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        if (isLoading) {
-            initIdentity();
-        }
+        checkIdentity();
 
         return () => { isMounted = false; clearTimeout(failsafeTimer); };
-    }, [searchParams]);
+    }, [searchParams, isLoading, leadId]);
 
     return (
         <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, missionData, isLoading, updateMissionProgress, refreshIdentity }}>

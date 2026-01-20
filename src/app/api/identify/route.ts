@@ -10,81 +10,88 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
         }
 
-        console.log("Identify API: Fetching for Lead ID:", leadId);
+        console.log("Identify API (Demo): Fetching for ID:", leadId);
 
-        // 1. Supabase Fetch
-        const { data: lead, error } = await supabase
-            .from('leads')
+        // 1. Fetch from demo_raffle_entries
+        const { data: entry, error } = await supabase
+            .from('demo_raffle_entries')
             .select('*')
             .eq('id', leadId)
             .single();
 
-        if (error || !lead) {
-            console.error("Supabase Identity Error:", error);
-            return NextResponse.json({ error: 'Lead not found in Supabase' }, { status: 404 });
+        if (error || !entry) {
+            console.error("Supabase Identity Error (Demo):", error);
+            // Fallback: Check if it's a legacy lead ID? 
+            // In this specific demo workspace, we strictly use demo_raffle_entries.
+            return NextResponse.json({ error: 'Entry not found in demo_raffle_entries' }, { status: 404 });
         }
 
-        // 2. Fetch Raffle Entry (if exists)
-        const { data: raffleEntry } = await supabase
-            .from('raffle_entries')
-            .select('*')
-            .eq('lead_id', leadId)
-            .maybeSingle();
+        // 2. Map 'profile_data' JSONB + Top Level Columns to IdentityContext shape
+        const profile = entry.profile_data || {};
+
+        // Helper to get field from top-level OR jsonb
+        const getField = (key: string, topLevelKey?: string) => {
+            // @ts-ignore
+            return entry[topLevelKey || key] || profile[key] || '';
+        };
+
+        const isProfileComplete = !!(entry.name && entry.email); // Simplified completion check for demo
 
         return NextResponse.json({
             success: true,
             data: {
-                name: lead.name,
-                company: lead.company,
-                email: lead.email,
-                avatar: lead.avatar || '',
-                isProfileComplete: !!(lead.company && lead.title && lead.phone && lead.instagram),
-                missionProgress: lead.mission_progress || 0,
-                missionData: lead.mission_data || [],
+                name: entry.name || profile.name,
+                company: profile.company || '',
+                email: entry.email || profile.email,
+                avatar: profile.avatar || '', // Demo might not have avatars
+                isProfileComplete: isProfileComplete,
+                missionProgress: 0, // Not used in demo
+                missionData: [],
                 contactDetails: {
                     // Basic Contact
-                    name: lead.name || '',
-                    email: lead.email || '',
-                    phone: lead.phone || '',
-                    instagram: lead.instagram || '',
-                    linkedin: lead.linkedin || '',
-                    facebook: lead.facebook || '',
-                    youtube: lead.youtube || '',
-                    schedulingLink: lead.scheduling_link || '',
+                    name: entry.name || profile.name || '',
+                    email: entry.email || profile.email || '',
+                    phone: profile.phone || '',
+                    instagram: entry.social_handle || profile.instagram || '',
+                    linkedin: profile.linkedin || '',
+                    facebook: profile.facebook || '',
+                    youtube: profile.youtube || '',
+                    schedulingLink: profile.schedulingLink || '',
 
                     // Profile / MRI
-                    hometown: lead.hometown || '',
-                    timezone: lead.timezone || '',
-                    bestTime: lead.best_time || '',
-                    askMeAbout: lead.ask_me_about || '',
-                    helpMeBy: lead.help_me_by || '',
-                    helpYouBy: lead.help_you_by || '',
+                    hometown: profile.hometown || '',
+                    timezone: profile.timezone || '',
+                    bestTime: profile.bestTime || '',
+                    askMeAbout: profile.askMeAbout || '',
+                    helpMeBy: profile.helpMeBy || '',
+                    helpYouBy: profile.helpYouBy || '',
 
                     // Preferences
-                    commPrefs: lead.communication_preference ? [lead.communication_preference] : [],
-                    learningPreference: lead.learning_preference || [],
+                    commPrefs: profile.commPrefs || [],
+                    learningPreference: profile.learningPreference || [],
 
                     // Onboarding / Business Data
-                    industry: lead.industry || '',
-                    company: lead.company || '',
-                    role: lead.role || '',
-                    website: lead.website || '',
-                    businessType: lead.business_type || '',
-                    employeeCount: lead.employee_count || '',
-                    decisionMaker: lead.decision_maker || '',
-                    isFirstTime: lead.is_first_time,
-                    goalForTonight: lead.goal_for_tonight || '',
-                    vision: lead.vision || '',
+                    industry: profile.industry || '',
+                    company: profile.company || '',
+                    role: profile.role || '',
+                    website: profile.website || '',
+                    businessType: profile.businessType || '',
+                    employeeCount: profile.employeeCount || '',
+                    decisionMaker: profile.decisionMaker || '',
+                    isFirstTime: entry.is_first_time,
+                    goalForTonight: profile.goalForTonight || '',
+                    vision: profile.vision || '',
 
-                    // AI / GenAI Data (Placeholder for now)
-                    aiMriResponse: lead.ai_mri_response || {}
+                    // AI / GenAI Data
+                    aiMriResponse: profile.aiMriResponse || {}
                 },
-                raffleData: raffleEntry ? {
-                    genAiExp: raffleEntry.gen_ai_exp || '',
-                    aiExpectations: raffleEntry.ai_expectations || '',
-                    aiHesitation: raffleEntry.ai_hesitation || '',
-                    interestedServices: raffleEntry.interested_services || []
-                } : null
+                raffleData: {
+                    // Start with explicit columns if they exist, fallback to profile_data
+                    genAiExp: entry.gen_ai_exp || profile.genAiExp || '',
+                    aiExpectations: entry.ai_expectations || profile.aiExpectations || '',
+                    aiHesitation: entry.ai_hesitation || profile.aiHesitation || '',
+                    interestedServices: entry.interested_services || profile.interestedServices || []
+                }
             }
         });
 

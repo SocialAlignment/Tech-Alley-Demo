@@ -60,11 +60,27 @@ export async function POST(request: Request) {
         if (data.businessType) updateData.business_type = data.businessType;
         if (data.employeeCount) updateData.employee_count = data.employeeCount;
         if (data.decisionMaker) updateData.decision_maker = data.decisionMaker;
-        if (data.isFirstTime !== undefined) updateData.is_first_time = data.isFirstTime;
+
+        // Fix: Convert "yes"/"no" to boolean for is_first_time
+        if (data.isFirstTime !== undefined) {
+            updateData.is_first_time = data.isFirstTime === 'yes' || data.isFirstTime === true;
+        }
+
         if (data.goalForTonight) updateData.goal_for_tonight = data.goalForTonight;
         if (data.vision) updateData.vision = data.vision;
-        if (data.estimatedMonthlyRevenue) updateData.estimated_monthly_revenue = data.estimatedMonthlyRevenue;
-        if (data.currentLeadsPerMonth) updateData.current_leads_per_month = data.currentLeadsPerMonth;
+
+        // Fix: Handle empty strings for numeric fields
+        if (data.estimatedMonthlyRevenue) {
+            updateData.estimated_monthly_revenue = data.estimatedMonthlyRevenue;
+        } else if (data.estimatedMonthlyRevenue === '') {
+            updateData.estimated_monthly_revenue = null;
+        }
+
+        if (data.currentLeadsPerMonth) {
+            updateData.current_leads_per_month = data.currentLeadsPerMonth;
+        } else if (data.currentLeadsPerMonth === '') {
+            updateData.current_leads_per_month = null;
+        }
 
         // 3. AI MRI Data Aggregation
         // The wizard sends flat fields, we need to bundle them for the JSONB column
@@ -190,7 +206,9 @@ export async function POST(request: Request) {
             {
                 success: false,
                 error: 'Failed to update contact details',
-                details: error.message || 'Unknown error'
+                details: error.message || 'Unknown error',
+                code: error.code,
+                hint: error.hint
             },
             { status: 500 }
         );

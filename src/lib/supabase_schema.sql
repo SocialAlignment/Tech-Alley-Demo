@@ -226,3 +226,33 @@ ON public.donations
 FOR INSERT 
 TO public 
 WITH CHECK (true);
+
+-- 10. DEMO RAFFLE ENTRIES TABLE (For Demo Flow)
+CREATE TABLE if not exists public.demo_raffle_entries (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    social_handle TEXT,
+    demo_google_id TEXT, -- Optional ID from the "Demo" Google Auth
+    is_winner BOOLEAN DEFAULT FALSE,
+    is_first_time BOOLEAN DEFAULT FALSE -- New field for tracking first-time visitors
+);
+
+-- RLS for Demo Raffle Entries
+ALTER TABLE public.demo_raffle_entries ENABLE ROW LEVEL SECURITY;
+
+-- Allow Public Insert (Since we might use a public client for the demo flow)
+CREATE POLICY "Enable insert for demo_raffle_entries (public)" 
+ON public.demo_raffle_entries 
+FOR INSERT 
+TO public 
+WITH CHECK (true);
+
+-- Allow Read for Admins/Service Role (Authenticated)
+CREATE POLICY "Enable read for demo_raffle_entries (admins)" 
+ON public.demo_raffle_entries 
+FOR SELECT 
+TO authenticated 
+USING (true);

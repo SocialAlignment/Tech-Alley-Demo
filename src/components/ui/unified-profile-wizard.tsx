@@ -136,6 +136,8 @@ interface ProfileData {
     estimatedMonthlyRevenue: string; // New field
     currentLeadsPerMonth: string; // New field
 
+    isFirstTime: string; // "yes" | "no"
+
     // Placeholders / Legacy
     aiMriResponse: any;
 }
@@ -169,6 +171,8 @@ const initialProfileData: ProfileData = {
 
     estimatedMonthlyRevenue: '',
     currentLeadsPerMonth: '',
+
+    isFirstTime: '',
 
     aiMriResponse: {}
 };
@@ -214,6 +218,44 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
                     placeholder="(555) 123-4567"
                     className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
                 />
+            </div>
+
+            <div className="col-span-1 md:col-span-2 space-y-3 pt-2">
+                <Label className="text-slate-300">Is this your first time at Tech Alley Henderson?</Label>
+                <div className="flex gap-4">
+                    <label className={cn(
+                        "flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all",
+                        formData.isFirstTime === 'yes'
+                            ? "bg-blue-600/20 border-blue-500 text-blue-200"
+                            : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800"
+                    )}>
+                        <input
+                            type="radio"
+                            name="isFirstTime"
+                            value="yes"
+                            checked={formData.isFirstTime === 'yes'}
+                            onChange={updateFormData}
+                            className="hidden"
+                        />
+                        <span className="font-medium">Yes, First Time!</span>
+                    </label>
+                    <label className={cn(
+                        "flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all",
+                        formData.isFirstTime === 'no'
+                            ? "bg-blue-600/20 border-blue-500 text-blue-200"
+                            : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800"
+                    )}>
+                        <input
+                            type="radio"
+                            name="isFirstTime"
+                            value="no"
+                            checked={formData.isFirstTime === 'no'}
+                            onChange={updateFormData}
+                            className="hidden"
+                        />
+                        <span className="font-medium">No, I'm a Regular</span>
+                    </label>
+                </div>
             </div>
 
         </div>
@@ -430,10 +472,20 @@ const SocialsStep = ({ formData, updateFormData, toggleCommPref }: any) => {
 
 // --- Main Component ---
 
-export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitting }: { initialData?: any, onSubmit: (data: any) => void, isSubmitting?: boolean }) {
+export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitting, connectedName, connectedId, mode = 'full' }: {
+    initialData?: any,
+    onSubmit: (data: any) => void,
+    isSubmitting?: boolean,
+    connectedName?: string,
+    connectedId?: string,
+    mode?: 'onboarding' | 'full'
+}) {
     const [currentStep, setCurrentStep] = useState(0);
-    const { leadId, userName } = useIdentity();
+    const { leadId: ctxLeadId, userName: ctxUserName } = useIdentity();
     const [formData, setFormData] = useState<ProfileData>(initialProfileData);
+
+    const leadId = connectedId || ctxLeadId;
+    const userName = connectedName || ctxUserName;
 
     // Hydration
     useEffect(() => {
@@ -441,10 +493,29 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
             setFormData(prev => ({
                 ...prev,
                 ...initialData,
-                // Ensure arrays are arrays
                 learningPreference: Array.isArray(initialData.learningPreference) ? initialData.learningPreference : [],
                 commPrefs: Array.isArray(initialData.commPrefs) ? initialData.commPrefs : [],
             }));
+
+            // Auto-advance logic: If we have Name & Email, allow skipping to next relevant step
+            // Specifically for the "Main Welcome Flow", if they are connected, we might want to start on a later step.
+            // However, users might want to review. Let's make it smart:
+            // If name/email are present (and we are in "qualified" mode i.e. leadId exists), 
+            // we can default to step 1 (Professional) or even further if that is done?
+            // The user requested: "dont show me things ive already filled out... start with the next questions".
+
+            // Simple heuristic to find first "incomplete" section or at least skip Basic if done.
+            if (initialData.name && initialData.email) {
+                // Check if Professional is done?
+                // For now, securely skipping Basic is the key request.
+                // let's default to step 1 (Professional)
+                setCurrentStep(1);
+
+                // If Professional is also largely done (e.g. company/role exist), maybe skip to Socials?
+                if (initialData.company && initialData.role && initialData.industry) {
+                    setCurrentStep(2); // Socials
+                }
+            }
         }
     }, [initialData]);
 
@@ -463,11 +534,16 @@ export default function UnifiedProfileWizard({ initialData, onSubmit, isSubmitti
         });
     };
 
-    const steps = [
+    const allSteps = [
         { id: 'basic', label: 'Basic Info', component: BasicDetailsStep },
         { id: 'professional', label: 'Professional Details', component: ProfessionalInfoStep },
-        { id: 'goals', label: 'Goals & Connect', component: GoalsStep },
+        { id: 'socials', label: 'Social Presence', component: SocialsStep },
+        { id: 'goals', label: 'Goals & Missions', component: GoalsStep },
     ];
+
+    const steps = mode === 'onboarding'
+        ? allSteps.filter(s => s.id !== 'socials')
+        : allSteps;
 
     const CurrentComponent = steps[currentStep].component;
 

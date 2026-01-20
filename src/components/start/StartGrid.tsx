@@ -139,7 +139,7 @@ export default function StartGrid() {
                         title="Hub Raffle"
                         description="Enter to win prizes."
                         icon={Gift}
-                        href="#section-raffle"
+                        href="/demo"
                         color="lime"
                         delay={0.4}
                     />
