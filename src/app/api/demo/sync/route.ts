@@ -19,23 +19,51 @@ export async function POST(req: Request) {
 
         const { name, email } = session.user;
 
-        // Upsert based on email to ensure we capture the user
-        const { data, error } = await supabase
+        // 1. Check if Lead already exists
+        const { data: existingLead, error: fetchError } = await supabase
             .from('demo_leads')
-            .upsert({
-                email,
-                name: name || email.split('@')[0],
-                // We keep existing data if present, just ensuring the record exists
-            }, { onConflict: 'email' })
             .select('id, name, email')
+            .eq('email', email)
             .single();
 
-        if (error) {
-            console.error("Demo Sync Supabase Error:", error);
-            throw error;
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "No rows found"
+            console.error("Error checking existing lead:", fetchError);
+            throw fetchError;
         }
 
-        return NextResponse.json({ success: true, id: data.id, entry: data });
+        let resultData;
+
+        if (existingLead) {
+            // 2a. Update existing Lead (update last_active)
+            const { data, error } = await supabase
+                .from('demo_leads')
+                .update({
+                    name: name || email.split('@')[0],
+                    last_active: new Date().toISOString()
+                })
+                .eq('id', existingLead.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            resultData = data;
+        } else {
+            // 2b. Insert new Lead
+            const { data, error } = await supabase
+                .from('demo_leads')
+                .insert({
+                    email,
+                    name: name || email.split('@')[0],
+                    status: 'new'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            resultData = data;
+        }
+
+        return NextResponse.json({ success: true, id: resultData.id, entry: resultData });
     } catch (e: any) {
         console.error("Demo Sync Error:", e);
         return NextResponse.json({ error: e.message || 'Server Error' }, { status: 500 });

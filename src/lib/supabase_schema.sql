@@ -256,3 +256,36 @@ ON public.demo_raffle_entries
 FOR SELECT 
 TO authenticated 
 USING (true);
+
+-- 11. DEMO LEADS TABLE (For Initial Sync)
+CREATE TABLE if not exists public.demo_leads (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    status TEXT DEFAULT 'new', -- new, onboarding, qualified
+    last_active TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS for Demo Leads
+ALTER TABLE public.demo_leads ENABLE ROW LEVEL SECURITY;
+
+-- Allow Public Insert (Server-side service role will likely handle this, but for dev ease allow public insert)
+CREATE POLICY "Enable insert for demo_leads (public)" 
+ON public.demo_leads 
+FOR INSERT 
+TO public 
+WITH CHECK (true);
+
+CREATE POLICY "Enable read for demo_leads (public)"
+ON public.demo_leads
+FOR SELECT
+TO public
+USING (true);
+
+CREATE POLICY "Enable update for demo_leads (public)"
+ON public.demo_leads
+FOR UPDATE
+TO public
+USING (true);

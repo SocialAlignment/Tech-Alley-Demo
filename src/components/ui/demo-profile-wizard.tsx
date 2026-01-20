@@ -347,7 +347,7 @@ const EventRegistrationStep = ({ formData, updateFormData }: any) => {
             <div className="space-y-4 flex flex-col items-center">
                 <div className="relative w-64 h-64 -mb-8 z-10">
                     <Image
-                        src="/tech-alley-henderson-glow.png"
+                        src="/tech-alley-logo-transparent.png"
                         alt="Tech Alley Henderson"
                         fill
                         className="object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
@@ -540,6 +540,7 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
+        console.log(`Input Changed: ${name} = ${value}`); // DEBUG LOG
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -565,6 +566,7 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
             coreAlignmentStatement: finalSentence
         };
 
+        console.log("Submitting Final Data:", finalData); // DEBUG LOG
         onSubmit(finalData);
     };
 

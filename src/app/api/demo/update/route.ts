@@ -31,6 +31,16 @@ export async function POST(req: Request) {
             updatePayload.is_first_time = profileData.isFirstTime === 'yes';
         }
 
+        // Map other common fields to top-level columns if they exist
+        if (profileData.company) updatePayload.company = profileData.company;
+        if (profileData.phone) updatePayload.phone = profileData.phone;
+        if (profileData.role) updatePayload.title = profileData.role; // Map role -> title
+        if (profileData.industry) updatePayload.industry = profileData.industry;
+        if (profileData.website) updatePayload.website = profileData.website;
+        if (profileData.businessType) updatePayload.business_type = profileData.businessType;
+        if (profileData.goalForNextMonth) updatePayload.goal_for_tonight = profileData.goalForNextMonth;
+        if (profileData.vision) updatePayload.vision = profileData.vision;
+
         // Update demo_leads
         // We update the main record with known columns and dump everything else into profile_data
 

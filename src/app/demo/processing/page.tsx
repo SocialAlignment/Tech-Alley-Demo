@@ -27,22 +27,15 @@ export default function DemoProcessingPage() {
                         throw new Error("No ID returned from sync API");
                     }
                 } else {
-                    const status = res.status;
+                    const statusVal = res.status;
                     const text = await res.text();
-                    console.error(`Sync failed with status ${status}:`, text);
-                    try {
-                        const data = JSON.parse(text);
-                        console.error("Parsed error data:", data);
-                    } catch (e) {
-                        // ignore JSON parse error
-                    }
-                    setStatus(`Sync failed (${status}). Redirecting...`);
-                    setTimeout(() => router.push('/demo/login'), 2500);
+                    setStatus(`Sync failed (${statusVal}). Redirecting...`);
+                    setTimeout(() => router.push('/demo'), 2500);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Demo Processing Error:', error);
-                setStatus('Something went wrong.');
-                router.push('/demo/login');
+                setStatus('Something went wrong. Redirecting...');
+                router.push('/demo');
             }
         };
 
@@ -60,9 +53,9 @@ export default function DemoProcessingPage() {
                     <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
                     <Loader2 className="w-12 h-12 text-purple-400 animate-spin relative z-10" />
                 </motion.div>
-                <div className="text-center space-y-2">
-                    <h2 className="text-xl font-bold text-white">One Moment</h2>
-                    <p className="text-sm font-medium text-slate-400 font-mono animate-pulse">{status}</p>
+                <div className="text-center space-y-2 max-w-md px-4">
+                    <h2 className="text-xl font-bold text-white">Processing...</h2>
+                    <p className="text-sm font-medium text-slate-400 font-mono break-words">{status}</p>
                 </div>
             </div>
         </div>

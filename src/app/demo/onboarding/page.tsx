@@ -17,7 +17,7 @@ export default function DemoOnboardingPage() {
 
     useEffect(() => {
         if (!id) {
-            router.push('/demo/login');
+            router.push('/demo');
             return;
         }
 
