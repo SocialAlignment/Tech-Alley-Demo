@@ -5,12 +5,17 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useIdentity } from "@/context/IdentityContext";
+import { useSearchParams } from "next/navigation";
 import { Liquid } from "@/components/ui/liquid-gradient";
 import { Confetti } from "@/components/ui/confetti";
 import { Hyperspace } from "@/components/ui/hyperspace";
 
 export function SuccessContent() {
-    const { userName } = useIdentity();
+    const { userName, leadId: ctxLeadId } = useIdentity();
+    const searchParams = useSearchParams();
+    const urlId = searchParams.get('id');
+    const effectivelyLeadId = urlId || ctxLeadId;
+
     const firstName = userName ? userName.split(' ')[0] : 'OPERATOR';
 
     // Animation Phases:
@@ -178,7 +183,7 @@ export function SuccessContent() {
                                     transition={{ duration: 0.4 }}
                                     className="w-full h-full relative"
                                 >
-                                    <Link href="/demo/qualify" className="block w-full h-full relative group">
+                                    <Link href={`/demo/qualify${effectivelyLeadId ? `?id=${effectivelyLeadId}` : ''}`} className="block w-full h-full relative group">
                                         {/* Liquid Background */}
                                         <div className="absolute inset-0 rounded-md overflow-hidden transform group-hover:scale-105 transition-transform duration-500">
                                             <Liquid isHovered={true} colors={{

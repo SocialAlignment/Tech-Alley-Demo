@@ -5,35 +5,42 @@ import DemoProfileWizard from '@/components/ui/demo-profile-wizard';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useIdentity } from '@/context/IdentityContext'; // Corrected path
+import Link from 'next/link';
 
 export default function DemoOnboardingPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const id = searchParams.get('id');
+    const { userName, leadId: ctxLeadId } = useIdentity();
+    const urlId = searchParams.get('id');
+    const effectivelyLeadId = urlId || ctxLeadId;
+
+    // Try to fallback to ID-based name if context is empty (optional enhancement: could fetch, but 'OPERATOR' fallback is okay if we at least pass the ID forward)
+    const firstName = userName ? userName.split(' ')[0] : 'OPERATOR';
     const [isLoading, setIsLoading] = useState(true);
     const [initialData, setInitialData] = useState<any>(null);
     const [connectedName, setConnectedName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (!id) {
+        if (!effectivelyLeadId) {
             router.push('/demo');
             return;
         }
 
-        // Fetch basic info if we can, or just use what we know/empty. 
+        // Fetch basic info if we can, or just use what we know/empty.
         // Ideally we fetch the name/email we just synced.
         // We can create a simple route /api/demo/entry?id=... or just assume empty.
         // For better UX, let's try to pass name via query or fetch it.
-        // Fetching is cleaner. I'll just simulate a quick load or rely on defaults for now 
-        // to avoid creating another route unless needed. 
+        // Fetching is cleaner. I'll just simulate a quick load or rely on defaults for now
+        // to avoid creating another route unless needed.
         // Actually, UnifiedProfileWizard expects email/name to be locked if populated.
         // So I SHOULD fetch.
 
-        // Let's do a quick fetch to our new generic data endpoint if we had one, 
+        // Let's do a quick fetch to our new generic data endpoint if we had one,
         // OR we can misuse the register endpoint or create a GET on /api/demo/register.
 
-        // I'll create a simple GET on /api/demo/register/[id] or just use client data if passed? 
+        // I'll create a simple GET on /api/demo/register/[id] or just use client data if passed?
         // No, fetch from server is secure.
 
         // I'll just use the /api/demo/sync logic idea but GET? No sync is POST.
@@ -45,7 +52,7 @@ export default function DemoOnboardingPage() {
 
         const fetchEntry = async () => {
             try {
-                const res = await fetch(`/api/demo/get-entry?id=${id}`);
+                const res = await fetch(`/api/demo/get-entry?id=${effectivelyLeadId}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.entry) {
@@ -67,7 +74,7 @@ export default function DemoOnboardingPage() {
 
         fetchEntry();
 
-    }, [id, router]);
+    }, [effectivelyLeadId, router]);
 
     const handleSubmit = async (data: any) => {
         setIsSubmitting(true);
@@ -77,14 +84,14 @@ export default function DemoOnboardingPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id, // Update existing entry
+                    id: effectivelyLeadId, // Update existing entry
                     ...data,
                     socialHandle: data.instagram || data.linkedin // Map to socialHandle for top-level column
                 })
             });
 
             if (res.ok) {
-                router.push('/demo/success');
+                router.push(`/demo/success?id=${effectivelyLeadId}`);
             } else {
                 const errorData = await res.json();
                 console.error("Submission failed", errorData);
@@ -112,7 +119,9 @@ export default function DemoOnboardingPage() {
                 <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                     Event Registration
                 </h1>
-                <p className="text-lg text-slate-400">Enter to win 1:1 video session with Social Alignment, LLC</p>
+                <Link href={`/demo/qualify${effectivelyLeadId ? `?id=${effectivelyLeadId}` : ''}`} className="block w-full h-full relative group">
+                    <p className="text-lg text-slate-400">Enter to win 1:1 video session with Social Alignment, LLC</p>
+                </Link>
             </div>
 
             <DemoProfileWizard
@@ -120,7 +129,7 @@ export default function DemoOnboardingPage() {
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
                 connectedName={connectedName}
-                connectedId={id!}
+                connectedId={effectivelyLeadId!}
             />
         </main>
     );

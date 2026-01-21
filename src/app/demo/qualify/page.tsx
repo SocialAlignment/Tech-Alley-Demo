@@ -114,7 +114,7 @@ export default function QualifyPage() {
                         className="text-center space-y-2"
                     >
                         <h1 className="text-3xl md:text-5xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-green-100 tracking-tighter leading-none drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-                            Power Up Complete!
+                            Power Up <br className="hidden md:inline" /> Complete!
                         </h1>
                         <p className="text-slate-400 text-sm md:text-base max-w-md mx-auto">
                             You've unlocked customized resources and increased your winning odds.
@@ -254,10 +254,10 @@ export default function QualifyPage() {
 
             <div className="text-center mb-10 space-y-4">
                 <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-green-400 to-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                    Win a 1:1 GenAI Video Session
+                    Win a 1:1 <br className="md:hidden" /> GenAI Video Session
                 </h1>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                    Complete this creative brief to earn <span className="text-white font-bold whitespace-nowrap">+5 Raffle Entries</span> and unlock <br className="hidden md:inline" /> personalized GenAI resources aligned to your exact business stage.
+                    Complete this creative brief to earn <span className="text-white font-bold whitespace-nowrap block md:inline">+5 Raffle Entries</span> and unlock <br className="hidden md:inline" /> personalized GenAI resources aligned to your exact business stage.
                 </p>
             </div>
 

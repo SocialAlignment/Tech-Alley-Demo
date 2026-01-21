@@ -365,7 +365,7 @@ const EventRegistrationStep = ({ formData, updateFormData }: any) => {
                     </h3>
 
                     <div className="flex flex-col gap-1 text-slate-200 font-medium">
-                        <span className="text-xl text-blue-300">February 25th 2026 @ 5:00 PM</span>
+                        <span className="text-xl text-blue-300">February 25th 2026 @ <span className="whitespace-nowrap">5:00 PM</span></span>
                         <span className="text-slate-400">Pass Casino, Henderson, NV</span>
                     </div>
                 </div>
@@ -595,8 +595,8 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
                     </div>
 
                     {/* Center: Step Title & User Context */}
-                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center justify-center pointer-events-none">
-                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center px-4 leading-tight">
+                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center justify-center pointer-events-none z-0">
+                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center px-4 leading-tight max-w-[200px] md:max-w-none mx-auto">
                             {steps[currentStep].label}
                         </h2>
                         {leadId && (
@@ -608,7 +608,7 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
                     </div>
 
                     {/* Right: Step Counter */}
-                    <div className="flex-none text-right z-10">
+                    <div className="flex-none text-right z-10 relative">
                         <div className="text-lg font-bold font-mono text-cyan-300">
                             Step {currentStep + 1} <span className="text-white/40 text-sm font-sans mx-1">of</span> {steps.length}
                         </div>
