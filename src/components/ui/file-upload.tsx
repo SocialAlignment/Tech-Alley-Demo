@@ -84,26 +84,40 @@ export default function FileUpload05() {
         setError(null);
         setProgress(10); // Start progress
 
+        console.log("Starting upload process...", { filename: file.name, type: file.type });
+
         try {
             // 1. Get Presigned URL
+            console.log("Fetching presigned URL...");
             const res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`);
             const data = await res.json();
 
-            if (!res.ok) throw new Error(data.error || "Failed to get upload URL");
+            if (!res.ok) {
+                console.error("Presigned URL error:", data);
+                throw new Error(data.error || "Failed to get upload URL");
+            }
 
+            console.log("Presigned URL received:", data.url);
             setProgress(30); // Url received
 
             // 2. Upload to S3
+            // Note: We use the presigned URL directly.
+            console.log("Uploading to S3...");
             const uploadRes = await fetch(data.url, {
                 method: "PUT",
                 body: file,
                 headers: {
                     "Content-Type": file.type,
+                    // "Access-Control-Allow-Origin": "*", // Not needed on client PUT usually, handled by Bucket CORS
                 },
             });
 
-            if (!uploadRes.ok) throw new Error("Failed to upload to storage");
+            if (!uploadRes.ok) {
+                console.error("S3 Upload Failed:", uploadRes.status, uploadRes.statusText);
+                throw new Error(`Failed to upload to storage (S3: ${uploadRes.status})`);
+            }
 
+            console.log("S3 Upload Successful");
             setProgress(80);
 
             // 3. Confirm & Save to Notion
@@ -132,7 +146,7 @@ export default function FileUpload05() {
             setCaption("");
 
         } catch (err: any) {
-            console.error(err);
+            console.error("Upload error caught:", err);
             setError(err.message || "Something went wrong during upload");
         } finally {
             setUploading(false);
