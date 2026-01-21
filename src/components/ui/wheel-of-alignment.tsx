@@ -40,7 +40,7 @@ export default function WheelOfAlignment() {
                 const palette = ['#3B82F6', '#06B6D4', '#6366F1', '#2563EB', '#0891B2', '#4F46E5', '#60A5FA', '#22D3EE'];
                 const formatted = data.entries.map((d: any, i: number) => ({
                     id: d.id,
-                    name: d.name.split(' ')[0], // First name
+                    name: d.name, // Full Name
                     entries_count: d.entries_count || 1,
                     color: palette[i % palette.length]
                 }));

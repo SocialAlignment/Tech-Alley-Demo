@@ -111,6 +111,7 @@ export async function GET() {
 
         // E. Raffle Entries (Supabase: demo_raffle_entries)
         const fetchRaffleEntries = async () => {
+            // Fetch entries
             const { data, error } = await supabase
                 .from('demo_raffle_entries')
                 .select('*')
@@ -121,13 +122,48 @@ export async function GET() {
                 return { registrantCount: 0, raffleEntries: 0, entries: [], error };
             }
 
+            // Fetch corresponding profile data from demo_leads to enrich the list
+            // We use email as the common key
+            const emails = (data || []).map(e => e.email).filter(Boolean);
+            let profileMap: Record<string, any> = {};
+
+            if (emails.length > 0) {
+                const { data: leadsData, error: leadsError } = await supabase
+                    .from('demo_leads')
+                    .select('email, company, title, phone, profile_data, vision, goal_for_tonight')
+                    .in('email', emails);
+
+                if (!leadsError && leadsData) {
+                    profileMap = leadsData.reduce((acc, lead) => {
+                        acc[lead.email] = lead;
+                        return acc;
+                    }, {} as Record<string, any>);
+                }
+            }
+
+            // Merge Data
+            const enrichedData = (data || []).map(entry => {
+                const profile = profileMap[entry.email] || {};
+                const pData = profile.profile_data || {};
+
+                return {
+                    ...entry,
+                    company: profile.company || pData.company || 'N/A',
+                    role: profile.title || pData.role || 'N/A', // Mapped title -> role
+                    phone: profile.phone || pData.phone || 'N/A',
+                    intention: profile.goal_for_tonight || profile.vision || pData.goalForNextMonth || pData.vision || 'N/A', // Best effort for intention
+                    // Preserve original profile_data if needed by frontend
+                    profile_data: { ...pData, ...profile }
+                };
+            });
+
             // Calculate counts
             const registrantCount = (data || []).length;
 
             // Sum entries_count
             const raffleEntries = (data || []).reduce((sum, entry) => sum + (entry.entries_count || 1), 0);
 
-            return { registrantCount, raffleEntries, entries: data || [] };
+            return { registrantCount, raffleEntries, entries: enrichedData };
         };
 
 

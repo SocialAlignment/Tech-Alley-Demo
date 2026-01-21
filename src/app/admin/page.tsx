@@ -10,6 +10,7 @@ import { EventApprovalWidget } from '@/components/admin/EventApprovalWidget';
 import { getAllFeedback, getAllQuestions, markFeedbackAsHandled, markQuestionAsAnswered } from '@/lib/api';
 import { HelpCircle, MessagesSquare, Filter } from 'lucide-react';
 import RegistrantsListModal from '@/components/admin/RegistrantsListModal';
+import RaffleEntriesModal from '@/components/admin/RaffleEntriesModal';
 
 // Data Interfaces
 export interface DashboardStats {
@@ -64,6 +65,7 @@ export default function AdminDashboardPage() {
     const [selectedSpeaker, setSelectedSpeaker] = useState<string>('all');
     const [loading, setLoading] = useState(true);
     const [showRegistrantsModal, setShowRegistrantsModal] = useState(false);
+    const [showRaffleEntriesModal, setShowRaffleEntriesModal] = useState(false);
 
     useEffect(() => {
         // Auth Bypass (Debugging)
@@ -208,7 +210,11 @@ export default function AdminDashboardPage() {
                     </BentoCard>
 
                     {/* 3. Raffle Entries Count */}
-                    <BentoCard className="md:col-span-1 border-blue-500/30 bg-blue-500/10" delay={0.15}>
+                    <BentoCard
+                        className="md:col-span-1 border-blue-500/30 bg-blue-500/10 cursor-pointer hover:bg-blue-500/20 transition-colors"
+                        delay={0.15}
+                        onClick={() => setShowRaffleEntriesModal(true)}
+                    >
                         <div className="flex items-center justify-between mb-4">
                             <span className="p-2 bg-blue-500/20 rounded-lg text-blue-400"><Ticket className="w-6 h-6" /></span>
                             <span className="text-xs text-blue-300 flex items-center gap-1">Total</span>
@@ -271,58 +277,39 @@ export default function AdminDashboardPage() {
                     </motion.div>
 
                     {/* 5. Live Check-in Feed (1x2) */}
-                    <div className="md:col-span-1 md:row-span-2 bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-full flex flex-col">
+                    {/* 5. Event Approvals (Promoted to Row 2) */}
+                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.25}>
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-bold flex items-center gap-2 text-indigo-100 text-sm">
+                                <Calendar className="w-4 h-4 text-indigo-400" /> Event Approvals
+                            </h3>
+                            <span className="text-[10px] bg-indigo-950 text-indigo-200 px-2 py-0.5 rounded border border-indigo-500/20">Queue</span>
+                        </div>
+                        <div className="h-[200px] contents-center">
+                            <EventApprovalWidget />
+                        </div>
+                    </BentoCard>
+
+                    {/* --- ROW 3: OPS & LEGACY --- */}
+
+                    {/* 6. Photo Uploads */}
+                    <BentoCard
+                        className="md:col-span-1 bg-slate-900/50 border-pink-500/20 cursor-pointer hover:bg-pink-500/10 transition-colors"
+                        delay={0.3}
+                        onClick={() => router.push('/admin/gallery')}
+                    >
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-bold flex items-center gap-2">
-                                <RefreshCw className="w-4 h-4 text-blue-400" /> Live Feed
-                            </h2>
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="p-2 bg-pink-500/20 rounded-lg text-pink-400"><CheckSquare className="w-6 h-6" /></span>
+                            <span className="text-xs text-slate-400">Manage</span>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3">
-                            {leads.length === 0 ? (
-                                <div className="text-center text-slate-500 italic text-xs mt-10">Waiting...</div>
-                            ) : (
-                                leads.map((lead) => (
-                                    <div key={lead.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold flex-none">
-                                            {lead.name.charAt(0)}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-xs text-white truncate">{lead.name}</div>
-                                            <div className="text-[10px] text-slate-400 truncate">{lead.company}</div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                        <div>
+                            <div className="text-3xl font-bold text-white mb-1">{stats?.photoUploads || 0}</div>
+                            <div className="text-sm text-slate-400">Photo Uploads</div>
                         </div>
-                    </div>
+                    </BentoCard>
 
-                    {/* 6. Other Stats (Stacked 1x2 Space) */}
-                    <div className="md:col-span-1 md:row-span-2 flex flex-col gap-4">
-                        {/* Check-ins */}
-                        <BentoCard className="flex-1" delay={0.3}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="p-1.5 bg-blue-500/20 rounded text-blue-400"><Users className="w-4 h-4" /></span>
-                                <span className="text-[10px] text-green-400 uppercase tracking-widest">Live</span>
-                            </div>
-                            <div className="text-3xl font-bold text-white">{stats?.totalUsers || 0}</div>
-                            <div className="text-[10px] text-slate-400 uppercase">Check-ins</div>
-                        </BentoCard>
-
-                        {/* Photo Uploads */}
-                        <BentoCard className="flex-1" delay={0.35}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="p-1.5 bg-pink-500/20 rounded text-pink-400"><CheckSquare className="w-4 h-4" /></span>
-                            </div>
-                            <div className="text-3xl font-bold text-white">{stats?.photoUploads || 0}</div>
-                            <div className="text-[10px] text-slate-400 uppercase">Uploads</div>
-                        </BentoCard>
-                    </div>
-
-                    {/* --- ROW 3: OPERATIONS & SMS --- */}
-
-                    {/* 7. SMS Status & Controls (Moved from Header) */}
-                    <BentoCard className="md:col-span-1 bg-slate-800/50 border-white/5" delay={0.4}>
+                    {/* 7. SMS System */}
+                    <BentoCard className="md:col-span-1 bg-slate-800/50 border-green-500/20" delay={0.35}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-slate-300 text-sm">SMS System</h3>
                             <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${smsStatus === 'active' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'}`}>
@@ -370,28 +357,25 @@ export default function AdminDashboardPage() {
                     </BentoCard>
 
                     {/* 8. Broadcast */}
-                    <BentoCard className="md:col-span-1 bg-gradient-to-b from-red-900/20 to-slate-900/50 border-red-500/30 hover:border-red-500/60" delay={0.45}>
+                    <BentoCard className="md:col-span-1 bg-gradient-to-b from-red-900/20 to-slate-900/50 border-red-500/30 hover:border-red-500/60" delay={0.4}>
                         <div className="flex items-center gap-2 mb-4">
-                            <Bell className="w-4 h-4 text-red-400" />
+                            <Bell className="w-5 h-5 text-red-400" />
                             <h3 className="font-bold text-red-100 text-sm">Broadcast</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-auto">
-                            <button onClick={() => setBroadcastState({ isOpen: true, type: 'email' })} className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded flex justify-center"><Mail className="w-4 h-4" /></button>
-                            <button onClick={() => setBroadcastState({ isOpen: true, type: 'sms' })} className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded flex justify-center"><MessageSquare className="w-4 h-4" /></button>
+                            <button onClick={() => setBroadcastState({ isOpen: true, type: 'email' })} className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded flex justify-center items-center transition-colors"><Mail className="w-5 h-5" /></button>
+                            <button onClick={() => setBroadcastState({ isOpen: true, type: 'sms' })} className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded flex justify-center items-center transition-colors"><MessageSquare className="w-5 h-5" /></button>
                         </div>
                     </BentoCard>
 
-                    {/* 9. Event Approvals */}
-                    <BentoCard className="md:col-span-2 md:row-span-2" delay={0.5}>
+                    {/* 9. Check-ins (Legacy) */}
+                    <BentoCard className="md:col-span-1 opacity-50 grayscale hover:grayscale-0 transition-all border-dashed border-slate-700" delay={0.45}>
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold flex items-center gap-2 text-indigo-100 text-sm">
-                                <Calendar className="w-4 h-4 text-indigo-400" /> Event Approvals
-                            </h3>
-                            <span className="text-[10px] bg-indigo-950 text-indigo-200 px-2 py-0.5 rounded border border-indigo-500/20">Queue</span>
+                            <span className="p-1.5 bg-slate-500/20 rounded text-slate-400"><Users className="w-4 h-4" /></span>
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Legacy</span>
                         </div>
-                        <div className="h-[200px] contents-center">
-                            <EventApprovalWidget />
-                        </div>
+                        <div className="text-3xl font-bold text-slate-300">{stats?.totalUsers || 0}</div>
+                        <div className="text-[10px] text-slate-500 uppercase">Total Users</div>
                     </BentoCard>
 
                     {/* --- ROW 4: DATA FEEDS --- */}
@@ -435,6 +419,32 @@ export default function AdminDashboardPage() {
                         </div>
                     </BentoCard>
 
+                    {/* 12. Live Feed (Legacy) - Moved to bottom */}
+                    <div className="md:col-span-4 opacity-30 hover:opacity-100 transition-opacity bg-slate-900/20 border border-white/5 rounded-2xl p-6 h-[200px] flex flex-col border-dashed">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-sm font-bold flex items-center gap-2 text-slate-500">
+                                <RefreshCw className="w-4 h-4" /> Live Feed (Legacy)
+                            </h2>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3">
+                            {leads.length === 0 ? (
+                                <div className="text-center text-slate-500 italic text-xs mt-10">Waiting...</div>
+                            ) : (
+                                leads.map((lead) => (
+                                    <div key={lead.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 opacity-50">
+                                        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold flex-none text-slate-400">
+                                            {lead.name.charAt(0)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-xs text-slate-400 truncate">{lead.name}</div>
+                                            <div className="text-[10px] text-slate-600 truncate">{lead.company}</div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -469,6 +479,13 @@ export default function AdminDashboardPage() {
                 isOpen={showRegistrantsModal}
                 onClose={() => setShowRegistrantsModal(false)}
                 leads={qualifiedLeads}
+            />
+
+            {/* Raffle Entries Modal */}
+            <RaffleEntriesModal
+                isOpen={showRaffleEntriesModal}
+                onClose={() => setShowRaffleEntriesModal(false)}
+                entries={qualifiedLeads}
             />
 
         </main>

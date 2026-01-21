@@ -4,8 +4,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { StarsBackground } from "@/components/ui/stars-background"
-import { ShootingStars } from "@/components/ui/shooting-stars"
+import { WarpBackground } from "@/components/ui/warp-background"
 
 export const dynamic = 'force-dynamic';
 
@@ -18,24 +17,8 @@ const s3Client = new S3Client({
 });
 
 // Fallback data if no Notion/S3 data found
-const FALLBACK_REVIEWS: Review[] = [
-    {
-        id: "stock-1",
-        name: "Tech Alley Team",
-        affiliation: "@techalley",
-        quote: "Welcome to the Innovation Gallery! Upload your photos to see them featured here.",
-        imageSrc: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=2000",
-        thumbnailSrc: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=200",
-    },
-    {
-        id: "stock-2",
-        name: "Community Member",
-        affiliation: "Attendee",
-        quote: "Networking at its finest. Love the energy here!",
-        imageSrc: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=2000",
-        thumbnailSrc: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=200",
-    }
-];
+// Fallback data if no Notion/S3 data found
+const FALLBACK_REVIEWS: Review[] = [];
 
 async function getGalleryReviews(): Promise<Review[]> {
     const NOTION_KEY = process.env.NOTION_API_KEY;
@@ -95,7 +78,7 @@ async function getGalleryReviews(): Promise<Review[]> {
             let finalImageUrl = props.ImageURL?.url;
 
             // Generate Presigned URL if S3 Key exists
-            if (s3Key && S3_BUCKET && process.env.AWS_ACCESS_KEY_ID) {
+            if (s3Key && S3_BUCKET && process.env.S3_ACCESS_KEY_ID) {
                 try {
                     const command = new GetObjectCommand({
                         Bucket: S3_BUCKET,
@@ -137,17 +120,18 @@ export default async function GalleryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Immersive Background */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <StarsBackground />
-                <ShootingStars minDelay={500} maxDelay={1500} />
+        <main className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+            {/* Background - Neon Portal Warp Grid */}
+            <div className="absolute inset-0 z-0">
+                <WarpBackground className="w-full h-full" gridColor="rgba(34, 211, 238, 0.4)" />
+                <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none" />
             </div>
 
             {/* Simple Back Button wrapped for layout */}
             <div className="fixed top-4 left-4 z-50">
                 <Link href="https://muddy-nautilus-ad8.notion.site/nano-banana-pro-the-creative-amplifier?source=copy_link">
-                    <Button variant="ghost" className="text-white hover:text-indigo-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
+                    <Button variant="ghost" className="text-white hover:text-cyan-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
                         <ArrowLeft size={16} />
                         Take me back to Alignment Resources
                     </Button>
@@ -155,8 +139,28 @@ export default async function GalleryPage() {
             </div>
 
             <div className="relative z-10 w-full max-w-[1400px] border border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm">
-                <TestimonialSlider reviews={reviews} />
+                {reviews.length > 0 ? (
+                    <TestimonialSlider reviews={reviews} />
+                ) : (
+                    <div className="flex flex-col items-center justify-center min-h-[600px] text-center p-8 space-y-6">
+                        <div className="w-24 h-24 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20 animate-pulse">
+                            <ArrowLeft className="w-10 h-10 text-indigo-400 rotate-90" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-bold text-white">The Gallery is Empty... For Now!</h2>
+                            <p className="text-lg text-slate-300 max-w-md mx-auto">
+                                Be the first to share a moment from Tech Alley. <br />
+                                Your photo will be featured here instantly.
+                            </p>
+                        </div>
+                        <Link href="/photo-booth/upload">
+                            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-8 py-6 text-lg shadow-[0_0_20px_rgba(79,70,229,0.3)] border border-indigo-500/50 transition-all hover:scale-105">
+                                Upload the First Photo
+                            </Button>
+                        </Link>
+                    </div>
+                )}
             </div>
-        </div>
+        </main>
     );
 }

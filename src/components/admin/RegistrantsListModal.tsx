@@ -56,14 +56,15 @@ export default function RegistrantsListModal({ isOpen, onClose, leads }: Registr
                                     <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Name</th>
                                     <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Company</th>
                                     <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Role</th>
-                                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Email</th>
+                                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Contact</th>
+                                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800">Intention</th>
                                     <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50">
                                 {leads.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="p-8 text-center text-slate-500 italic">
+                                        <td colSpan={6} className="p-8 text-center text-slate-500 italic">
                                             No registrants found.
                                         </td>
                                     </tr>
@@ -71,6 +72,8 @@ export default function RegistrantsListModal({ isOpen, onClose, leads }: Registr
                                     leads.map((lead) => {
                                         const company = lead.company || lead.profile_data?.company || lead.responses?.company || 'N/A';
                                         const role = lead.title || lead.profile_data?.role || lead.responses?.role || 'N/A';
+                                        const phone = lead.phone || lead.profile_data?.phone || 'N/A';
+                                        const intention = lead.intention || lead.profile_data?.vision || lead.profile_data?.goalForNextMonth || '-';
 
                                         return (
                                             <tr key={lead.id} className="group hover:bg-slate-800/30 transition-colors">
@@ -80,19 +83,32 @@ export default function RegistrantsListModal({ isOpen, onClose, leads }: Registr
                                                 <td className="p-4 text-slate-300">
                                                     <div className="flex items-center gap-2">
                                                         <Building size={14} className="text-slate-600" />
-                                                        <span>{company}</span>
+                                                        <span className="truncate max-w-[120px]" title={company}>{company}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-slate-300">
                                                     <div className="flex items-center gap-2">
                                                         <Briefcase size={14} className="text-slate-600" />
-                                                        <span>{role}</span>
+                                                        <span className="truncate max-w-[120px]" title={role}>{role}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-slate-400 font-mono text-xs">
-                                                    <div className="flex items-center gap-2">
-                                                        <Mail size={14} className="text-slate-600" />
-                                                        <span>{lead.email}</span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <Mail size={12} className="text-slate-600" />
+                                                            <span className="truncate max-w-[150px]" title={lead.email}>{lead.email}</span>
+                                                        </div>
+                                                        {phone !== 'N/A' && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-slate-600 text-[10px]">PH:</span>
+                                                                <span>{phone}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-slate-300 text-xs">
+                                                    <div className="truncate max-w-[150px] italic text-slate-500" title={intention}>
+                                                        "{intention}"
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-right">
