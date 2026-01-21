@@ -4,6 +4,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { StarsBackground } from "@/components/ui/stars-background"
+import { ShootingStars } from "@/components/ui/shooting-stars"
 
 export const dynamic = 'force-dynamic';
 
@@ -135,18 +137,24 @@ export default async function GalleryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            {/* Immersive Background */}
+            <div className="absolute inset-0 z-0">
+                <StarsBackground />
+                <ShootingStars minDelay={500} maxDelay={1500} />
+            </div>
+
             {/* Simple Back Button wrapped for layout */}
-            <div className="w-full max-w-[1400px] mb-4 flex justify-start">
+            <div className="fixed top-4 left-4 z-50">
                 <Link href="https://muddy-nautilus-ad8.notion.site/nano-banana-pro-the-creative-amplifier?source=copy_link">
-                    <Button variant="ghost" className="text-white hover:text-indigo-300 hover:bg-white/10 gap-2">
+                    <Button variant="ghost" className="text-white hover:text-indigo-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
                         <ArrowLeft size={16} />
                         Take me back to Alignment Resources
                     </Button>
                 </Link>
             </div>
 
-            <div className="w-full max-w-[1400px] border border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm">
+            <div className="relative z-10 w-full max-w-[1400px] border border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm">
                 <TestimonialSlider reviews={reviews} />
             </div>
         </div>
