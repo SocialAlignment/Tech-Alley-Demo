@@ -181,7 +181,7 @@ export default function FileUpload05() {
                         </p>
 
                         <div className="flex w-full flex-col gap-4">
-                            <Link href="/hub/photo-booth/gallery" className="w-full">
+                            <Link href="/photo-booth/gallery" className="w-full">
                                 <ShimmerButton className="w-full text-lg font-medium" shimmerColor="#c084fc" background="rgba(79, 70, 229, 0.4)">
                                     <span className="flex items-center gap-2">
                                         View in Gallery
