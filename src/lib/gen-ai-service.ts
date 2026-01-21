@@ -35,6 +35,8 @@ interface LeadProfile {
     helpStatement?: string;
     problems?: string;
     goals?: string;
+    vision?: string;
+    wishlist?: string;
     company?: string;
 }
 
