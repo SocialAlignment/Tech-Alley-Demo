@@ -28,8 +28,8 @@ export default function RaffleWheel({ candidates = [] }: { candidates?: string[]
     };
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-8">
-            <div className="relative w-64 h-64 md:w-80 md:h-80">
+        <div className="relative flex flex-col items-center justify-center p-8 w-full overflow-hidden">
+            <div className="relative w-[300px] h-[300px] max-w-[85vw] max-h-[85vw] md:w-80 md:h-80 transition-all duration-300">
                 {/* Pointer */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-20 w-8 h-8 bg-[#9d4edd] rotate-45 border-4 border-[#0a0a0a] shadow-lg rounded-sm"></div>
 
@@ -40,7 +40,7 @@ export default function RaffleWheel({ candidates = [] }: { candidates?: string[]
                     style={{ backgroundImage: 'conic-gradient(from 0deg, #240046 0 60deg, #3c096c 60deg 120deg, #5a189a 120deg 180deg, #7b2cbf 180deg 240deg, #9d4edd 240deg 300deg, #240046 300deg 360deg)' }}
                 >
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-48 h-48 rounded-full bg-[#0a0a0a] border-4 border-[#9d4edd] z-10 flex flex-col items-center justify-center p-4 text-center">
+                        <div className="w-[70%] h-[70%] rounded-full bg-[#0a0a0a] border-4 border-[#9d4edd] z-10 flex flex-col items-center justify-center p-4 text-center">
                             {winner ? (
                                 <motion.div
                                     initial={{ scale: 0 }}

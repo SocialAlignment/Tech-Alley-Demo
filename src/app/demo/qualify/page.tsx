@@ -84,7 +84,7 @@ export default function QualifyPage() {
         return (
             <main className="relative w-full h-[100dvh] overflow-hidden bg-[#02040a] font-sans selection:bg-green-500/30">
                 {/* --- AMBIENT BACKGROUND --- */}
-                <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="fixed inset-0 z-0 pointer-events-none">
                     <WarpBackground
                         perspective={100}
                         beamsPerSide={3}
@@ -119,8 +119,8 @@ export default function QualifyPage() {
                         transition={{ duration: 0.5, ease: "circOut" }}
                         className="text-center space-y-2"
                     >
-                        <h1 className="text-3xl md:text-5xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-green-100 tracking-tighter leading-none drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-                            Power Up <br className="hidden md:inline" /> Complete!
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-green-100 tracking-tighter leading-none drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                            Alignment Completed.
                         </h1>
                         <p className="text-slate-400 text-sm md:text-base max-w-md mx-auto">
                             You've unlocked customized resources and increased your winning odds.

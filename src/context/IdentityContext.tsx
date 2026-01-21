@@ -10,6 +10,7 @@ interface IdentityContextType {
     email: string | null;
     avatar: string | null;
     instagram: string | null;
+    coreAlignmentStatement: string | null;
     isProfileComplete: boolean;
     missionProgress: number | null;
     missionData: string[];
@@ -24,6 +25,7 @@ const IdentityContext = createContext<IdentityContextType>({
     email: null,
     avatar: null,
     instagram: null,
+    coreAlignmentStatement: null,
     isProfileComplete: false,
     missionProgress: null,
     missionData: [],
@@ -38,6 +40,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     const [email, setEmail] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<string | null>(null);
     const [instagram, setInstagram] = useState<string | null>(null);
+    const [coreAlignmentStatement, setCoreAlignmentStatement] = useState<string | null>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
     const [missionProgress, setMissionProgress] = useState<number | null>(null);
     const [missionData, setMissionData] = useState<string[]>([]);
@@ -67,6 +70,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                 setEmail(data.data.email);
                 setAvatar(data.data.avatar);
                 setInstagram(data.data.contactDetails?.instagram || null);
+                setCoreAlignmentStatement(data.data.coreAlignmentStatement || null);
                 setIsProfileComplete(data.data.isProfileComplete);
                 setMissionProgress(data.data.missionProgress);
                 setMissionData(data.data.missionData || []);
@@ -173,7 +177,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     }, [searchParams, isLoading, leadId]);
 
     return (
-        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, isProfileComplete, missionProgress, missionData, isLoading, updateMissionProgress, refreshIdentity }}>
+        <IdentityContext.Provider value={{ leadId, userName, email, avatar, instagram, coreAlignmentStatement, isProfileComplete, missionProgress, missionData, isLoading, updateMissionProgress, refreshIdentity }}>
             {children}
         </IdentityContext.Provider>
     );

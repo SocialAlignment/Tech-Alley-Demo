@@ -80,6 +80,7 @@ export async function POST(request: Request) {
                 isProfileComplete: isProfileComplete,
                 missionProgress: 0, // Not used in demo
                 missionData: [],
+                coreAlignmentStatement: profile.coreAlignmentStatement || '',
                 contactDetails: {
                     // Basic Contact
                     name: entry.name || profile.name || '',

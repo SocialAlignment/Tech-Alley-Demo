@@ -175,13 +175,13 @@ const SingleSelectOptions = ({
 // --- Component ---
 
 export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignmentStatement, initialName, initialEmail }: { onSubmit: (data: GenAIFormData) => void, isSubmitting: boolean, initialAlignmentStatement?: string, initialName?: string, initialEmail?: string }) {
-    const { userName, email } = useIdentity(); // Pre-fill context
+    const { userName, email, coreAlignmentStatement } = useIdentity(); // Pre-fill context
     const [page, setPage] = useState(0);
     const [data, setData] = useState<GenAIFormData>({
         ...initialData,
         name: initialName || userName || '',
         email: initialEmail || email || '',
-        coreAlignmentStatement: initialAlignmentStatement || ''
+        coreAlignmentStatement: initialAlignmentStatement || coreAlignmentStatement || ''
     });
 
     const update = (field: keyof GenAIFormData, value: any) => setData(prev => ({ ...prev, [field]: value }));
@@ -195,7 +195,8 @@ export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignm
         else if (email && !data.email) setData(prev => ({ ...prev, email: email }));
 
         if (initialAlignmentStatement && !data.coreAlignmentStatement) setData(prev => ({ ...prev, coreAlignmentStatement: initialAlignmentStatement }));
-    }, [userName, email, initialAlignmentStatement, initialName, initialEmail]);
+        else if (coreAlignmentStatement && !data.coreAlignmentStatement) setData(prev => ({ ...prev, coreAlignmentStatement: coreAlignmentStatement }));
+    }, [userName, email, coreAlignmentStatement, initialAlignmentStatement, initialName, initialEmail]);
 
     // Logic Gate: Skip Page 5 if "Curious, haven't tried" (Q12) is selected
     const shouldShowPage4b = data.aiStage !== "Never tried it" && data.aiStage !== "Curious, haven't tried" && data.aiStage !== "";

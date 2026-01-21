@@ -526,15 +526,17 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
     const userName = connectedName || identityUserName;
 
     // Hydration: Merge initialData AND Identity Context
+    // Hydration: Merge initialData AND Identity Context
     useEffect(() => {
         setFormData(prev => ({
             ...prev,
             ...(initialData || {}),
-            // Fallback to identity context if fields are empty
-            name: (initialData?.name) || prev.name || identityUserName || '',
-            email: (initialData?.email) || prev.email || (useIdentity().email) || '', // access email directly from hook if not destructured above
+            // Fallback to identity context if fields are empty or if context updates
+            // Prioritize Initial Data -> Identity Context -> Previous Value
+            name: (initialData?.name) || identityUserName || prev.name || '',
+            email: (initialData?.email) || identityEmail || prev.email || '',
         }));
-    }, [initialData, identityUserName, identityLeadId]);
+    }, [initialData, identityUserName, identityEmail, identityLeadId]);
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
