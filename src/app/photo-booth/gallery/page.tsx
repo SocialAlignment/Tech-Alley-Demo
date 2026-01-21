@@ -10,10 +10,10 @@ import { ShootingStars } from "@/components/ui/shooting-stars"
 export const dynamic = 'force-dynamic';
 
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION!,
+    region: process.env.S3_REGION!,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
     },
 });
 
@@ -40,7 +40,7 @@ const FALLBACK_REVIEWS: Review[] = [
 async function getGalleryReviews(): Promise<Review[]> {
     const NOTION_KEY = process.env.NOTION_API_KEY;
     const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID; // 2eb6b72f-a765-81ca-91d7-fca18180af7c
-    const S3_BUCKET = process.env.AWS_BUCKET_NAME;
+    const S3_BUCKET = process.env.S3_BUCKET_NAME;
 
     if (!NOTION_KEY || !NOTION_DB_ID) {
         console.warn("Notion credentials missing for Gallery");
