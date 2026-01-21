@@ -19,104 +19,49 @@ export async function POST(request: Request) {
             );
         }
 
-        // Construct the S3 URL
+        const AWS_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
         const imageUrl = `https://${AWS_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`;
 
-        // 1. Save to Notion (Photo Booth Gallery)
-        const res = await fetch('https://api.notion.com/v1/pages', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${NOTION_KEY}`,
-                'Notion-Version': NOTION_VERSION,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                parent: { database_id: NOTION_DB_ID },
-                properties: {
-                    'Caption': {
-                        title: [
-                            {
-                                text: {
-                                    content: caption || 'Untitled Memory'
-                                }
-                            }
-                        ]
-                    },
-                    'ImageURL': {
-                        url: imageUrl
-                    },
-                    'S3Key': {
-                        rich_text: [
-                            {
-                                text: {
-                                    content: s3Key
-                                }
-                            }
-                        ]
-                    },
-                    'Status': {
-                        select: {
-                            name: 'Approved'
-                        }
-                    },
-                    'UploadedAt': {
-                        date: {
-                            start: new Date().toISOString()
-                        }
-                    },
-                    'User': {
-                        rich_text: [
-                            {
-                                text: {
-                                    content: userId || 'Anonymous'
-                                }
-                            }
-                        ]
-                    },
-                    'Instagram': {
-                        rich_text: [
-                            {
-                                text: {
-                                    content: instagramHandle || ''
-                                }
-                            }
-                        ]
-                    }
-                }
-            })
-        });
+        // Initialize Supabase Admin Client
+        const adminAuthClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? require('@supabase/supabase-js').createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY
+            )
+            : supabase;
 
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error("Notion API Error Raw:", errorText);
-            let errorJson;
-            try {
-                errorJson = JSON.parse(errorText);
-            } catch (e) {
-                errorJson = { message: errorText };
-            }
-            return NextResponse.json(
-                { error: `Notion Error: ${errorJson.message || errorText}` },
-                { status: res.status }
-            );
+        // 1. Save to Supabase (demo_gallery)
+        console.log(`[Upload Confirm] Saving to Supabase demo_gallery: ${s3Key}`);
+
+        const { error: galleryError } = await adminAuthClient
+            .from('demo_gallery')
+            .insert({
+                s3_key: s3Key,
+                image_url: imageUrl,
+                caption: caption || 'Untitled Memory',
+                user_info: userId || 'Anonymous',
+                instagram: instagramHandle || '',
+                status: 'approved' // Default to approved as requested for stability
+            });
+
+        if (galleryError) {
+            console.error("Supabase Insert Error:", galleryError);
+            throw new Error(`Database Error: ${galleryError.message}`);
         }
 
         // 2. Sync Instagram to User Profile (Supabase) if provided
         if (userId && instagramHandle) {
-            // Use Admin Client if available to bypass RLS issues just in case
-            const adminAuthClient = process.env.SUPABASE_SERVICE_ROLE_KEY
-                ? require('@supabase/supabase-js').createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.SUPABASE_SERVICE_ROLE_KEY
-                )
-                : supabase;
-
             console.log(`[Upload Confirm] Syncing Instagram for user ${userId}: ${instagramHandle}`);
 
-            await adminAuthClient
+            const { error: profileError } = await adminAuthClient
                 .from('leads')
                 .update({ instagram: instagramHandle })
-                .eq('id', userId);
+                .eq('id', userId); // Assuming userId matches leads.id logic, or we tolerate failure
+
+            if (profileError) {
+                console.warn("Failed to sync Instagram to profile:", profileError);
+                // Don't fail the whole request for this
+            }
         }
 
         return NextResponse.json({ success: true, imageUrl });

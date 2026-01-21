@@ -20,64 +20,37 @@ const s3Client = new S3Client({
 // Fallback data if no Notion/S3 data found
 const FALLBACK_REVIEWS: Review[] = [];
 
+import { supabase } from '@/lib/supabase'; // Client side import okay for server component? Ideally createClient for server.
+// Actually, for Server Components, we should use a fresh client or the one from @k/lib/supabase if it handles envs. 
+// Since this file has 'use client' ? No, it exports dynamic. It is a server component.
+// But `src/lib/supabase` creates a client singleton. That's usually fine for simple fetches, but Next.js recommends cookies/headers for auth. 
+// Since this is public data, the singleton is fine.
+
 async function getGalleryReviews(): Promise<Review[]> {
-    const NOTION_KEY = process.env.NOTION_API_KEY;
-    const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID; // 2eb6b72f-a765-81ca-91d7-fca18180af7c
     const S3_BUCKET = process.env.S3_BUCKET_NAME;
 
-    if (!NOTION_KEY || !NOTION_DB_ID) {
-        console.warn("Notion credentials missing for Gallery");
-        return [];
-    }
-
     try {
-        const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DB_ID}/query`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${NOTION_KEY}`,
-                'Notion-Version': '2022-06-28',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                sorts: [
-                    {
-                        property: 'UploadedAt',
-                        direction: 'descending',
-                    },
-                ],
-            }),
-            next: { revalidate: 10 } // Cache briefly
-        });
+        const { data: galleryItems, error } = await supabase
+            .from('demo_gallery')
+            .select('*')
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false });
 
-        if (!res.ok) {
-            console.error("Notion Gallery Fetch Error:", await res.text());
+        if (error) {
+            console.error("Supabase Gallery Fetch Error:", error);
             return [];
         }
 
-        const data = await res.json();
+        if (!galleryItems || galleryItems.length === 0) return [];
 
-        // Process in parallel
-        const reviewsWithUrls = await Promise.all(data.results.map(async (page: any) => {
-            const props = page.properties;
+        // Process in parallel to sign URLs
+        const reviewsWithUrls = await Promise.all(galleryItems.map(async (item: any) => {
+            let finalImageUrl = item.image_url;
+            const s3Key = item.s3_key;
 
-            // Clean the user string to remove ID (e.g., "Name (uuid)" -> "Name")
-            const rawUser = props.User?.rich_text?.[0]?.plain_text || "Anonymous";
-            const cleanName = rawUser.replace(/\s*\([a-f0-9-]+\)$/i, "").trim();
-
-            let instagram = props.Instagram?.rich_text?.[0]?.plain_text || "";
-            // Clean URL if present
-            if (instagram) {
-                instagram = instagram.replace(/(?:https?:\/\/)?(?:www\.)?instagram\.com\//i, "");
-                instagram = instagram.replace(/\/$/, ""); // Remove trailing slash
-                if (!instagram.startsWith('@')) {
-                    instagram = `@${instagram}`;
-                }
-            }
-            const caption = props.Caption?.title?.[0]?.plain_text || "Checking out the event!";
-            const s3Key = props.S3Key?.rich_text?.[0]?.plain_text;
-            let finalImageUrl = props.ImageURL?.url;
-
-            // Generate Presigned URL if S3 Key exists
+            // Generate Presigned URL if S3 Key exists (Standard for private buckets)
+            // Even if we store image_url, it might be expired if it was presigned, 
+            // or just a base path if public. Assuming private bucket pattern from before.
             if (s3Key && S3_BUCKET && process.env.S3_ACCESS_KEY_ID) {
                 try {
                     const command = new GetObjectCommand({
@@ -87,16 +60,25 @@ async function getGalleryReviews(): Promise<Review[]> {
                     finalImageUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
                 } catch (err) {
                     console.error("Failed to sign URL for key:", s3Key, err);
+                    // Fallback to stored URL if signing fails, though likely also broken
                 }
             }
 
             if (!finalImageUrl) return null;
 
+            // Use User Info or fallback
+            // Clean name logic if needed, but we stored it clean hopefully?
+            // "Name (id)" -> we probably just want "Name" if we stored that way. 
+            // Let's assume user_info might have the ID.
+            const rawUser = item.user_info || "Anonymous";
+            const cleanName = rawUser.replace(/\s*\([a-f0-9-]+\)$/i, "").trim();
+            const instagram = item.instagram || "";
+
             return {
-                id: page.id,
-                name: instagram || cleanName, // Use IG as primary name if available
-                affiliation: instagram ? cleanName : "Tech Alley Attendee", // Use Name as affiliation
-                quote: caption,
+                id: item.id,
+                name: instagram || cleanName,
+                affiliation: instagram ? cleanName : "Tech Alley Attendee",
+                quote: item.caption || "Checking out the event!",
                 imageSrc: finalImageUrl,
                 thumbnailSrc: finalImageUrl,
             };

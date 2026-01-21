@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { supabase } from '@/lib/supabase';
 
-const NOTION_KEY = process.env.NOTION_API_KEY;
-const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID;
-const NOTION_VERSION = '2022-06-28';
 const S3_BUCKET = process.env.S3_BUCKET_NAME;
 
 const s3Client = new S3Client({
@@ -18,41 +16,26 @@ const s3Client = new S3Client({
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    if (!NOTION_KEY || !NOTION_DB_ID) {
-        return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
-    }
-
     try {
-        const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DB_ID}/query`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${NOTION_KEY}`,
-                'Notion-Version': NOTION_VERSION,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                sorts: [
-                    {
-                        property: 'UploadedAt',
-                        direction: 'descending',
-                    },
-                ],
-            }),
-        });
+        // Fetch from Supabase
+        const { data: galleryItems, error } = await supabase
+            .from('demo_gallery')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-        if (!res.ok) {
-            return NextResponse.json({ error: "Failed to fetch from Notion" }, { status: 500 });
+        if (error) {
+            console.error("Supabase Admin Gallery Fetch Error:", error);
+            return NextResponse.json({ error: "Failed to fetch from database" }, { status: 500 });
         }
 
-        const data = await res.json();
+        if (!galleryItems) return NextResponse.json({ photos: [] });
 
         // Process results to get Signed URLs
-        const photos = await Promise.all(data.results.map(async (page: any) => {
-            const props = page.properties;
-            const s3Key = props.S3Key?.rich_text?.[0]?.plain_text;
-            let finalImageUrl = props.ImageURL?.url;
+        const photos = await Promise.all(galleryItems.map(async (item: any) => {
+            let finalImageUrl = item.image_url;
+            const s3Key = item.s3_key;
 
-            // Generate Presigned URL if S3 Key exists (same logic as public gallery)
+            // Generate Presigned URL if S3 Key exists
             if (s3Key && S3_BUCKET && process.env.S3_ACCESS_KEY_ID) {
                 try {
                     const command = new GetObjectCommand({
@@ -66,12 +49,12 @@ export async function GET() {
             }
 
             return {
-                id: page.id,
+                id: item.id,
                 url: finalImageUrl,
-                caption: props.Caption?.title?.[0]?.plain_text || "Untitled",
-                user: props.User?.rich_text?.[0]?.plain_text || "Anonymous",
-                uploadedAt: props.UploadedAt?.date?.start,
-                status: props.Status?.select?.name
+                caption: item.caption || "Untitled",
+                user: item.user_info || "Anonymous",
+                uploadedAt: item.created_at,
+                status: item.status
             };
         }));
 
