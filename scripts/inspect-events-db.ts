@@ -7,6 +7,7 @@ const notion = new Client({ auth: process.env.NOTION_API_KEY });
 async function debug() {
     console.log("Notion DataBases keys:", Object.keys(notion.databases));
     console.log("Has retrieve?", typeof notion.databases.retrieve);
+    // @ts-ignore
     console.log("Has query?", typeof notion.databases.query);
 }
 
