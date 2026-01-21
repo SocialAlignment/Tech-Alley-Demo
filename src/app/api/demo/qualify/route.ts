@@ -13,22 +13,20 @@ const supabase = createClient(
 // 1. Derived Tags
 function deriveTags(data: any): string[] {
     const tags: string[] = [];
-    const { aiStage, aiToolsUsed, monthlyLeads, targetAudience, desiredAction, aiChallenge, soraCreation, helpNeeded, aiInterest } = data;
+    const { aiStage, aiToolsUsed, monthlyLeads, targetAudience, desiredAction, aiChallenge, helpNeeded, aiInterest } = data;
 
     // AI Awareness
     if (aiToolsUsed.includes("None yet")) tags.push('AI_UNAWARE');
-    else if (aiStage.includes("Curious")) tags.push('AI_CURIOUS');
-    else if (aiStage.includes("Actively experimenting")) tags.push('AI_EXPERIMENTING');
-    else if (aiStage.includes("Using in production")) tags.push('AI_PRODUCTION');
-    else if (aiStage.includes("Tried and gave up")) tags.push('AI_BURNED');
+    else if (aiStage === "Curious, haven't tried" || aiStage === "Never tried it") tags.push('AI_CURIOUS');
+    else if (aiStage === "Dabbled a bit") tags.push('AI_EXPERIMENTING');
+    else if (aiStage.includes("weekly") || aiStage.includes("daily") || aiStage.includes("Expert")) tags.push('AI_PRODUCTION');
 
-    // Video Readiness
-    if (aiChallenge === "Don't know what to prompt") tags.push('PROMPT_BLOCKED');
-    if (aiChallenge === "Outputs not like my brand") tags.push('BRAND_MISMATCH');
-    if (aiChallenge === "Feels generic / cringe") tags.push('GENERIC_OUTPUTS');
-    if (aiChallenge === "Takes too much time") tags.push('TIME_BLOCKED');
-    if (aiChallenge === "Don't trust it") tags.push('TRUST_BLOCKED');
-    if (aiChallenge === "Can't get consistent results") tags.push('CONSISTENCY_BLOCKED');
+    // Video Readiness / Challenges
+    if (aiChallenge === "Production costs are too high") tags.push('COST_BLOCKED');
+    if (aiChallenge === "Takes too long to film/edit") tags.push('TIME_BLOCKED');
+    if (aiChallenge === "Scheduling actors/talent" || aiChallenge === "Logistics & Locations") tags.push('LOGISTICS_BLOCKED');
+    if (aiChallenge === "Inconsistent quality") tags.push('QUALITY_BLOCKED');
+    if (aiChallenge === "Hard to update later") tags.push('FLEXIBILITY_BLOCKED');
 
     // Business Stage
     if (['0-5'].includes(monthlyLeads)) tags.push('PRE_LEADS');
@@ -41,15 +39,16 @@ function deriveTags(data: any): string[] {
     if (targetAudience?.includes("not sure") || targetAudience?.includes("Not fully sure")) tags.push('AUDIENCE_FUZZY');
     else tags.push('AUDIENCE_CLEAR');
 
-    if (desiredAction?.includes("Not sure")) tags.push('CTA_FUZZY');
+    if (desiredAction?.includes("Not sure") || desiredAction?.includes("Other")) tags.push('CTA_FUZZY');
 
     // Offer Alignment
     const helpStr = helpNeeded?.join(' ') || '';
-    if (helpStr.includes("1:1") || soraCreation === "Offer explainer" || soraCreation === "Ad / Promo") tags.push('SORA_1ON1_FIT');
+    if (helpStr.includes("1:1") || helpStr.includes("Consulting")) tags.push('SORA_1ON1_FIT');
     if (helpStr.includes("Done-for-you")) tags.push('DFY_FIT');
     if (helpStr.includes("Avatar") || aiInterest?.includes("Be on camera less")) tags.push('AVATAR_FIT');
-    if (helpStr.includes("Systems")) tags.push('SYSTEMS_FIT');
-    if (helpStr.includes("Workshops")) tags.push('TRAINING_FIT');
+    if (helpStr.includes("System") || helpStr.includes("Automation")) tags.push('SYSTEMS_FIT');
+    if (helpStr.includes("Workshops") || helpStr.includes("Training")) tags.push('TRAINING_FIT');
+    if (helpStr.includes("grant funding")) tags.push('GRANT_SEEKER');
 
     return tags;
 }
@@ -67,26 +66,28 @@ function calculateScore(data: any): number {
     else if (leads === '100+') score += 30;
 
     // Clarity
-    if (!data.targetAudience?.includes("not sure")) score += 10;
-    if (!data.desiredAction?.includes("not sure")) score += 10;
+    if (data.targetAudience && !data.targetAudience.includes("not sure")) score += 10;
+    if (data.desiredAction && !data.desiredAction.includes("not sure")) score += 10;
 
     // AI Readiness
     const stage = data.aiStage;
-    if (stage.includes("Curious")) score += 5;
-    else if (stage.includes("meh")) score += 10;
-    else if (stage.includes("experimenting")) score += 15;
-    else if (stage.includes("production")) score += 20;
-    else if (stage.includes("given up")) score += 10;
+    if (stage === "Curious, haven't tried") score += 5;
+    else if (stage === "Dabbled a bit") score += 10;
+    else if (stage.includes("weekly")) score += 15;
+    else if (stage.includes("daily")) score += 20;
+    else if (stage.includes("Expert")) score += 25;
 
     // Opt-in Intent
     if (data.wantResources === 'Yes') score += 15;
     const help = data.helpNeeded || [];
-    if (help.includes("Done-for-you") || help.includes("Systems")) score += 10;
-    if (help.includes("1:1")) score += 8;
-    if (help.includes("Avatar")) score += 8;
+    if (help.includes("Done-for-you") || help.some((h: string) => h.includes("System"))) score += 10;
+    if (help.some((h: string) => h.includes("1:1"))) score += 8;
+    if (help.includes("AI Avatar Creation")) score += 8;
+    if (help.includes("I'm interested in grant funding.")) score += 5;
 
-    // Website provided?
+    // Details provided
     if (data.website && data.website.length > 3) score += 5;
+    if (data.coreAlignmentStatement && data.coreAlignmentStatement.length > 20) score += 5;
 
     return Math.min(100, score);
 }
@@ -111,8 +112,8 @@ function assignVariant(tags: string[], data: any): string {
 function selectSMSTemplate(tags: string[], scoreBand: string): string {
     if (scoreBand === 'PRIORITY') return 'Template E (High Score)';
     if (tags.includes('TIME_BLOCKED')) return 'Template D (Time Blocked)';
-    if (tags.includes('BRAND_MISMATCH') || tags.includes('GENERIC_OUTPUTS')) return 'Template C (Quality Blocked)';
-    if (tags.includes('AI_EXPERIMENTING') && tags.includes('PROMPT_BLOCKED')) return 'Template B (Prompt Blocked)';
+    if (tags.includes('COST_BLOCKED')) return 'Template C (Cost Blocked)';
+    if (tags.includes('AI_EXPERIMENTING') && tags.includes('QUALITY_BLOCKED')) return 'Template B (Quality Blocked)';
     return 'Template A (General)';
 }
 

@@ -365,7 +365,7 @@ const EventRegistrationStep = ({ formData, updateFormData }: any) => {
                     </h3>
 
                     <div className="flex flex-col gap-1 text-slate-200 font-medium">
-                        <span className="text-xl text-blue-300">February 21st @ 5:00 PM</span>
+                        <span className="text-xl text-blue-300">February 25th 2026 @ 5:00 PM</span>
                         <span className="text-slate-400">Pass Casino, Henderson, NV</span>
                     </div>
                 </div>

@@ -80,9 +80,12 @@ const Confetti = forwardRef<ConfettiRef, Props>((props, ref) => {
 
     useImperativeHandle(ref, () => api, [api])
 
+    const firedRef = useRef(false)
+
     useEffect(() => {
-        if (!manualstart) {
+        if (!manualstart && !firedRef.current) {
             fire()
+            firedRef.current = true
         }
     }, [manualstart, fire])
 

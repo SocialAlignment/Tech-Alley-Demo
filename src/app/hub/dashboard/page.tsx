@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useIdentity } from '@/context/IdentityContext';
-import HubLandingNavbar from '@/components/hub/hub-landing-navbar';
+import { HubLandingNavbar } from '@/components/landing/HubLandingNavbar';
 import AIExecutiveDashboardWizard from '@/components/ui/ai-executive-dashboard-wizard';
 import { ArrowRight, LayoutDashboard, Target, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
