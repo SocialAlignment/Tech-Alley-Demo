@@ -1,30 +1,31 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Loader2, Trophy, RotateCcw } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { X } from 'lucide-react';
 
 // --- Types ---
 interface Entrant {
     id: string;
     name: string;
     entries_count: number;
-    color?: string;
+    color: string;
 }
 
-// --- Component ---
-
 export default function WheelOfAlignment() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    // --- State ---
     const [entrants, setEntrants] = useState<Entrant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [spinning, setSpinning] = useState(false);
-    const [winner, setWinner] = useState<Entrant | null>(null);
+    const [isSpinning, setIsSpinning] = useState(false);
     const [rotation, setRotation] = useState(0);
+    const [winner, setWinner] = useState<Entrant | null>(null);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [particles, setParticles] = useState<any[]>([]);
+    const wheelRef = useRef<HTMLDivElement>(null);
+    const [loading, setLoading] = useState(false);
 
-    // Fetch Entrants
+    // --- Effects ---
+
+    // 1. Fetch Entrants (Supabase Integration)
     useEffect(() => {
         fetchEntrants();
     }, []);
@@ -36,236 +37,577 @@ export default function WheelOfAlignment() {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
-        // Fetch valid entries
         const { data, error } = await supabase
             .from('demo_raffle_entries')
             .select('id, name, entries_count')
             .gt('entries_count', 0);
 
         if (data && !error) {
-            // Assign colors
-            const colors = ['#a855f7', '#ec4899', '#6366f1', '#14b8a6', '#f59e0b', '#ef4444'];
+            const palette = ['#3B82F6', '#06B6D4', '#6366F1', '#2563EB', '#0891B2', '#4F46E5', '#60A5FA', '#22D3EE'];
             const formatted = data.map((d: any, i: number) => ({
                 id: d.id,
-                name: d.name.split(' ')[0], // First name only for cleaner wheel
+                name: d.name.split(' ')[0], // First name
                 entries_count: d.entries_count || 1,
-                color: colors[i % colors.length]
+                color: palette[i % palette.length]
             }));
+
+            // If weighted, we might want to duplicate entries or adjust segment size.
+            // For this visual implementation, simple equal segments often look best,
+            // but let's assume 1 entry = 1 slot if we want true probability,
+            // OR strictly weighted random logic (Visuals vs Logic).
+            // The User's Logic assumed equal segments: segmentSize = 360 / entrants.length
+            // Let's stick to that for the Visual Wheel, but strictly pick the winner by weight.
+
             setEntrants(formatted);
         }
         setLoading(false);
     };
 
-    // Spin Logic
-    const spin = async () => {
-        if (spinning || entrants.length === 0) return;
-        setSpinning(true);
+
+    // 2. Generate ambient particles
+    useEffect(() => {
+        const newParticles = Array.from({ length: 50 }, (_, i) => ({
+            id: i,
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            size: Math.random() * 3 + 1,
+            duration: Math.random() * 20 + 10,
+            delay: Math.random() * 5,
+        }));
+        setParticles(newParticles);
+    }, []);
+
+    // --- Logic ---
+    const spinWheel = async () => {
+        if (isSpinning || entrants.length === 0) return;
+
+        setIsSpinning(true);
         setWinner(null);
+        setShowConfetti(false);
 
-        // Calculate Total Weight
+        // --- Weighted Winner Selection ---
         const totalWeight = entrants.reduce((sum, e) => sum + e.entries_count, 0);
-
-        // Pick Winner (Weighted Random)
         let random = Math.random() * totalWeight;
         let selected = entrants[0];
+        let selectedIndex = 0;
 
-        for (const entrant of entrants) {
-            if (random < entrant.entries_count) {
-                selected = entrant;
+        for (let i = 0; i < entrants.length; i++) {
+            const e = entrants[i];
+            if (random < e.entries_count) {
+                selected = e;
+                selectedIndex = i;
                 break;
             }
-            random -= entrant.entries_count;
+            random -= e.entries_count;
         }
 
-        // Determine Target Angle
-        // We know exactly who won, now we need to land on their segment.
-        // Calculate start/end angles for the winner
-        let currentWeight = 0;
-        let startAngle = 0;
-        let endAngle = 0;
+        // --- Calculate Rotation to land on Selected ---
+        // segmentSize is strictly visual here (360 / length)
+        const segmentSize = 360 / entrants.length;
 
-        for (const entrant of entrants) {
-            const segmentAngle = (entrant.entries_count / totalWeight) * 2 * Math.PI;
-            if (entrant.id === selected.id) {
-                startAngle = (currentWeight / totalWeight) * 2 * Math.PI;
-                endAngle = startAngle + segmentAngle;
-                break;
-            }
-            currentWeight += entrant.entries_count;
-        }
+        // Target angle logic:
+        // The pointer is at TOP (270 degrees in standard circle math, or 0/360 if we rotate the container).
+        // Let's look at the SVG: 
+        // 0 degrees starts at 3 o'clock (standard SVG arc).
+        // The pointer is at top (-90 deg from 0). Or physically TOP.
+        // User Code: winnerIndex = Math.floor((360 - normalizedRotation + segmentSize / 2) % 360 / segmentSize) % entrants.length;
+        // This implies the wheel rotates normally.
 
-        // Randomize landing within the segment (padding 10% on each side)
-        const segmentAngle = endAngle - startAngle;
-        const landingAngle = startAngle + (segmentAngle * 0.1) + (Math.random() * (segmentAngle * 0.8));
+        // We want to force the rotation to land on 'selectedIndex'.
+        // Target Angle (where the pointer points to the center of the segment):
+        // Pointer is fixed at top.
+        // We need the center of segment 'selectedIndex' to be at -90deg (Top).
 
-        // Convert to degrees and add multiple spins (5-10 spins)
-        const landingDegrees = (landingAngle * 180 / Math.PI);
-        // The pointer is usually at 270 (top) or 0 (right). Let's assume passed 0 is to the right.
-        // Actually, let's reverse compute:
-        // We want: Rotation % 360 == (360 - landingDegrees)  Assuming pointer is at 0 (Right)
-        // Adjust for pointer location. Let's assume pointer is at 270deg (Top).
-        // Target Rotation = 270 - landingDegrees
+        // Current Angle of segment[i] center = (i * segmentSize) - 90 + (segmentSize/2)
+        // We want (Angle + Rotation) % 360 = 270 (Top)
+        // ... Let's trust the User's random spin logic for visual flair, OR rig it?
+        // Since this is a raffle, we MUST rig it to the weighted winner.
 
-        const extraSpins = 360 * (5 + Math.floor(Math.random() * 5));
-        const finalRotation = extraSpins + (270 - landingDegrees);
+        // Inverse Math:
+        // We want the wheel to stop such that 'selected' is at the top.
+        // Segment Start: index * segmentSize
+        // Segment Center: (index + 0.5) * segmentSize
 
-        // Ensure we always rotate forward
-        const newRotation = rotation + (finalRotation - (rotation % 360)) + 360;
+        // If we want Segment Center to be at 270 (Top)
+        // Rotation + SegmentCenter = 270
+        // Rotation = 270 - SegmentCenter
 
-        setRotation(newRotation);
+        // Let's add randomness within the segment (+/- 40% of segmentSize)
+        const randomOffset = (Math.random() - 0.5) * 0.8 * segmentSize;
 
-        // Wait for animation
-        setTimeout(() => {
-            setSpinning(false);
+        const targetCenter = (selectedIndex + 0.5) * segmentSize;
+        // SVG starts 0 at 3 o'clock. 
+        // Our segments are drawn: i * segmentSize - 90. So index 0 starts at -90 (Top).
+        // So index 0 is ALREADY at the top.
+        // Wait, logic check:
+        // user's d calc: `i * segmentSize - 90`.
+        // So Entrant 0 is at Top (-90 to -90+size). Check.
+
+        // To land Index 0 at Top, Rotation should be 0 (or 360).
+        // To land Index 1 at Top, we rotate -segmentSize. (Clockwise necessitates 360-segmentSize).
+
+        // Target Rotation = -1 * (selectedIndex * segmentSize) + randomOffset
+        // Add full spins
+        const spins = 5 + Math.floor(Math.random() * 5);
+        const extraDegrees = (360 * spins);
+
+        // Current rotation
+        const currentRot = rotation;
+        // We want to go forward.
+        // Target:
+        let targetRot = (360 - (selectedIndex * segmentSize)) + randomOffset;
+
+        // Normalize
+        const totalRotation = currentRot + (360 * spins) + (targetRot - (currentRot % 360));
+        // Fix modulo glitch if needed, or just add huge raw numbers.
+        // Simplified: Just add (spins * 360) + calculated delta.
+
+        // Let's use the user's simpler math if possible, but we need to target the weighted winner.
+        // User's User's Math: `totalRotation = rotation + (spins * 360) + extraDegrees` (Pure Random)
+        // My Override:
+        const desiredLandingAngle = (360 - (selectedIndex * segmentSize) - (segmentSize / 2)) + randomOffset;
+        // Add multiple spins
+        const finalRotation = rotation + (360 * 5) + (360 - (rotation % 360)) + desiredLandingAngle;
+
+        setRotation(finalRotation);
+
+        // Sync State Update
+        setTimeout(async () => {
             setWinner(selected);
-            triggerWin(selected);
-        }, 5000); // 5s spin
+            setIsSpinning(false);
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000);
+
+            // Trigger DB/SMS (Optional side effect)
+            await fetch('/api/admin/sms/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'raffle_winner', recipient: selected })
+            });
+
+        }, 5000);
     };
 
-    // Win Handler
-    const triggerWin = async (winner: Entrant) => {
-        // Confetti!
-        confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-
-        // In real app: Update DB here
-        // await supabase.from('demo_raffle_entries').update({ is_winner: true, winner_draw_id: ... }).eq('id', winner.id);
-    };
-
-    // Render Loop
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const totalWeight = entrants.reduce((sum, e) => sum + e.entries_count, 0);
-        let startAngle = 0;
-
-        // Clear
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Center
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        const radius = cx - 20;
-
-        // Draw Segments
-        entrants.forEach(entrant => {
-            const segmentAngle = (entrant.entries_count / totalWeight) * 2 * Math.PI;
-            const endAngle = startAngle + segmentAngle;
-
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, radius, startAngle, endAngle);
-            ctx.closePath();
-
-            ctx.fillStyle = entrant.color || '#ccc';
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Text
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(startAngle + segmentAngle / 2);
-            ctx.textAlign = "right";
-            ctx.fillStyle = "#fff";
-            ctx.font = "bold 14px sans-serif";
-            ctx.fillText(entrant.name, radius - 10, 5);
-            ctx.restore();
-
-            startAngle += segmentAngle;
-        });
-
-    }, [entrants]); // Redraw when entrants change (static wheel, rotation handled by CSS)
+    const segmentSize = entrants.length > 0 ? 360 / entrants.length : 0;
 
     return (
-        <div className="flex flex-col items-center gap-8 p-8 max-w-4xl mx-auto bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/10">
-            <div className="text-center space-y-2">
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                    Wheel of Alignment
-                </h2>
-                <p className="text-slate-400">
-                    {entrants.length} Entrants • Weighted by Signal Score
-                </p>
-            </div>
+        <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            // Matched to user request, but scoped to container instead of full screen force
+            width: '100%',
+            height: '100%',
+            minHeight: '600px',
+            background: 'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: "'Outfit', sans-serif",
+            borderRadius: '24px', // Added for modal fit
+        }}>
+            {/* Import fonts */}
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+                
+                @keyframes float {
+                  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+                  50% { transform: translateY(-20px) translateX(10px); opacity: 0.7; }
+                }
+                
+                @keyframes pulse-glow {
+                  0%, 100% { filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.4)); }
+                  50% { filter: drop-shadow(0 0 40px rgba(6, 182, 212, 0.8)); }
+                }
+                
+                @keyframes spin-glow {
+                  0% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 60px rgba(6, 182, 212, 0.4)); }
+                  50% { filter: drop-shadow(0 0 50px rgba(99, 102, 241, 0.8)) drop-shadow(0 0 80px rgba(34, 211, 238, 0.6)); }
+                  100% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 60px rgba(6, 182, 212, 0.4)); }
+                }
+                
+                @keyframes confetti-fall {
+                  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+                  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+                }
+                
+                @keyframes winner-reveal {
+                  0% { transform: scale(0.8); opacity: 0; }
+                  50% { transform: scale(1.1); }
+                  100% { transform: scale(1); opacity: 1; }
+                }
+                
+                @keyframes ring-pulse {
+                  0%, 100% { transform: scale(1); opacity: 0.5; }
+                  50% { transform: scale(1.05); opacity: 0.8; }
+                }
+                
+                @keyframes gradient-shift {
+                  0% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+                  100% { background-position: 0% 50%; }
+                }
+                
+                @keyframes ticker-bounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(4px); }
+                }
+            `}</style>
 
-            <div className="relative">
-                {/* Pointer */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-20">
-                    <div className="w-8 h-8 bg-white rotate-45 transform origin-center shadow-xl border-4 border-slate-900" />
-                </div>
-
-                {/* Wheel Container (Rotates) */}
+            {/* Ambient particles */}
+            {particles.map(p => (
                 <div
-                    className="relative w-[500px] h-[500px] transition-transform duration-[5000ms] cubic-bezier(0.25, 0.1, 0.25, 1)"
-                    style={{ transform: `rotate(${rotation}deg)` }}
+                    key={p.id}
+                    style={{
+                        position: 'absolute',
+                        left: `${p.x}%`,
+                        top: `${p.y}%`,
+                        width: p.size,
+                        height: p.size,
+                        borderRadius: '50%',
+                        background: 'rgba(6, 182, 212, 0.5)',
+                        animation: `float ${p.duration}s ease-in-out infinite`,
+                        animationDelay: `${p.delay}s`,
+                        pointerEvents: 'none',
+                    }}
+                />
+            ))}
+
+            {/* Grid overlay */}
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `
+                    linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px',
+                pointerEvents: 'none',
+            }} />
+
+            {/* Confetti */}
+            {showConfetti && Array.from({ length: 120 }, (_, i) => (
+                <div
+                    key={i}
+                    style={{
+                        position: 'absolute',
+                        left: `${Math.random() * 100}%`,
+                        top: '-20px',
+                        width: Math.random() * 10 + 5,
+                        height: Math.random() * 10 + 5,
+                        background: ['#3B82F6', '#06B6D4', '#6366F1', '#60A5FA'][Math.floor(Math.random() * 4)],
+                        borderRadius: Math.random() > 0.5 ? '50%' : '0',
+                        animation: `confetti-fall ${Math.random() * 3 + 2}s linear forwards`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        pointerEvents: 'none',
+                        zIndex: 50
+                    }}
+                />
+            ))}
+
+            {/* Main container */}
+            {/* Main Strict 3-Column Container */}
+            <div style={{
+                background: '#0f1419',
+                borderRadius: 20,
+                padding: '40px 24px',
+                border: '1px solid rgba(0, 212, 170, 0.15)',
+                boxShadow: `
+                    0 0 0 1px rgba(0, 212, 170, 0.1),
+                    0 40px 80px -12px rgba(0, 0, 0, 0.9),
+                    0 0 60px rgba(0, 212, 170, 0.05)
+                `,
+                width: '100%',
+                maxWidth: 1100,
+                position: 'relative',
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 20,
+            }}>
+                {/* Close Button */}
+                <button
+                    onClick={() => { }}
+                    style={{
+                        position: 'absolute',
+                        top: 24,
+                        right: 24,
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.4)',
+                        cursor: 'pointer',
+                        padding: 8,
+                        zIndex: 50,
+                    }}
                 >
-                    <canvas
-                        ref={canvasRef}
-                        width={500}
-                        height={500}
-                        className="w-full h-full"
+                    <X size={24} />
+                </button>
+
+                {/* LEFT COLUMN: Tech Alley Logo */}
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingRight: 20 }}>
+                    <img
+                        src="/tah-hero-logo.png"
+                        alt="Tech Alley Henderson"
+                        style={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            height: 'auto',
+                            maxHeight: 320,
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))'
+                        }}
                     />
                 </div>
 
-                {/* Center Cap */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center border-4 border-slate-900 z-10">
-                    <span className="text-2xl">🎯</span>
-                </div>
-            </div>
+                {/* CENTER COLUMN: Wheel & Controls */}
+                <div style={{
+                    flex: '0 0 340px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    zIndex: 20,
+                }}>
 
-            <div className="flex flex-col items-center gap-4 min-h-[100px]">
-                {winner ? (
-                    <div className="animate-in zoom-in slide-in-from-bottom-4 text-center space-y-4">
-                        <div className="space-y-2">
-                            <div className="text-yellow-400 font-bold uppercase tracking-widest text-sm">Winner!</div>
-                            <div className="text-4xl font-black text-white">{winner.name}</div>
-                            <div className="text-slate-400 text-sm">{winner.entries_count} Entries ({((winner.entries_count / entrants.reduce((a, b) => a + b.entries_count, 0)) * 100).toFixed(1)}% Chance)</div>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
+                            <span style={{ color: '#00D4AA', fontSize: 10 }}>●</span>
+                            <span style={{
+                                color: '#00D4AA',
+                                fontSize: 12,
+                                fontFamily: "'Space Mono', monospace",
+                                letterSpacing: 3,
+                                textTransform: 'uppercase',
+                                fontWeight: 700
+                            }}>LIVE RAFFLE</span>
+                            <span style={{ color: '#00D4AA', fontSize: 10 }}>●</span>
                         </div>
 
-                        <Button
-                            onClick={async () => {
-                                const res = await fetch('/api/admin/sms/send', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        type: 'raffle_winner',
-                                        recipient: winner
-                                    })
-                                });
-                                if (res.ok) alert('SMS Sent!');
-                                else alert('Failed to send SMS');
-                            }}
-                            className="bg-green-500 hover:bg-green-600 text-black font-bold rounded-full px-8"
-                        >
-                            <span className="mr-2">📲</span> Notify Winner
-                        </Button>
-                    </div>
-                ) : (
-                    <Button
-                        size="lg"
-                        onClick={spin}
-                        disabled={spinning || entrants.length === 0}
-                        className="h-16 px-12 text-xl font-bold rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-xl shadow-purple-500/20"
-                    >
-                        {spinning ? (
-                            <>Spinning...</>
-                        ) : (
-                            <>SPIN THE WHEEL!</>
-                        )}
-                    </Button>
-                )}
+                        <h2 style={{
+                            fontSize: 38,
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 0,
+                            margin: 0,
+                            lineHeight: 1,
+                            textTransform: 'uppercase',
+                        }}>
+                            WHEEL OF ALIGNMENT
+                        </h2>
 
-                <Button variant="ghost" size="sm" onClick={fetchEntrants} disabled={spinning} className="text-slate-500">
-                    <RotateCcw className="w-3 h-3 mr-2" /> Refresh Entrants
-                </Button>
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            background: 'rgba(0, 212, 170, 0.15)',
+                            padding: '6px 16px',
+                            borderRadius: 100,
+                            marginTop: 16,
+                            border: '1px solid rgba(0, 212, 170, 0.2)'
+                        }}>
+                            <span style={{ color: '#00D4AA', fontSize: 14 }}>✦</span>
+                            <span style={{
+                                color: '#00D4AA',
+                                fontSize: 13,
+                                fontWeight: 700,
+                                fontFamily: "'Space Mono', monospace",
+                                letterSpacing: 1
+                            }}>
+                                {entrants.length} ENTRANTS QUALIFIED
+                            </span>
+                            <span style={{ color: '#00D4AA', fontSize: 14 }}>✦</span>
+                        </div>
+                    </div>
+
+                    {/* Wheel Section */}
+                    <div style={{ position: 'relative', width: 320, height: 320, marginBottom: 32 }}>
+                        {/* Ticker */}
+                        <div style={{
+                            position: 'absolute',
+                            top: -24,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 30,
+                            width: 0,
+                            height: 0,
+                            borderLeft: '15px solid transparent',
+                            borderRight: '15px solid transparent',
+                            borderTop: '40px solid #00D4AA',
+                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                        }} />
+
+                        {/* Outer Glow */}
+                        <div style={{
+                            position: 'absolute',
+                            inset: -2,
+                            borderRadius: '50%',
+                            boxShadow: '0 0 40px rgba(0, 212, 170, 0.2)',
+                            zIndex: 0
+                        }} />
+
+                        {/* Wheel */}
+                        <div
+                            ref={wheelRef}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '50%',
+                                background: '#0a0e12',
+                                border: '3px solid #00D4AA',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                transform: `rotate(${rotation}deg)`,
+                                transition: isSpinning ? 'transform 5s cubic-bezier(0.15, 0.85, 0.35, 1)' : 'none',
+                                zIndex: 10
+                            }}
+                        >
+                            <svg width="100%" height="100%" viewBox="0 0 320 320">
+                                {entrants.map((entrant, i) => {
+                                    const count = entrants.length;
+                                    const anglePerSegment = 360 / count;
+                                    const startAngle = i * anglePerSegment - 90;
+                                    const endAngle = (i + 1) * anglePerSegment - 90;
+                                    const toRad = (deg: number) => deg * Math.PI / 180;
+
+                                    // Line coords (center 160,160 radius 160)
+                                    const x1 = 160 + 160 * Math.cos(toRad(endAngle));
+                                    const y1 = 160 + 160 * Math.sin(toRad(endAngle));
+
+                                    // Text coords
+                                    const midAngle = startAngle + anglePerSegment / 2;
+                                    const textRadius = 130;
+                                    const tx = 160 + textRadius * Math.cos(toRad(midAngle));
+                                    const ty = 160 + textRadius * Math.sin(toRad(midAngle));
+
+                                    return (
+                                        <g key={entrant.id || i}>
+                                            <line x1="160" y1="160" x2={x1} y2={y1} stroke="#00D4AA" strokeWidth="1" />
+                                            <text
+                                                x={tx} y={ty}
+                                                fill="white"
+                                                fontSize={count > 20 ? 10 : 12}
+                                                fontWeight="600"
+                                                fontFamily="'Outfit', sans-serif"
+                                                textAnchor="middle"
+                                                dominantBaseline="middle"
+                                                transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}
+                                                style={{ textTransform: 'uppercase' }}
+                                            >
+                                                {entrant.name}
+                                            </text>
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+                        </div>
+
+                        {/* Hub */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 76,
+                            height: 76,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #3B82F6, #06B6D4)',
+                            zIndex: 20,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '3px solid #0f1419'
+                        }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    {/* Status / Winner */}
+                    <div style={{ height: 60, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {winner ? (
+                            <div style={{ textAlign: 'center', animation: 'winner-reveal 0.6s ease-out' }}>
+                                <div style={{ color: '#00D4AA', fontSize: 12, fontFamily: "'Space Mono', monospace", letterSpacing: 2, marginBottom: 4 }}>WINNER SELECTED</div>
+                                <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 0 20px rgba(59, 130, 246, 0.5)' }}>{winner.name}</div>
+                            </div>
+                        ) : (
+                            <div style={{ color: '#6B7280', fontSize: 13, letterSpacing: 2, fontWeight: 500 }}>READY TO SPIN</div>
+                        )}
+                    </div>
+
+                    {/* Buttons */}
+                    <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <button
+                            onClick={spinWheel}
+                            disabled={isSpinning || entrants.length === 0}
+                            style={{
+                                width: '100%',
+                                background: isSpinning ? '#1f2937' : '#3B82F6',
+                                backgroundImage: isSpinning ? 'none' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                color: isSpinning ? '#4b5563' : '#fff',
+                                border: 'none',
+                                padding: '16px 32px',
+                                borderRadius: 12,
+                                fontSize: 18,
+                                fontWeight: 800,
+                                letterSpacing: 1.5,
+                                cursor: isSpinning ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
+                                transform: isSpinning ? 'scale(0.98)' : 'scale(1)',
+                            }}
+                        >
+                            {isSpinning ? 'SPINNING...' : 'SPIN THE WHEEL'}
+                        </button>
+
+                        {!isSpinning && (
+                            <button
+                                onClick={fetchEntrants}
+                                style={{
+                                    width: '100%',
+                                    background: 'transparent',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    color: '#9CA3AF',
+                                    padding: '12px',
+                                    borderRadius: 12,
+                                    fontSize: 12,
+                                    fontFamily: "'Space Mono', monospace",
+                                    letterSpacing: 1,
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                SYNC ENTRANTS
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ marginTop: 24, color: '#6B7280', fontSize: 12, textAlign: 'center' }}>
+                        Powered by Social Alignment
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN: Social Alignment Logo */}
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: 20 }}>
+                    <img
+                        src="/sa-hero-logo.png"
+                        alt="Social Alignment"
+                        style={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            height: 'auto',
+                            maxHeight: 320,
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))'
+                        }}
+                    />
+                </div>
             </div>
-        </div>
+        </div >
     );
-}
+};

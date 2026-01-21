@@ -81,8 +81,14 @@ export async function POST(req: Request) {
             const tags = ['Demo Registrant'];
             if (profileData.industry) tags.push(profileData.industry);
 
+            // Import dynamically to avoid top-level load issues if env vars missing
             import('@/lib/email-service').then(({ EmailService }) => {
-                EmailService.addSubscriber(profileData.email, profileData.name, '', tags).catch(err =>
+                // Split name for First/Last
+                const nameParts = profileData.name.split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+                EmailService.addSubscriber(profileData.email, firstName, lastName, tags).catch(err =>
                     console.error("Failed to add to Mailchimp:", err)
                 );
             });

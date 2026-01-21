@@ -58,6 +58,7 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [qualifiedLeads, setQualifiedLeads] = useState<any[]>([]); // New State for Qualified Leads
+    const [smsStatus, setSmsStatus] = useState<'active' | 'simulated'>('active');
     const [feedbackItems, setFeedbackItems] = useState<any[]>([]); // Quick type for now
     const [questions, setQuestions] = useState<any[]>([]);
     const [selectedSpeaker, setSelectedSpeaker] = useState<string>('all');
@@ -76,7 +77,8 @@ export default function AdminDashboardPage() {
 
                 if (data.stats) setStats(data.stats);
                 if (data.recentLeads) setLeads(data.recentLeads);
-                if (data.qualifiedLeads) setQualifiedLeads(data.qualifiedLeads); // Set qualified leads
+                if (data.qualifiedLeads) setQualifiedLeads(data.qualifiedLeads);
+                if (data.smsStatus) setSmsStatus(data.smsStatus);
 
                 // Fetch Feedback & Questions
                 const fb = await getAllFeedback();
@@ -136,7 +138,56 @@ export default function AdminDashboardPage() {
                         <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                             MISSION CONTROL
                         </h1>
-                        <p className="text-slate-400">Tech Alley Henderson • Live Operations</p>
+                        <div className="flex items-center gap-3">
+                            <p className="text-slate-400">Tech Alley Henderson • Live Operations</p>
+                            {smsStatus === 'simulated' ? (
+                                <button
+                                    onClick={() => {
+                                        const phone = window.prompt("Enter phone number to test SIMULATION:");
+                                        if (phone) {
+                                            fetch('/api/admin/sms/test', {
+                                                method: 'POST',
+                                                body: JSON.stringify({ phone, message: "SIMULATED TEST from Dashboard" })
+                                            })
+                                                .then(res => res.json())
+                                                .then(data => alert(JSON.stringify(data, null, 2)))
+                                                .catch(err => alert("Error: " + err.message));
+                                        }
+                                    }}
+                                    className="px-2 py-0.5 rounded text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 flex items-center gap-1.5 font-mono uppercase tracking-wider hover:bg-yellow-500/30 cursor-pointer transition-colors"
+                                >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                                    SMS Simulated (Click to Test)
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        const phone = window.prompt("Enter phone number for LIVE SMS Test:");
+                                        if (phone) {
+                                            fetch('/api/admin/sms/test', {
+                                                method: 'POST',
+                                                body: JSON.stringify({ phone, message: "LIVE TEST from Tech Alley Dashboard 🚀" })
+                                            })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        const extra = data.errorCode ? `\n❌ Error Code: ${data.errorCode}\nMsg: ${data.errorMessage}` : `\nStatus: ${data.status}`;
+                                                        alert(`✅ SMS Request Sent!\nSID: ${data.sid}${extra}`);
+                                                    } else {
+                                                        alert(`❌ Failed: ${data.error}\nCheck console for details.`);
+                                                        console.error(data);
+                                                    }
+                                                })
+                                                .catch(err => alert("Error: " + err.message));
+                                        }
+                                    }}
+                                    className="px-2 py-0.5 rounded text-[10px] bg-green-500/20 text-green-400 border border-green-500/30 flex items-center gap-1.5 font-mono uppercase tracking-wider hover:bg-green-500/30 cursor-pointer transition-colors"
+                                >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    SMS Active (Click to Test)
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -251,6 +302,8 @@ export default function AdminDashboardPage() {
                                     <tr>
                                         <th className="pb-3 pl-2">Name</th>
                                         <th className="pb-3">Score</th>
+                                        <th className="pb-3">First Time</th>
+                                        <th className="pb-3 w-1/4">Goal</th>
                                         <th className="pb-3">Status</th>
                                         <th className="pb-3 text-right pr-2">Variant</th>
                                     </tr>
@@ -258,7 +311,7 @@ export default function AdminDashboardPage() {
                                 <tbody className="divide-y divide-white/5">
                                     {qualifiedLeads?.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-8 text-center text-slate-500 italic">
+                                            <td colSpan={6} className="py-8 text-center text-slate-500 italic">
                                                 No registrations yet.
                                             </td>
                                         </tr>
@@ -274,16 +327,28 @@ export default function AdminDashboardPage() {
                                                         lead.score >= 60 ? 'text-purple-400' :
                                                             'text-slate-400'
                                                         }`}>
-                                                        {lead.score}
+                                                        {lead.score || '-'}
                                                     </span>
                                                     <span className="text-slate-600 text-xs text-opacity-50">/100</span>
+                                                </td>
+                                                <td className="py-3">
+                                                    {lead.is_first_time ? (
+                                                        <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Yes</span>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-500">No</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3">
+                                                    <div className="text-xs text-slate-300 truncate max-w-[200px]" title={lead.goal_for_tonight}>
+                                                        {lead.goal_for_tonight || '-'}
+                                                    </div>
                                                 </td>
                                                 <td className="py-3">
                                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${lead.score_band === 'PRIORITY' ? 'bg-green-500/20 text-green-400' :
                                                         lead.score_band === 'QUALIFIED' ? 'bg-purple-500/20 text-purple-400' :
                                                             'bg-slate-800 text-slate-400'
                                                         }`}>
-                                                        {lead.score_band}
+                                                        {lead.score_band || 'Standard'}
                                                     </span>
                                                 </td>
                                                 <td className="py-3 text-right pr-2 text-xs text-slate-400">

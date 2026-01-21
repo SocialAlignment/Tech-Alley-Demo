@@ -58,7 +58,7 @@ const MultiSelect = ({ options, selected, onChange, label, max, placeholder = "S
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-white"
+                    className="w-full justify-between bg-black/20 border-white/10 text-slate-300 hover:bg-slate-900/50 hover:text-white transition-all duration-300 focus:ring-0 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
                 >
                     {selected.length > 0 ? (
                         <span className="truncate">
@@ -161,41 +161,41 @@ const initialDemoProfileData: DemoProfileData = {
 // STEP 1: Basic Info
 const BasicDetailsStep = ({ formData, updateFormData }: any) => (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg flex items-start gap-3">
+        <div className="bg-blue-900/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3 backdrop-blur-sm">
             <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-200">
+            <p className="text-base text-blue-200/80">
                 Your Name and Email are managed via your Google Login.
             </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-                <Label className="text-slate-300">Full Name <Lock className="w-3 h-3 inline ml-1 text-slate-500" /></Label>
-                <Input value={formData.name} disabled className="bg-slate-900/50 border-slate-700 text-slate-300 cursor-not-allowed opacity-100" />
+                <Label className="text-slate-300 text-base">Full Name <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
+                <Input value={formData.name} disabled className="bg-slate-950/30 border-white/5 text-slate-400 cursor-not-allowed text-base" />
             </div>
             <div className="space-y-2">
-                <Label className="text-slate-300">Email <Lock className="w-3 h-3 inline ml-1 text-slate-500" /></Label>
-                <Input value={formData.email} disabled className="bg-slate-900/50 border-slate-700 text-slate-300 cursor-not-allowed opacity-100" />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-300">Phone Number</Label>
-                <Input id="phone" name="phone" value={formData.phone} onChange={updateFormData} placeholder="(555) 123-4567" className="bg-slate-800/50 border-slate-700 text-white focus:border-blue-500" />
+                <Label className="text-slate-300 text-base">Email <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
+                <Input value={formData.email} disabled className="bg-slate-950/30 border-white/5 text-slate-400 cursor-not-allowed text-base" />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="company" className="text-slate-300">Company</Label>
-                <Input id="company" name="company" value={formData.company} onChange={updateFormData} placeholder="Your Company Name" className="bg-slate-800/50 border-slate-700 text-white focus:border-blue-500" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="role" className="text-slate-300">Role / Title</Label>
-                <Input id="role" name="role" value={formData.role} onChange={updateFormData} placeholder="Founder, CEO, Developer..." className="bg-slate-800/50 border-slate-700 text-white focus:border-blue-500" />
+                <Label htmlFor="phone" className="text-slate-300 text-base">Phone Number</Label>
+                <Input id="phone" name="phone" value={formData.phone} onChange={updateFormData} placeholder="(555) 123-4567" className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base" />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="industry" className="text-slate-300">Industry</Label>
+                <Label htmlFor="company" className="text-slate-300 text-base">Company</Label>
+                <Input id="company" name="company" value={formData.company} onChange={updateFormData} placeholder="Your Company Name" className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base" />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="role" className="text-slate-300 text-base">Role / Title</Label>
+                <Input id="role" name="role" value={formData.role} onChange={updateFormData} placeholder="Founder, CEO, Developer..." className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base" />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="industry" className="text-slate-300 text-base">Industry</Label>
                 <Select value={formData.industry} onValueChange={(val) => updateFormData({ target: { name: 'industry', value: val } })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-black/20 border-white/10 text-white focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base h-12">
                         <SelectValue placeholder="Select Industry" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700 text-white">
@@ -207,9 +207,9 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="businessType" className="text-slate-300">Business Type</Label>
+                <Label htmlFor="businessType" className="text-slate-300 text-base">Business Type</Label>
                 <Select value={formData.businessType} onValueChange={(val) => updateFormData({ target: { name: 'businessType', value: val } })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-black/20 border-white/10 text-white focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base h-12">
                         <SelectValue placeholder="Select Type" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700 text-white">
@@ -221,8 +221,8 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
             </div>
 
             <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="website" className="text-slate-300">Website</Label>
-                <Input id="website" name="website" value={formData.website} onChange={updateFormData} placeholder="https://..." className="bg-slate-800/50 border-slate-700 text-white focus:border-blue-500" />
+                <Label htmlFor="website" className="text-slate-300 text-base">Website</Label>
+                <Input id="website" name="website" value={formData.website} onChange={updateFormData} placeholder="https://..." className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base" />
             </div>
         </div>
     </div>
@@ -248,9 +248,9 @@ const CoreAlignmentStep = ({ formData, updateFormData }: any) => {
 
             <div className="space-y-6">
                 <div className="space-y-3">
-                    <Label className="text-slate-300">1. Who do you help? (Target Audience)</Label>
+                    <Label className="text-slate-300 text-base">1. Who do you help? (Target Audience)</Label>
                     <Select value={formData.targetAudience} onValueChange={(val) => updateFormData({ target: { name: 'targetAudience', value: val } })}>
-                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white h-12">
+                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white h-12 text-base">
                             <SelectValue placeholder="Select Target Audience..." />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-700 text-white">
@@ -275,17 +275,17 @@ const CoreAlignmentStep = ({ formData, updateFormData }: any) => {
                             value={formData.targetAudienceOther}
                             onChange={updateFormData}
                             placeholder="Please specify..."
-                            className="bg-slate-800/50 border-slate-700 text-white mt-2"
+                            className="bg-slate-800/50 border-slate-700 text-white mt-2 h-12 text-base"
                         />
                     )}
                 </div>
 
                 <div className="space-y-3">
-                    <Label className="text-slate-300">2. What problem do you solve? (Biggest Pain Point)</Label>
+                    <Label className="text-slate-300 text-base">2. What problem do you solve? (Biggest Pain Point)</Label>
                     <div className="flex flex-col md:flex-row gap-2">
                         <div className="w-full md:w-1/3">
                             <Select value={formData.problemVerb} onValueChange={(val) => updateFormData({ target: { name: 'problemVerb', value: val } })}>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white h-12">
+                                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white h-12 text-base">
                                     <SelectValue placeholder="Action..." />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-900 border-slate-700 text-white">
@@ -300,7 +300,7 @@ const CoreAlignmentStep = ({ formData, updateFormData }: any) => {
                                     value={formData.problemVerbOther}
                                     onChange={updateFormData}
                                     placeholder="Action verb..."
-                                    className="bg-slate-800/50 border-slate-700 text-white mt-2 h-12"
+                                    className="bg-slate-800/50 border-slate-700 text-white mt-2 h-12 text-base"
                                 />
                             )}
                         </div>
@@ -310,20 +310,20 @@ const CoreAlignmentStep = ({ formData, updateFormData }: any) => {
                                 value={formData.problemSolved}
                                 onChange={updateFormData}
                                 placeholder="e.g. lack of leads, poor retention..."
-                                className="bg-slate-800/50 border-slate-700 text-white h-12"
+                                className="bg-slate-800/50 border-slate-700 text-white h-12 text-base"
                             />
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <Label className="text-slate-300">3. How do you solve it? (Your Product/Service/Mechanism)</Label>
+                    <Label className="text-slate-300 text-base">3. How do you solve it? (Your Product/Service/Mechanism)</Label>
                     <Input
                         name="solutionMechanism"
                         value={formData.solutionMechanism}
                         onChange={updateFormData}
                         placeholder="e.g. AI automation, custom software, coaching..."
-                        className="bg-slate-800/50 border-slate-700 text-white h-12"
+                        className="bg-slate-800/50 border-slate-700 text-white h-12 text-base"
                     />
                 </div>
             </div>
@@ -434,7 +434,7 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
 
             {/* Moved First Time Question Here */}
             <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
-                <Label className="text-slate-300 block mb-3">Was today your first time at Tech Alley Henderson?</Label>
+                <Label className="text-slate-300 block mb-3 text-base">Was today your first time at Tech Alley Henderson?</Label>
                 <div className="flex gap-4">
                     <label className={cn(
                         "flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all",
@@ -472,7 +472,7 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
             </div>
 
             <div className="space-y-2">
-                <label className="text-sm font-medium leading-none text-slate-300 flex items-center">
+                <label className="text-base font-medium leading-none text-slate-300 flex items-center">
                     Intention for Next Month's Event
                     <HelpBubble content="What are you hoping to achieve when you return?" />
                 </label>
@@ -487,15 +487,15 @@ const GoalsStep = ({ formData, updateFormData }: any) => {
             </div>
 
             <div className="space-y-2">
-                <Label className="text-slate-300 flex items-center">
+                <Label className="text-slate-300 flex items-center text-base">
                     3 Month Success Vision
                     <HelpBubble content="Where do you want your business/project to be in 90 days?" />
                 </Label>
-                <Textarea name="vision" value={formData.vision} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500" placeholder="I want to have launched my MVP..." />
+                <Textarea name="vision" value={formData.vision} onChange={updateFormData} className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 text-base" placeholder="I want to have launched my MVP..." />
             </div>
 
             <div className="space-y-2">
-                <Label className="text-slate-300">What would you like to see from future Tech Alley Henderson events?</Label>
+                <Label className="text-slate-300 text-base">What would you like to see from future Tech Alley Henderson events?</Label>
                 <Textarea
                     name="futureEventsWishlist"
                     value={formData.futureEventsWishlist}
@@ -577,28 +577,44 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 w-full max-w-2xl bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden"
+                className="relative z-10 w-full bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-white/10 border-t-white/20 rounded-[2rem] shadow-[0_0_40px_rgba(139,92,246,0.15)] overflow-hidden"
             >
-                {/* Header */}
-                <div className="bg-slate-900/80 px-8 py-6 border-b border-white/5 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                            <Image src="/social-alignment-icon.png" alt="Social Alignment" width={32} height={32} className="w-8 h-8 object-contain" />
+                {/* Full-Width Branded Header Bar */}
+                {/* Full-Width Branded Header Bar */}
+                <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-900/80 px-6 py-4 flex items-center justify-between border-b border-white/10 relative min-h-[100px]">
+
+                    {/* Left: Logo */}
+                    <div className="flex-none z-10 -ml-2">
+                        <Image
+                            src="/tah-hero-logo.png"
+                            alt="Tech Alley Henderson"
+                            width={120}
+                            height={120}
+                            className="w-28 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-125"
+                        />
+                    </div>
+
+                    {/* Center: Step Title & User Context */}
+                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center justify-center pointer-events-none">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md whitespace-nowrap">
                             {steps[currentStep].label}
                         </h2>
-                        {leadId ? (
-                            <p className="text-blue-400 text-sm flex items-center gap-1 mt-1">
-                                <UserCheck className="w-3 h-3" /> Connected as {userName || 'User'}
-                            </p>
-                        ) : (
-                            <p className="text-slate-400 text-sm mt-1">Please ensure your information is accurate.</p>
+                        {leadId && (
+                            <div className="flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md pointer-events-auto">
+                                <UserCheck className="w-3 h-3 text-cyan-400" />
+                                <span className="text-xs font-medium text-cyan-200/80 block pb-0.5">Connected as {userName || 'User'}</span>
+                            </div>
                         )}
                     </div>
-                    <div className="text-right">
-                        <div className="text-sm font-medium text-blue-400">Step {currentStep + 1} of {steps.length}</div>
-                        <div className="h-1.5 w-32 bg-slate-800 rounded-full mt-2 overflow-hidden">
+
+                    {/* Right: Step Counter */}
+                    <div className="flex-none text-right z-10">
+                        <div className="text-lg font-bold font-mono text-cyan-300">
+                            Step {currentStep + 1} <span className="text-white/40 text-sm font-sans mx-1">of</span> {steps.length}
+                        </div>
+                        <div className="h-2 w-32 bg-slate-800/50 rounded-full mt-2 overflow-hidden border border-white/5 ml-auto">
                             <motion.div
-                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400"
+                                className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                                 transition={{ duration: 0.5 }}

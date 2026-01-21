@@ -110,9 +110,9 @@ export default function DemoOnboardingPage() {
         <main className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-4xl mx-auto mb-8 text-center space-y-2">
                 <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                    Complete Registration
+                    Event Registration
                 </h1>
-                <p className="text-slate-400">Tell us a bit about yourself to enter the raffle.</p>
+                <p className="text-lg text-slate-400">Enter to win 1:1 video session with Social Alignment, LLC</p>
             </div>
 
             <DemoProfileWizard

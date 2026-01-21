@@ -108,19 +108,29 @@ export class CommService {
         const cleanPhone = this.formatPhone(to);
 
         console.log(`[CommService] Attempting to send SMS to ${cleanPhone} (Original: ${to}) [Trigger: ${triggerId}]`);
-        console.log(`[CommService] Content: "${body}"`);
 
         if (!client) {
             console.warn("[CommService] Twilio credentials missing. SIMULATING SEND.");
             return { success: true, status: 'simulated', sid: 'simulated_sid' };
         }
 
+        // A2P 10DLC Compliance: Prefer Messaging Service SID
+        const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID || 'MG761ccd492c31c0f0aa524b57a2f89a52';
+
         try {
-            const result = await client.messages.create({
+            const payload: any = {
                 body,
-                from: fromNumber,
                 to: cleanPhone
-            });
+            };
+
+            if (messagingServiceSid) {
+                payload.messagingServiceSid = messagingServiceSid;
+            } else {
+                payload.from = fromNumber;
+            }
+
+            const result = await client.messages.create(payload);
+
             console.log(`[CommService] SMS Sent! SID: ${result.sid}`);
             return { success: true, status: 'sent', sid: result.sid };
         } catch (error) {

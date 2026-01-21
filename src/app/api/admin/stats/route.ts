@@ -109,21 +109,24 @@ export async function GET() {
             }
         };
 
-        // E. Raffle Entries (Supabase: demo_raffle_entries) - Qualified Leads
+        // E. Raffle Entries (Supabase: demo_leads) - Qualified Leads
+        // Switched from 'demo_raffle_entries' to 'demo_leads' as the Wizard updates 'demo_leads'
         const fetchRaffleEntries = async () => {
             const { data, error } = await supabase
-                .from('demo_raffle_entries')
+                .from('demo_leads')
                 .select('*')
-                .order('score', { ascending: false }); // Show highest scores first
+                .order('created_at', { ascending: false });
 
             if (error) {
-                console.error("Raffle Count Error", error);
+                console.error("Leads Fetch Error", error);
                 return { registrantCount: 0, raffleEntries: 0, entries: [], error };
             }
 
-            // Sum up all entries_count values
-            const registrantCount = (data || []).length
-            const raffleEntries = ((data as any[]) || []).reduce((sum, entry) => sum + (entry.entries_count || 0), 0)
+            // Calculate counts
+            const registrantCount = (data || []).length;
+            // Assuming 1 entry per lead for now, or use a specific column if it exists. 
+            // Previous logic summed 'entries_count', but demo_leads might simply be one row per user.
+            const raffleEntries = registrantCount;
 
             return { registrantCount, raffleEntries, entries: data || [] };
         };
@@ -153,6 +156,7 @@ export async function GET() {
             },
             recentLeads: userData.recent,
             qualifiedLeads: raffleData.entries, // Send full list to frontend
+            smsStatus: (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) ? 'active' : 'simulated'
         });
 
     } catch (e: any) {

@@ -1,34 +1,28 @@
+import mailchimp from '@mailchimp/mailchimp_marketing';
 
-import client from '@mailchimp/mailchimp_marketing';
-
-// Initialize Client (if creds exist)
-const API_KEY = process.env.MAILCHIMP_API_KEY;
-const SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX; // e.g. "us17"
-const LIST_ID = process.env.MAILCHIMP_LIST_ID;
-
-if (API_KEY && SERVER_PREFIX) {
-    client.setConfig({
-        apiKey: API_KEY,
-        server: SERVER_PREFIX,
-    });
-}
+// Initialize Mailchimp
+mailchimp.setConfig({
+    apiKey: process.env.MAILCHIMP_API_KEY,
+    server: process.env.MAILCHIMP_SERVER_PREFIX,
+});
 
 export class EmailService {
+
     /**
-     * Adds a user to the main newsletter list.
-     * @param email User's email
-     * @param firstName User's first name
-     * @param lastName User's last name (optional)
-     * @param tags Array of tags to add to the subscriber
+     * Adds a new lead to the Mailchimp Audience
      */
-    static async addSubscriber(email: string, firstName: string, lastName: string = '', tags: string[] = []) {
-        if (!API_KEY || !LIST_ID || !SERVER_PREFIX) {
-            console.log(`[EmailService] [SIMULATION] Adding ${email} to Mailchimp List ${LIST_ID || 'MISSING_ID'} with tags: [${tags.join(', ')}]`);
-            return { status: 'simulated' };
+    static async addSubscriber(email: string, firstName: string, lastName: string, tags: string[] = []) {
+        const listId = process.env.MAILCHIMP_AUDIENCE_ID;
+
+        if (!listId || !process.env.MAILCHIMP_API_KEY) {
+            console.warn("[EmailService] Missing Credentials. Simulating Subscription.");
+            return { success: true, status: 'simulated' };
         }
 
         try {
-            const response = await client.lists.addListMember(LIST_ID, {
+            console.log(`[EmailService] Adding ${email} to list ${listId}`);
+
+            const response = await mailchimp.lists.addListMember(listId, {
                 email_address: email,
                 status: 'subscribed',
                 merge_fields: {
@@ -36,20 +30,22 @@ export class EmailService {
                     LNAME: lastName
                 },
                 tags
-            });
+            }) as any;
 
-            console.log(`[EmailService] Successfully added ${email} to list.`);
-            return response;
+            console.log(`[EmailService] Successfully subscribed ${email}. ID: ${response.id}`);
+            return { success: true, id: response.id };
         } catch (error: any) {
-            // If user already exists, that's fine, maybe update tags?
-            // For now, just log generic error or specific "Member Exists"
-            if (error.response && error.response.body.title === "Member Exists") {
-                console.log(`[EmailService] User ${email} already in list.`);
-                // Optional: Update tags here if needed.
-                return { status: 'exists' };
+            // If already subscribed, update their tags instead of failing
+            if (error.response?.body?.title === 'Member Exists') {
+                console.log(`[EmailService] ${email} already exists. Attempting to update tags...`);
+                // Logic to update tags could go here if needed, 
+                // but for now we just treat it as a success to not block flow.
+                return { success: true, status: 'already_subscribed' };
             }
-            console.error("[EmailService] Error adding subscriber:", error);
-            return { status: 'error', error };
+
+            console.error("[EmailService] Failed to subscribe:", error);
+            // Don't kill the request
+            return { success: false, error };
         }
     }
 }
