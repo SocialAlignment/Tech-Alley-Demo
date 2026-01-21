@@ -28,6 +28,14 @@ export async function GET() {
             exists: !!process.env.NEXTAUTH_SECRET,
             length: process.env.NEXTAUTH_SECRET?.length || 0
         },
+        SUPABASE_SERVICE_ROLE_KEY: {
+            exists: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            length: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0
+        },
+        NEXT_PUBLIC_SUPABASE_URL: {
+            exists: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+            value: process.env.NEXT_PUBLIC_SUPABASE_URL
+        },
         NODE_ENV: process.env.NODE_ENV
     });
 }
