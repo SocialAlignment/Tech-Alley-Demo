@@ -32,35 +32,25 @@ export default function WheelOfAlignment() {
 
     const fetchEntrants = async () => {
         setLoading(true);
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        try {
+            const res = await fetch('/api/admin/wheel-entries');
+            const data = await res.json();
 
-        const { data, error } = await supabase
-            .from('demo_raffle_entries')
-            .select('id, name, entries_count')
-            .gt('entries_count', 0);
-
-        if (data && !error) {
-            const palette = ['#3B82F6', '#06B6D4', '#6366F1', '#2563EB', '#0891B2', '#4F46E5', '#60A5FA', '#22D3EE'];
-            const formatted = data.map((d: any, i: number) => ({
-                id: d.id,
-                name: d.name.split(' ')[0], // First name
-                entries_count: d.entries_count || 1,
-                color: palette[i % palette.length]
-            }));
-
-            // If weighted, we might want to duplicate entries or adjust segment size.
-            // For this visual implementation, simple equal segments often look best,
-            // but let's assume 1 entry = 1 slot if we want true probability,
-            // OR strictly weighted random logic (Visuals vs Logic).
-            // The User's Logic assumed equal segments: segmentSize = 360 / entrants.length
-            // Let's stick to that for the Visual Wheel, but strictly pick the winner by weight.
-
-            setEntrants(formatted);
+            if (data.entries) {
+                const palette = ['#3B82F6', '#06B6D4', '#6366F1', '#2563EB', '#0891B2', '#4F46E5', '#60A5FA', '#22D3EE'];
+                const formatted = data.entries.map((d: any, i: number) => ({
+                    id: d.id,
+                    name: d.name.split(' ')[0], // First name
+                    entries_count: d.entries_count || 1,
+                    color: palette[i % palette.length]
+                }));
+                setEntrants(formatted);
+            }
+        } catch (error) {
+            console.error("Failed to fetch wheel entrants", error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
 

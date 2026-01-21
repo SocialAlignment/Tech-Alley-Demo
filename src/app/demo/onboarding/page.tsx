@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function DemoOnboardingPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { userName, leadId: ctxLeadId } = useIdentity();
+    const { userName, leadId: ctxLeadId, refreshIdentity } = useIdentity();
     const urlId = searchParams.get('id');
     const effectivelyLeadId = urlId || ctxLeadId;
 
@@ -91,6 +91,7 @@ export default function DemoOnboardingPage() {
             });
 
             if (res.ok) {
+                await refreshIdentity(); // Refresh context before redirect
                 router.push(`/demo/success?id=${effectivelyLeadId}`);
             } else {
                 const errorData = await res.json();

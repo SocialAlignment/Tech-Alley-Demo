@@ -519,11 +519,11 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
     connectedId?: string
 }) {
     const [currentStep, setCurrentStep] = useState(0);
-    const { leadId: ctxLeadId, userName: ctxUserName } = useIdentity();
+    const { leadId: identityLeadId, userName: identityUserName, refreshIdentity } = useIdentity();
     const [formData, setFormData] = useState<DemoProfileData>(initialDemoProfileData);
 
-    const leadId = connectedId || ctxLeadId;
-    const userName = connectedName || ctxUserName;
+    const leadId = connectedId || identityLeadId;
+    const userName = connectedName || identityUserName;
 
     // Hydration
     useEffect(() => {
@@ -584,23 +584,23 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
                 <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-900/80 px-6 py-4 flex items-center justify-between border-b border-white/10 relative min-h-[100px]">
 
                     {/* Left: Logo */}
-                    <div className="flex-none z-10 -ml-2">
+                    <div className="flex-none z-10 -ml-2 w-24 md:w-32">
                         <Image
                             src="/tah-hero-logo.png"
                             alt="Tech Alley Henderson"
                             width={120}
                             height={120}
-                            className="w-28 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-125"
+                            className="w-full h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-125"
                         />
                     </div>
 
                     {/* Center: Step Title & User Context */}
-                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center justify-center pointer-events-none z-0">
-                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center px-4 leading-tight max-w-[200px] md:max-w-none mx-auto">
+                    <div className="flex-1 flex flex-col items-center justify-center z-0 px-2">
+                        <h2 className="text-lg md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center leading-tight">
                             {steps[currentStep].label}
                         </h2>
                         {leadId && (
-                            <div className="flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md pointer-events-auto">
+                            <div className="hidden md:flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md">
                                 <UserCheck className="w-3 h-3 text-cyan-400" />
                                 <span className="text-xs font-medium text-cyan-200/80 block pb-0.5">Connected as {userName || 'User'}</span>
                             </div>
@@ -608,11 +608,11 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
                     </div>
 
                     {/* Right: Step Counter */}
-                    <div className="flex-none text-right z-10 relative">
+                    <div className="flex-none text-right z-10 relative w-24 md:w-32">
                         <div className="text-lg font-bold font-mono text-cyan-300">
                             Step {currentStep + 1} <span className="text-white/40 text-sm font-sans mx-1">of</span> {steps.length}
                         </div>
-                        <div className="h-2 w-32 bg-slate-800/50 rounded-full mt-2 overflow-hidden border border-white/5 ml-auto">
+                        <div className="h-2 w-full bg-slate-800/50 rounded-full mt-2 overflow-hidden border border-white/5 ml-auto">
                             <motion.div
                                 className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
                                 initial={{ width: 0 }}

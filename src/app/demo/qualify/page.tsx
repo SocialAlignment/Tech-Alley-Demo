@@ -17,8 +17,14 @@ export default function QualifyPage() {
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
     const [scoreInfo, setScoreInfo] = useState<{ score: number, band: string } | null>(null);
     const [initialAlignmentStatement, setInitialAlignmentStatement] = useState('');
-    const [initialName, setInitialName] = useState('');
-    const [initialEmail, setInitialEmail] = useState('');
+    const [initialName, setInitialName] = useState(userName || '');
+    const [initialEmail, setInitialEmail] = useState(email || '');
+
+    // Update state when context loads if not already set
+    useEffect(() => {
+        if (!initialName && userName) setInitialName(userName);
+        if (!initialEmail && email) setInitialEmail(email);
+    }, [userName, email]);
 
     // Fetch Alignment Statement
     const searchParams = useSearchParams();
