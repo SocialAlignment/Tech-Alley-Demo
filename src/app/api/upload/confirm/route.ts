@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase';
 const NOTION_KEY = process.env.NOTION_API_KEY;
 const NOTION_DB_ID = process.env.NOTION_PHOTOBOOTH_DB_ID;
 const NOTION_VERSION = '2022-06-28';
-const AWS_REGION = process.env.AWS_REGION!;
-const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME!;
+const AWS_REGION = process.env.S3_REGION!;
+const AWS_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
 export async function POST(request: Request) {
     try {
