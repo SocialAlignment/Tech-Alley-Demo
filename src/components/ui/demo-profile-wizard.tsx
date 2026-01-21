@@ -171,11 +171,11 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
                 <Label className="text-slate-300 text-base">Full Name <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
-                <Input value={formData.name} onChange={updateFormData} name="name" disabled={!!(formData.name && formData.name.length > 2)} className={cn("bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base", formData.name && formData.name.length > 2 ? "cursor-not-allowed opacity-70 bg-slate-950/30" : "")} placeholder="Enter your full name" />
+                <Input value={formData.name} disabled className="bg-slate-950/30 border-white/10 text-slate-400 cursor-not-allowed text-base" />
             </div>
             <div className="space-y-2">
-                <Label className="text-slate-300 text-base">Email {formData.email && <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" />}</Label>
-                <Input value={formData.email} onChange={updateFormData} name="email" disabled={!!(formData.email && formData.email.length > 4)} className={cn("bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base", formData.email && formData.email.length > 4 ? "cursor-not-allowed opacity-70 bg-slate-950/30" : "")} placeholder="Enter your email" />
+                <Label className="text-slate-300 text-base">Email <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
+                <Input value={formData.email} disabled className="bg-slate-950/30 border-white/10 text-slate-400 cursor-not-allowed text-base" />
             </div>
 
             <div className="space-y-2">

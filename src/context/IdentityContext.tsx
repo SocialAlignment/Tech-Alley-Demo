@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface IdentityContextType {
     leadId: string | null;
@@ -148,7 +149,37 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        checkIdentity();
+        // 3. Check Supabase Auth (The missing link for Google OAuth)
+        const checkAuth = async () => {
+            const supabase = createClientComponentClient();
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session?.user?.id) {
+                console.log("IDENTITY DEBUG: Found Supabase Auth User:", session.user.id);
+                setLeadId(session.user.id);
+                await fetchProfile(session.user.id);
+            } else {
+                // Fallback to URL/Local if no Auth session
+                // 3. Check Supabase Auth (The missing link for Google OAuth)
+                const checkAuth = async () => {
+                    const supabase = createClientComponentClient();
+                    const { data: { session } } = await supabase.auth.getSession();
+
+                    if (session?.user?.id) {
+                        console.log("IDENTITY DEBUG: Found Supabase Auth User via Session:", session.user.id);
+                        setLeadId(session.user.id);
+                        await fetchProfile(session.user.id);
+                    } else {
+                        // Fallback to URL/Local if no Auth session
+                        checkIdentity();
+                    }
+                };
+
+                checkAuth();
+            }
+        };
+
+        checkAuth();
 
         return () => { isMounted = false; clearTimeout(failsafeTimer); };
     }, [searchParams, isLoading, leadId]);
