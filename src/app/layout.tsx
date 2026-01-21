@@ -42,11 +42,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} antialiased bg-background text-foreground overflow-x-hidden`} suppressHydrationWarning>
-        <IdentityProvider>
-          <QuestionsProvider>
-            {children}
-          </QuestionsProvider>
-        </IdentityProvider>
+        <Suspense fallback={null}>
+          <IdentityProvider>
+            <QuestionsProvider>
+              {children}
+            </QuestionsProvider>
+          </IdentityProvider>
+        </Suspense>
       </body>
     </html>
   );
