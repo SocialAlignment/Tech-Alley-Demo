@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { motion } from "framer-motion";
 import { CircuitBoardBackground } from "@/components/ui/circuit-board-background";
 import { Loader2, CheckCircle, Ticket } from "lucide-react";
 
-export default function DemoRegisterPage() {
+function RegisterContent() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         name: "",
@@ -124,5 +124,13 @@ export default function DemoRegisterPage() {
                 )}
             </motion.div>
         </main>
+    );
+}
+
+export default function DemoRegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+            <RegisterContent />
+        </Suspense>
     );
 }

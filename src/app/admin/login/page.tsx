@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, Terminal, AlertTriangle } from 'lucide-react';
 import { WarpBackground } from '@/components/ui/warp-background';
 
-export default function AdminLoginPage() {
+function LoginContent() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -121,5 +121,13 @@ export default function AdminLoginPage() {
 
             </div>
         </div>
+    );
+}
+
+export default function AdminLoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+            <LoginContent />
+        </Suspense>
     );
 }
