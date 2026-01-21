@@ -256,7 +256,7 @@ export default function FeedbackPage() {
                                             handleFeedbackClick(speaker);
                                         } else {
                                             // Open website on card click
-                                            const url = speaker.landingPage || speaker.website;
+                                            const url = speaker.landingPage || (speaker as any).website;
                                             if (url) {
                                                 window.open(url, '_blank');
                                             }
