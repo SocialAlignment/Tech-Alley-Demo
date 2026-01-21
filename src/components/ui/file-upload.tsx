@@ -45,7 +45,7 @@ export default function FileUpload05() {
         }
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = (e: React.DragEvent<HTMLElement>) => {
         e.preventDefault();
         e.stopPropagation();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -65,7 +65,7 @@ export default function FileUpload05() {
         }
     };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
         e.preventDefault();
         e.stopPropagation();
     };
@@ -187,7 +187,8 @@ export default function FileUpload05() {
                 <div className="w-full">
                     {/* Upload State */}
                     {!file ? (
-                        <div
+                        <label
+                            htmlFor="file-upload"
                             className={cn(
                                 "group relative mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 transition-all duration-300",
                                 "bg-slate-950/30 backdrop-blur-md", // Glass effect
@@ -203,8 +204,7 @@ export default function FileUpload05() {
                             </div>
 
                             <div className="text-center">
-                                <Label
-                                    htmlFor="file-upload"
+                                <div
                                     className="relative cursor-pointer text-lg font-semibold text-white transition-colors hover:text-indigo-400"
                                 >
                                     <span>Click to upload</span>
@@ -216,7 +216,7 @@ export default function FileUpload05() {
                                         className="sr-only"
                                         onChange={handleFileChange}
                                     />
-                                </Label>
+                                </div>
                                 <p className="mt-1 text-sm text-slate-400">or drag and drop</p>
                                 <p className="mt-2 text-xs text-slate-500">
                                     Images or Videos up to 10MB
@@ -228,7 +228,7 @@ export default function FileUpload05() {
                                     {error}
                                 </p>
                             )}
-                        </div>
+                        </label>
                     ) : (
                         <div className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-sm">
                             <div className="flex items-start gap-4">
