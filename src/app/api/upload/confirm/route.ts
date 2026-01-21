@@ -88,22 +88,21 @@ export async function POST(request: Request) {
 
         if (!res.ok) {
             const errorText = await res.text();
-            throw new Error(`Notion API Error: ${errorText}`);
+            console.error("Notion API Error Raw:", errorText);
+            let errorJson;
+            try {
+                errorJson = JSON.parse(errorText);
+            } catch (e) {
+                errorJson = { message: errorText };
+            }
+            return NextResponse.json(
+                { error: `Notion Error: ${errorJson.message || errorText}` },
+                { status: res.status }
+            );
         }
 
         // 2. Sync Instagram to User Profile (Supabase) if provided
         if (userId && instagramHandle) {
-            // Clean the handle first? optional but good practice
-            const cleanHandle = instagramHandle.startsWith('@')
-                ? `https://instagram.com/${instagramHandle.substring(1)}`
-                : instagramHandle; // Or keep it as is if we want raw handle. 
-            // Actually, keep it simple for now, or match `contact/update` logic.
-            // contact/update logic: url ? (url.startsWith('@') ? `https://instagram.com/${url.substring(1)}` : url) : null;
-            // The file-upload component might send raw handle or URL. The user sees what they type.
-            // Let's just save what they typed, or arguably, check if it's empty in DB first?
-            // "Upsert" logic: Update if instagram is null or empty? Or always update?
-            // User explicit input here is fresher than profile probably.
-
             // Use Admin Client if available to bypass RLS issues just in case
             const adminAuthClient = process.env.SUPABASE_SERVICE_ROLE_KEY
                 ? require('@supabase/supabase-js').createClient(
@@ -118,10 +117,6 @@ export async function POST(request: Request) {
                 .from('leads')
                 .update({ instagram: instagramHandle })
                 .eq('id', userId);
-
-            // Also Trigger Notion Sync for the user profile? 
-            // Yes, ideally, but let's stick to Supabase for now to fix the immediate "pulls from profile" loop.
-            // If we update Supabase, next time they load IdentityContext, it will be there.
         }
 
         return NextResponse.json({ success: true, imageUrl });
@@ -129,7 +124,7 @@ export async function POST(request: Request) {
     } catch (error: any) {
         console.error('Error confirming upload:', error);
         return NextResponse.json(
-            { error: 'Failed to save to database' },
+            { error: error.message || 'Failed to save to database' },
             { status: 500 }
         );
     }

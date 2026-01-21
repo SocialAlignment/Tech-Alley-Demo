@@ -101,14 +101,12 @@ export default function FileUpload05() {
             setProgress(30); // Url received
 
             // 2. Upload to S3
-            // Note: We use the presigned URL directly.
             console.log("Uploading to S3...");
             const uploadRes = await fetch(data.url, {
                 method: "PUT",
                 body: file,
                 headers: {
                     "Content-Type": file.type,
-                    // "Access-Control-Allow-Origin": "*", // Not needed on client PUT usually, handled by Bucket CORS
                 },
             });
 
@@ -121,29 +119,33 @@ export default function FileUpload05() {
             setProgress(80);
 
             // 3. Confirm & Save to Notion
-            try {
-                const confirmRes = await fetch('/api/upload/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        s3Key: data.key,
-                        caption: caption,
-                        userId: userName ? `${userName} (${leadId || 'No ID'})` : undefined,
-                        instagramHandle: instagram || contextInstagram
-                    })
-                });
+            console.log("Confirming upload with Notion/Supabase...");
+            const confirmRes = await fetch('/api/upload/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    s3Key: data.key,
+                    caption: caption,
+                    userId: userName ? `${userName} (${leadId || 'No ID'})` : undefined,
+                    instagramHandle: instagram || contextInstagram
+                })
+            });
 
-                if (!confirmRes.ok) {
-                    console.error("Failed to save metadata to Notion");
-                }
-            } catch (e) {
-                console.error("Confirmation error:", e);
+            if (!confirmRes.ok) {
+                const errorData = await confirmRes.json();
+                console.error("Failed to save metadata:", errorData);
+                // We DON'T throw here if we want to show partial success, but the user is complaining about "nothing updating".
+                // Let's THROW so they see the error and we can fix the schema.
+                throw new Error(errorData.error || "Failed to save to Gallery (Database Error)");
             }
 
             setProgress(100);
             setSuccess(true);
             setFile(null);
             setCaption("");
+            // Keep the file preview URL if possible, or just the S3 key? 
+            // We can't use the file object after setting to null. 
+            // Let's store a successPreviewUrl state.
 
         } catch (err: any) {
             console.error("Upload error caught:", err);
