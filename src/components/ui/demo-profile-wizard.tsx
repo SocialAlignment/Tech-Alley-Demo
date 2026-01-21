@@ -171,11 +171,11 @@ const BasicDetailsStep = ({ formData, updateFormData }: any) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
                 <Label className="text-slate-300 text-base">Full Name <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
-                <Input value={formData.name} disabled className="bg-slate-950/30 border-white/5 text-slate-400 cursor-not-allowed text-base" />
+                <Input value={formData.name} onChange={updateFormData} name="name" disabled={!!(formData.name && formData.name.length > 2)} className={cn("bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base", formData.name && formData.name.length > 2 ? "cursor-not-allowed opacity-70 bg-slate-950/30" : "")} placeholder="Enter your full name" />
             </div>
             <div className="space-y-2">
-                <Label className="text-slate-300 text-base">Email <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" /></Label>
-                <Input value={formData.email} disabled className="bg-slate-950/30 border-white/5 text-slate-400 cursor-not-allowed text-base" />
+                <Label className="text-slate-300 text-base">Email {formData.email && <Lock className="w-3.5 h-3.5 inline ml-1 text-slate-500" />}</Label>
+                <Input value={formData.email} onChange={updateFormData} name="email" disabled={!!(formData.email && formData.email.length > 4)} className={cn("bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300 text-base", formData.email && formData.email.length > 4 ? "cursor-not-allowed opacity-70 bg-slate-950/30" : "")} placeholder="Enter your email" />
             </div>
 
             <div className="space-y-2">
@@ -581,38 +581,28 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
                 {/* Full-Width Branded Header Bar */}
                 <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-900/80 px-4 md:px-6 py-4 flex flex-col md:flex-row items-center justify-between border-b border-white/10 relative gap-4 md:gap-0">
 
-                    {/* Left: Logo */}
-                    <div className="flex-none z-10 w-20 md:w-32">
-                        <Image
-                            src="/tah-hero-logo.png"
-                            alt="Tech Alley Henderson"
-                            width={120}
-                            height={120}
-                            className="w-full h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] md:scale-125"
-                        />
-                    </div>
-
-                    {/* Center: Step Title & User Context */}
-                    <div className="flex-1 flex flex-col items-center justify-center z-0 px-2 text-center order-2 md:order-1">
-                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center leading-tight">
+                    {/* Left: Step Title & User Context */}
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
                             {steps[currentStep].label}
                         </h2>
                         {leadId && (
-                            <div className="flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md">
-                                <UserCheck className="w-3 h-3 text-cyan-400" />
-                                <span className="text-xs font-medium text-cyan-200/80 block pb-0.5 max-w-[150px] truncate">{userName || 'User'}</span>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className={cn("text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-cyan-200/80 font-mono", leadId ? "opacity-100" : "opacity-0")}>
+                                    {userName || 'Guest User'}
+                                </span>
                             </div>
                         )}
                     </div>
 
                     {/* Right: Step Counter */}
-                    <div className="flex-none w-full md:w-32 z-10 relative flex flex-col items-center md:items-end order-3 md:order-2">
-                        <div className="text-sm md:text-lg font-bold font-mono text-cyan-300">
-                            Step {currentStep + 1} <span className="text-white/40 text-sm font-sans mx-1">of</span> {steps.length}
+                    <div className="text-right">
+                        <div className="text-sm font-medium text-slate-400 mb-2">
+                            Step {currentStep + 1} / {steps.length}
                         </div>
-                        <div className="h-1.5 md:h-2 w-24 md:w-full bg-slate-800/50 rounded-full mt-1 md:mt-2 overflow-hidden border border-white/5">
+                        <div className="h-1.5 w-32 bg-slate-800 rounded-full overflow-hidden ml-auto">
                             <motion.div
-                                className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                                className="h-full bg-teal-500"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                                 transition={{ duration: 0.5 }}

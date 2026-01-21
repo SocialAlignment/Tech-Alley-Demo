@@ -253,7 +253,7 @@ export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignm
                                     I confirm this is me
                                 </h3>
                                 <p className="text-sm text-slate-400">
-                                    I want to answer a few quick questions to earn <span className="text-teal-400 font-bold">+5 Extra Raffle Entries</span>.
+                                    I want to answer a few quick questions to earn <span className="text-teal-400 font-bold whitespace-nowrap">+5 Extra Raffle Entries</span>.
                                 </p>
                             </div>
                         </div>
