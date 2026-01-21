@@ -37,7 +37,7 @@ export default function PhotoBoothUploadPage() {
                 </div>
 
                 {/* File Upload Component - it handles its own glassmorphic styling now */}
-                <div className="relative z-20">
+                <div className="relative z-50">
                     <FileUpload05 />
                 </div>
             </div>
