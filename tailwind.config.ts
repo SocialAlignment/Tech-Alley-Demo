@@ -26,8 +26,6 @@ const config: Config = {
                 slate: {
                     850: "#1e293b", // Custom deep slate
                     900: "#0F172A",
-                    850: "#1e293b", // Custom deep slate
-                    900: "#0F172A",
                     950: "#020617",
                 },
                 // New Brand Colors
