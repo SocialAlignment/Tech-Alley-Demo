@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 
 interface IdentityContextType {
     leadId: string | null;
@@ -151,7 +151,10 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
 
         // 3. Check Supabase Auth (The missing link for Google OAuth)
         const checkAuth = async () => {
-            const supabase = createClientComponentClient();
+            const supabase = createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
             const { data: { session } } = await supabase.auth.getSession();
 
             if (session?.user?.id) {
@@ -160,22 +163,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
                 await fetchProfile(session.user.id);
             } else {
                 // Fallback to URL/Local if no Auth session
-                // 3. Check Supabase Auth (The missing link for Google OAuth)
-                const checkAuth = async () => {
-                    const supabase = createClientComponentClient();
-                    const { data: { session } } = await supabase.auth.getSession();
-
-                    if (session?.user?.id) {
-                        console.log("IDENTITY DEBUG: Found Supabase Auth User via Session:", session.user.id);
-                        setLeadId(session.user.id);
-                        await fetchProfile(session.user.id);
-                    } else {
-                        // Fallback to URL/Local if no Auth session
-                        checkIdentity();
-                    }
-                };
-
-                checkAuth();
+                checkIdentity();
             }
         };
 
