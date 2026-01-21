@@ -121,7 +121,10 @@ export default function DemoOnboardingPage() {
                     Event Registration
                 </h1>
                 <Link href={`/demo/qualify${effectivelyLeadId ? `?id=${effectivelyLeadId}` : ''}`} className="block w-full h-full relative group">
-                    <p className="text-lg text-slate-400">Enter to win 1:1 video session with Social Alignment, LLC</p>
+                    <p className="text-lg text-slate-400">
+                        Enter to win 1:1 video session with <br className="block" />
+                        <span className="text-white font-medium">Social Alignment, LLC</span>
+                    </p>
                 </Link>
             </div>
 

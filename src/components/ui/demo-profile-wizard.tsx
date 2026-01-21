@@ -519,24 +519,22 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
     connectedId?: string
 }) {
     const [currentStep, setCurrentStep] = useState(0);
-    const { leadId: identityLeadId, userName: identityUserName, refreshIdentity } = useIdentity();
+    const { leadId: identityLeadId, userName: identityUserName, refreshIdentity, email: identityEmail } = useIdentity();
     const [formData, setFormData] = useState<DemoProfileData>(initialDemoProfileData);
 
     const leadId = connectedId || identityLeadId;
     const userName = connectedName || identityUserName;
 
-    // Hydration
+    // Hydration: Merge initialData AND Identity Context
     useEffect(() => {
-        if (initialData) {
-            setFormData(prev => ({
-                ...prev,
-                ...initialData,
-                // Ensure recursive merge if needed, but shallow is fine for now
-            }));
-
-            // Smart skipping logic can be added here if needed
-        }
-    }, [initialData]);
+        setFormData(prev => ({
+            ...prev,
+            ...(initialData || {}),
+            // Fallback to identity context if fields are empty
+            name: (initialData?.name) || prev.name || identityUserName || '',
+            email: (initialData?.email) || prev.email || (useIdentity().email) || '', // access email directly from hook if not destructured above
+        }));
+    }, [initialData, identityUserName, identityLeadId]);
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
@@ -581,38 +579,38 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
             >
                 {/* Full-Width Branded Header Bar */}
                 {/* Full-Width Branded Header Bar */}
-                <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-900/80 px-6 py-4 flex items-center justify-between border-b border-white/10 relative min-h-[100px]">
+                <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-900/80 px-4 md:px-6 py-4 flex flex-col md:flex-row items-center justify-between border-b border-white/10 relative gap-4 md:gap-0">
 
                     {/* Left: Logo */}
-                    <div className="flex-none z-10 -ml-2 w-24 md:w-32">
+                    <div className="flex-none z-10 w-20 md:w-32">
                         <Image
                             src="/tah-hero-logo.png"
                             alt="Tech Alley Henderson"
                             width={120}
                             height={120}
-                            className="w-full h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-125"
+                            className="w-full h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] md:scale-125"
                         />
                     </div>
 
                     {/* Center: Step Title & User Context */}
-                    <div className="flex-1 flex flex-col items-center justify-center z-0 px-2">
-                        <h2 className="text-lg md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center leading-tight">
+                    <div className="flex-1 flex flex-col items-center justify-center z-0 px-2 text-center order-2 md:order-1">
+                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center leading-tight">
                             {steps[currentStep].label}
                         </h2>
                         {leadId && (
-                            <div className="hidden md:flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md">
+                            <div className="flex items-center gap-1.5 mt-1 bg-black/20 rounded-full px-3 py-0.5 border border-white/5 backdrop-blur-md">
                                 <UserCheck className="w-3 h-3 text-cyan-400" />
-                                <span className="text-xs font-medium text-cyan-200/80 block pb-0.5">Connected as {userName || 'User'}</span>
+                                <span className="text-xs font-medium text-cyan-200/80 block pb-0.5 max-w-[150px] truncate">{userName || 'User'}</span>
                             </div>
                         )}
                     </div>
 
                     {/* Right: Step Counter */}
-                    <div className="flex-none text-right z-10 relative w-24 md:w-32">
-                        <div className="text-lg font-bold font-mono text-cyan-300">
+                    <div className="flex-none w-full md:w-32 z-10 relative flex flex-col items-center md:items-end order-3 md:order-2">
+                        <div className="text-sm md:text-lg font-bold font-mono text-cyan-300">
                             Step {currentStep + 1} <span className="text-white/40 text-sm font-sans mx-1">of</span> {steps.length}
                         </div>
-                        <div className="h-2 w-full bg-slate-800/50 rounded-full mt-2 overflow-hidden border border-white/5 ml-auto">
+                        <div className="h-1.5 md:h-2 w-24 md:w-full bg-slate-800/50 rounded-full mt-1 md:mt-2 overflow-hidden border border-white/5">
                             <motion.div
                                 className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
                                 initial={{ width: 0 }}
