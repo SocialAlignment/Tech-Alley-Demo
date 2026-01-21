@@ -204,12 +204,8 @@ export function SuccessContent() {
 
                                         {/* Button Content - Overlaying the liquid */}
                                         <div className="absolute inset-0 flex items-center justify-center gap-2 z-10 px-4">
-                                            <span className="relative z-10 text-center leading-tight font-black text-white text-base md:text-lg tracking-wider uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] filter">
-                                                Engage
-                                                <span className="hidden md:inline mx-2 text-cyan-200">-</span>
-                                                <span className="font-bold normal-case text-white/95 text-sm md:text-base tracking-normal drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                                                    Activate 5 More Entries
-                                                </span>
+                                            <span className="relative z-10 text-center leading-tight font-black text-white text-sm md:text-base tracking-wider uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] filter">
+                                                Activate 5 More Entries
                                             </span>
                                             <ArrowRight className="w-6 h-6 text-white stroke-[3px] group-hover:translate-x-1 transition-transform relative z-10 flex-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" />
                                         </div>
@@ -226,7 +222,7 @@ export function SuccessContent() {
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: phase >= 1 ? 1 : 0, y: phase >= 1 ? 0 : 50 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="flex-none pb-0 relative z-50 text-center -mt-2 md:-mt-12"
+                    className="flex-none pb-0 relative z-50 text-center mt-1 md:-mt-6"
                 >
                     <div className="flex flex-col items-center justify-center opacity-90 hover:opacity-100 transition-opacity duration-500 scale-95 md:scale-125 origin-top">
                         {/* Subtle Glow */}
@@ -234,7 +230,7 @@ export function SuccessContent() {
                         <img
                             src="/sa-hero-logo.png"
                             alt="Social Alignment"
-                            className="h-[18vh] md:h-[32vh] w-auto object-contain hover:scale-105 transition-all duration-500 drop-shadow-[0_0_30px_rgba(56,189,248,0.4)] relative z-10"
+                            className="h-[22vh] md:h-[36vh] w-auto object-contain hover:scale-105 transition-all duration-500 drop-shadow-[0_0_30px_rgba(56,189,248,0.4)] relative z-10"
                         />
                     </div>
                 </motion.div>

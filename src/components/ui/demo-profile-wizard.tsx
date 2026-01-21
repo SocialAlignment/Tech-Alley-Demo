@@ -596,7 +596,7 @@ export default function DemoProfileWizard({ initialData, onSubmit, isSubmitting,
 
                     {/* Center: Step Title & User Context */}
                     <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center justify-center pointer-events-none">
-                        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md whitespace-nowrap">
+                        <h2 className="text-xl md:text-3xl font-bold text-white tracking-tight drop-shadow-md text-center px-4 leading-tight">
                             {steps[currentStep].label}
                         </h2>
                         {leadId && (

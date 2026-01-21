@@ -17,6 +17,8 @@ export default function QualifyPage() {
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
     const [scoreInfo, setScoreInfo] = useState<{ score: number, band: string } | null>(null);
     const [initialAlignmentStatement, setInitialAlignmentStatement] = useState('');
+    const [initialName, setInitialName] = useState('');
+    const [initialEmail, setInitialEmail] = useState('');
 
     // Fetch Alignment Statement
     const searchParams = useSearchParams();
@@ -38,6 +40,8 @@ export default function QualifyPage() {
                             data.entry.profile_data?.coreAlignmentStatement ||
                             ''
                         );
+                        if (data.entry.name) setInitialName(data.entry.name);
+                        if (data.entry.email) setInitialEmail(data.entry.email);
                     }
                 }
             } catch (e) {
@@ -253,7 +257,7 @@ export default function QualifyPage() {
                     Win a 1:1 GenAI Video Session
                 </h1>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                    Complete this creative brief to earn <span className="text-white font-bold">+5 Raffle Entries</span> and unlock <br className="hidden md:inline" /> personalized GenAI resources aligned to your exact business stage.
+                    Complete this creative brief to earn <span className="text-white font-bold whitespace-nowrap">+5 Raffle Entries</span> and unlock <br className="hidden md:inline" /> personalized GenAI resources aligned to your exact business stage.
                 </p>
             </div>
 
@@ -261,6 +265,8 @@ export default function QualifyPage() {
                 onSubmit={handleSubmit}
                 isSubmitting={status === 'submitting'}
                 initialAlignmentStatement={initialAlignmentStatement}
+                initialName={initialName}
+                initialEmail={initialEmail}
             />
 
             {/* Background elements */}

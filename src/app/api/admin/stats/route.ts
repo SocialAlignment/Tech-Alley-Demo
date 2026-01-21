@@ -109,24 +109,23 @@ export async function GET() {
             }
         };
 
-        // E. Raffle Entries (Supabase: demo_leads) - Qualified Leads
-        // Switched from 'demo_raffle_entries' to 'demo_leads' as the Wizard updates 'demo_leads'
+        // E. Raffle Entries (Supabase: demo_raffle_entries)
         const fetchRaffleEntries = async () => {
             const { data, error } = await supabase
-                .from('demo_leads')
+                .from('demo_raffle_entries')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error("Leads Fetch Error", error);
+                console.error("Raffle Entries Fetch Error", error);
                 return { registrantCount: 0, raffleEntries: 0, entries: [], error };
             }
 
             // Calculate counts
             const registrantCount = (data || []).length;
-            // Assuming 1 entry per lead for now, or use a specific column if it exists. 
-            // Previous logic summed 'entries_count', but demo_leads might simply be one row per user.
-            const raffleEntries = registrantCount;
+
+            // Sum entries_count
+            const raffleEntries = (data || []).reduce((sum, entry) => sum + (entry.entries_count || 1), 0);
 
             return { registrantCount, raffleEntries, entries: data || [] };
         };

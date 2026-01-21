@@ -174,24 +174,28 @@ const SingleSelectOptions = ({
 
 // --- Component ---
 
-export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignmentStatement }: { onSubmit: (data: GenAIFormData) => void, isSubmitting: boolean, initialAlignmentStatement?: string }) {
+export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignmentStatement, initialName, initialEmail }: { onSubmit: (data: GenAIFormData) => void, isSubmitting: boolean, initialAlignmentStatement?: string, initialName?: string, initialEmail?: string }) {
     const { userName, email } = useIdentity(); // Pre-fill context
     const [page, setPage] = useState(0);
     const [data, setData] = useState<GenAIFormData>({
         ...initialData,
-        name: userName || '',
-        email: email || '',
+        name: initialName || userName || '',
+        email: initialEmail || email || '',
         coreAlignmentStatement: initialAlignmentStatement || ''
     });
 
     const update = (field: keyof GenAIFormData, value: any) => setData(prev => ({ ...prev, [field]: value }));
 
-    // Sync context data when available
+    // Sync context or prop data when available
     React.useEffect(() => {
-        if (userName) setData(prev => ({ ...prev, name: userName }));
-        if (email) setData(prev => ({ ...prev, email: email }));
+        if (initialName && !data.name) setData(prev => ({ ...prev, name: initialName }));
+        else if (userName && !data.name) setData(prev => ({ ...prev, name: userName }));
+
+        if (initialEmail && !data.email) setData(prev => ({ ...prev, email: initialEmail }));
+        else if (email && !data.email) setData(prev => ({ ...prev, email: email }));
+
         if (initialAlignmentStatement && !data.coreAlignmentStatement) setData(prev => ({ ...prev, coreAlignmentStatement: initialAlignmentStatement }));
-    }, [userName, email, initialAlignmentStatement]);
+    }, [userName, email, initialAlignmentStatement, initialName, initialEmail]);
 
     // Logic Gate: Skip Page 5 if "Curious, haven't tried" (Q12) is selected
     const shouldShowPage4b = data.aiStage !== "Never tried it" && data.aiStage !== "Curious, haven't tried" && data.aiStage !== "";
@@ -249,7 +253,7 @@ export default function GenAIQualifyForm({ onSubmit, isSubmitting, initialAlignm
                                     I confirm this is me
                                 </h3>
                                 <p className="text-sm text-slate-400">
-                                    I want to answer a few quick questions to earn <span className="text-teal-400 font-bold">+5 Extra Raffle Entries</span> and adjust my demo profile.
+                                    I want to answer a few quick questions to earn <span className="text-teal-400 font-bold">+5 Extra Raffle Entries</span>.
                                 </p>
                             </div>
                         </div>
