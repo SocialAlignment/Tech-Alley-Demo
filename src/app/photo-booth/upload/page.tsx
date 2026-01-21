@@ -9,7 +9,7 @@ export default function PhotoBoothUploadPage() {
     return (
         <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-slate-900 selection:bg-indigo-500/30">
             {/* Immersive Background */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 pointer-events-none">
                 <StarsBackground />
                 <ShootingStars minDelay={500} maxDelay={1500} />
             </div>
