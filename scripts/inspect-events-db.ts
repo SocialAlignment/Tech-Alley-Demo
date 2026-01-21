@@ -8,7 +8,7 @@ async function debug() {
     console.log("Notion DataBases keys:", Object.keys(notion.databases));
     console.log("Has retrieve?", typeof notion.databases.retrieve);
     // @ts-ignore
-    console.log("Has query?", typeof notion.databases.query);
+    console.log("Has query?", typeof (notion.databases as any).query);
 }
 
 debug();
