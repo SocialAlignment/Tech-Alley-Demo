@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
     try {
@@ -10,13 +10,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing Lead ID' }, { status: 400 });
         }
 
+        // Initialize Admin Client to ensure we can find the user regardless of RLS
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
         console.log("Identify API (Demo): Fetching for ID:", leadId);
 
-        // 1. Try Fetching by ID from demo_raffle_entries directly
+        // 1. Try Fetching by ID OR demo_google_id (Auth ID)
         let { data: entry, error } = await supabase
             .from('demo_raffle_entries')
             .select('*')
-            .eq('id', leadId)
+            .or(`id.eq.${leadId},demo_google_id.eq.${leadId}`)
             .single();
 
         // 2. Fallback: If not found, it might be a 'demo_leads' ID (from registration sync)
