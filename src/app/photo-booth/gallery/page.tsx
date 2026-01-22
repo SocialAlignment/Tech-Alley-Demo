@@ -125,7 +125,7 @@ export default async function GalleryPage() {
                 <Link href="https://muddy-nautilus-ad8.notion.site/nano-banana-pro-the-creative-amplifier?source=copy_link">
                     <Button variant="ghost" className="text-white hover:text-cyan-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
                         <ArrowLeft size={16} />
-                        Take me back to Alignment Resources
+                        <span className="hidden md:inline">Take me back to Alignment Resources</span>
                     </Button>
                 </Link>
             </div>
@@ -134,7 +134,7 @@ export default async function GalleryPage() {
                 <Link href="/photo-booth/upload">
                     <Button variant="ghost" className="text-white hover:text-cyan-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
                         <Upload size={16} />
-                        Upload Another Photo
+                        <span className="hidden md:inline">Upload Another Photo</span>
                     </Button>
                 </Link>
             </div>
