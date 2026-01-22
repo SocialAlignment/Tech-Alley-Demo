@@ -3,7 +3,7 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 import { WarpBackground } from "@/components/ui/warp-background"
 
 export const dynamic = 'force-dynamic';
@@ -126,6 +126,15 @@ export default async function GalleryPage() {
                     <Button variant="ghost" className="text-white hover:text-cyan-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
                         <ArrowLeft size={16} />
                         Take me back to Alignment Resources
+                    </Button>
+                </Link>
+            </div>
+
+            <div className="fixed top-4 right-4 z-50">
+                <Link href="/photo-booth/upload">
+                    <Button variant="ghost" className="text-white hover:text-cyan-300 hover:bg-white/10 gap-2 backdrop-blur-sm bg-black/20 border border-white/5 rounded-full px-4">
+                        <Upload size={16} />
+                        Upload Another Photo
                     </Button>
                 </Link>
             </div>
