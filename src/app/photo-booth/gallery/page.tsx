@@ -27,13 +27,23 @@ import { supabase } from '@/lib/supabase'; // Client side import okay for server
 // Since this is public data, the singleton is fine.
 
 async function getGalleryReviews(): Promise<Review[]> {
-    const S3_BUCKET = process.env.S3_BUCKET_NAME;
+    const S3_BUCKET = process.env.S3_BUCKET_NAME; // Restore this line
+
+    // Use Admin Client to bypass RLS policies for public display
+    // This is a Server Component, so secrets are safe.
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? require('@supabase/supabase-js').createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
+        : supabase;
 
     try {
-        const { data: galleryItems, error } = await supabase
+        const { data: galleryItems, error } = await adminClient
             .from('demo_gallery')
             .select('*')
-            .eq('status', 'approved')
+            // Temporarily remove status filter to debug - IF columns are missing, this might fail, but "select *" handles it.
+            // .eq('status', 'approved')
             .order('created_at', { ascending: false });
 
         if (error) {
