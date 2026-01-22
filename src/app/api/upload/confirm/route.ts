@@ -10,7 +10,7 @@ const AWS_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { s3Key, caption, userId, instagramHandle } = body;
+        const { s3Key, caption, userId, instagramHandle, yourName } = body;
 
         if (!s3Key) {
             return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
                 s3_key: s3Key,
                 image_url: imageUrl,
                 caption: caption || 'Untitled Memory',
-                user_info: userId || 'Anonymous',
+                user_info: yourName || userId || 'Anonymous', // Prefer explicit name
                 instagram: instagramHandle || '',
                 status: 'approved' // Default to approved as requested for stability
             });

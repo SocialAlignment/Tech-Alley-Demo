@@ -20,6 +20,7 @@ export default function FileUpload05() {
     const [caption, setCaption] = useState("");
     const { leadId, userName, instagram: contextInstagram } = useIdentity();
     const [instagram, setInstagram] = useState("");
+    const [yourName, setYourName] = useState("");
 
     useEffect(() => {
         if (contextInstagram) setInstagram(contextInstagram);
@@ -127,6 +128,7 @@ export default function FileUpload05() {
                     s3Key: data.key,
                     caption: caption,
                     userId: userName ? `${userName} (${leadId || 'No ID'})` : undefined,
+                    yourName: yourName,
                     instagramHandle: instagram || contextInstagram
                 })
             });
@@ -264,6 +266,15 @@ export default function FileUpload05() {
                                         placeholder="Add a caption..."
                                         value={caption}
                                         onChange={(e) => setCaption(e.target.value)}
+                                        className="mb-2 w-full border-b border-slate-700 bg-transparent py-1 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+                                        disabled={uploading}
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Your Name (Optional)"
+                                        value={yourName}
+                                        onChange={(e) => setYourName(e.target.value)}
                                         className="mb-2 w-full border-b border-slate-700 bg-transparent py-1 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
                                         disabled={uploading}
                                     />
