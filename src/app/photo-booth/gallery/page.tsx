@@ -86,8 +86,8 @@ async function getGalleryReviews(): Promise<Review[]> {
 
             return {
                 id: item.id,
-                name: instagram || cleanName,
-                affiliation: instagram ? cleanName : "Tech Alley Attendee",
+                name: cleanName || "Anonymous",
+                affiliation: instagram ? (instagram.startsWith('@') ? instagram : `@${instagram}`) : "Tech Alley Attendee",
                 quote: item.caption || "Checking out the event!",
                 imageSrc: finalImageUrl,
                 thumbnailSrc: finalImageUrl,
