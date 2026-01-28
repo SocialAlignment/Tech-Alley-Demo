@@ -6,13 +6,20 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { WarpBackground } from '@/components/ui/warp-background';
+import { useInAppBrowser } from '@/hooks/use-in-app-browser';
+import { InAppBrowserOverlay } from '@/components/ui/in-app-browser-overlay';
 
 export default function DemoPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const isInAppBrowser = useInAppBrowser();
+    const [dismissedInAppWarning, setDismissedInAppWarning] = useState(false);
 
     return (
         <main className="relative w-full h-[100dvh] overflow-hidden bg-slate-900 font-sans">
+            {isInAppBrowser && !dismissedInAppWarning && (
+                <InAppBrowserOverlay onDismiss={() => setDismissedInAppWarning(true)} />
+            )}
             {/* Background - Neon Portal Warp Grid */}
             <div className="absolute inset-0 z-0">
                 <WarpBackground className="w-full h-full" gridColor="rgba(34, 211, 238, 0.4)" />
